@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import Paybuddy from '@/components/sections/Paybuddy';
+import Image from 'next/image';
 
 export default function World() {
   return (
@@ -65,25 +66,31 @@ export default function World() {
         </motion.div>
 
         {/* Stars */}
-        <motion.img
+        <motion.Image
           src="/star3.svg"
           alt=""
+          width={32}
+          height={32}
           className="absolute top-20 left-20 w-8 h-8"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
         />
-        <motion.img
+        <motion.Image
           src="/star3.svg"
           alt=""
+          width={32}
+          height={32}
           className="absolute top-40 right-32 w-8 h-8"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
         />
-        <motion.img
+        <motion.Image
           src="/star3.svg"
           alt=""
+          width={32}
+          height={32}
           className="absolute bottom-40 right-20 w-8 h-8"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

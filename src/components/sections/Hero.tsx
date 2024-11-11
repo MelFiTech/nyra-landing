@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import TextTicker from '@/components/ui/TextTicker';
+import Image from 'next/image';
 
 const Hero = () => {
   return (
@@ -14,7 +15,13 @@ const Hero = () => {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
       >
-        <img src="/star1.svg" alt="" className="w-[120px] h-[120px]" />
+        <Image 
+          src="/star1.svg" 
+          alt="" 
+          width={120}
+          height={120}
+          className="w-[120px] h-[120px]"
+        />
       </motion.div>
       
       <motion.div 
@@ -23,7 +30,13 @@ const Hero = () => {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
       >
-        <img src="/star2.svg" alt="" className="w-[100px] h-[100px]" />
+        <Image 
+          src="/star2.svg" 
+          alt="" 
+          width={100}
+          height={100}
+          className="w-[100px] h-[100px]"
+        />
       </motion.div>
 
       <div className="container mx-auto px-4">
@@ -82,9 +95,11 @@ const Hero = () => {
           transition={{ delay: 0.6, duration: 0.8 }}
         >
           <div className="h-[589px] overflow-hidden">
-            <img 
+            <Image 
               src="/phone.png" 
               alt="Nyra App Interface" 
+              width={416}
+              height={589}
               className="w-[416px]"
             />
           </div>

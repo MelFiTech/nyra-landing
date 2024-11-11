@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+
 const TextTicker = () => {
   const items = [
     "Online Banking",
@@ -21,7 +23,13 @@ const TextTicker = () => {
           <div key={index} className="flex items-center whitespace-nowrap">
             <span className="font-redhat text-[20px]">{item}</span>
             {/* Add star after each item */}
-            <img src="/star2.svg" alt="" className="w-6 h-6 mx-8" />
+            <Image
+              src="/star2.svg"
+              alt=""
+              width={24}
+              height={24}
+              className="w-6 h-6 mx-8"
+            />
           </div>
         ))}
       </div>
