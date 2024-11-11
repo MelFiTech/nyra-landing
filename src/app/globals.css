@@ -3,11 +3,51 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-rgb: 255, 255, 255;
+  --font-redhat: var(--font-redhat);
+  --font-clash: var(--font-clash);
+  --font-weight: 500;
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-rgb));
+@layer base {
+  body {
+    @apply bg-[#F5F5F6] text-black font-redhat;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'ClashDisplay-Variable', system-ui, sans-serif;
+  }
+}
+
+/* Font weight utilities */
+.font-clash {
+  font-family: 'ClashDisplay-Variable', 'Red Hat Display', sans-serif;
+}
+
+.font-clash-thin {
+  --font-weight: 200;
+}
+
+.font-clash-light {
+  --font-weight: 300;
+}
+
+.font-clash-regular {
+  --font-weight: 400;
+}
+
+.font-clash-medium {
+  --font-weight: 500;
+}
+
+.font-clash-semibold {
+  --font-weight: 600;
+}
+
+.font-clash-bold {
+  --font-weight: 700;
+}
+
+.animate-ticker {
+  will-change: transform;
+  backface-visibility: hidden;
 }
