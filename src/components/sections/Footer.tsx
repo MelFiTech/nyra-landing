@@ -1,7 +1,5 @@
 'use client';
 
-import Image from 'next/image';
-
 const footerLinks = {
   company: {
     title: 'Company',
@@ -49,39 +47,44 @@ const footerLinks = {
 
 const Footer = () => {
   return (
-    <footer className="bg-[#11140E] text-white py-24">
-      <div className="max-w-7xl mx-auto px-4">
+    <footer className="bg-[#11140E] text-white py-24 rounded-t-[70px] mx-2 relative">
+      <div className="absolute inset-0 bg-cover bg-center rounded-t-[70px]" style={{ backgroundImage: 'url(/images/Footerbg.png)' }} />
+      <div className="relative max-w-7xl mx-auto px-4">
         <div className="flex flex-col gap-16">
+          {/* Top section with logo and app store buttons */}
           <div className="flex justify-between items-start">
-            <h2 className="font-clash text-[64px] leading-none text-[#CEFE65]">
+            <h2 className="font-clash text-[100px] leading-none text-[#CEFE65] font-bold">
               Go Nyra <br />
               For Naira
             </h2>
             <div className="flex flex-col gap-3">
               <a 
                 href="#" 
-                className="flex items-center justify-center gap-2 bg-[#CEFE65] hover:bg-[#CEFE65]/90 text-black px-12 py-4 rounded-full w-[280px]"
+                className="flex items-center justify-center bg-[#CEFE65] hover:bg-[#CEFE65]/90 text-black h-[75px] rounded-full w-[421px]"
               >
-                <Image 
-                  src="/icons/apple.svg" 
-                  alt="" 
-                  width={20} 
-                  height={20}
-                />
-                <span className="text-sm font-medium">Get in on App Store</span>
+                <div className="flex items-center gap-3">
+                  <img src="/icons/apple.svg" alt="" className="w-[30px] h-[30px] [filter:brightness(0)_saturate(100%)_invert(0)_sepia(0)_saturate(0)_hue-rotate(0)_brightness(0)_contrast(100%)]" />
+                  <div className="flex flex-col">
+                    <span className="text-base font-medium">Get it on</span>
+                    <span className="text-[20px] font-bold">App Store</span>
+                  </div>
+                </div>
               </a>
               <a 
                 href="#" 
-                className="flex items-center justify-center gap-2 bg-[#4D5448] hover:bg-[#4D5448]/90 text-white px-12 py-4 rounded-full w-[280px]"
+                className="flex items-center justify-center bg-[#2F3A1C] hover:bg-[#2F3A1C]/90 text-white h-[75px] rounded-full w-[421px]"
               >
-                <Image 
-                  src="/icons/android.svg" 
-                  alt="" 
-                  width={20} 
-                  height={20}
-                  className="brightness-0 invert"
-                />
-                <span className="text-sm font-medium">Soon on Google Play</span>
+                <div className="flex items-center gap-3">
+                  <img 
+                    src="/icons/android.svg" 
+                    alt="" 
+                    className="w-[30px] h-[30px] [filter:brightness(0)_saturate(100%)_invert(0)_sepia(0)_saturate(0)_hue-rotate(0)_brightness(0)_contrast(100%)]"
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-base font-medium text-[#202715]">Soon on</span>
+                    <span className="text-[20px] font-bold text-[#11140E]">Google Play</span>
+                  </div>
+                </div>
               </a>
             </div>
           </div>
@@ -108,9 +111,9 @@ const Footer = () => {
           </div>
 
           {/* Bottom section with disclaimer and copyright */}
-          <div className="space-y-4 text-gray-400 text-sm">
+          <div className="space-y-4 text-gray-400 text-base">
             <p className="max-w-4xl">
-              MyNyra Technology Limited (&ldquo;Nyra Wallet&rdquo;) is not a bank. Banking services, including the management of accounts and financial transactions, are provided through our licensed banking partners.
+              MyNyra Technology Limited (Nyra Wallet) is not a bank. Banking services, including the management of accounts and financial transactions, are provided through our licensed banking partners.
             </p>
             <p>© 2024 Nyra Financial Technology. All rights reserved.</p>
           </div>
