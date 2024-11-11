@@ -5,6 +5,8 @@ import Button from '@/components/ui/Button';
 import Paybuddy from '@/components/sections/Paybuddy';
 import Image from 'next/image';
 
+const MotionImage = motion(Image);
+
 export default function World() {
   return (
     <section className="py-32 relative overflow-hidden">
@@ -43,8 +45,8 @@ export default function World() {
               className="bg-black text-white hover:bg-gray-900 inline-flex items-center"
             >
               <div className="flex items-center space-x-2">
-                <img src="/icons/apple.svg" alt="" className="w-5 h-5" />
-                <img src="/icons/android.svg" alt="" className="w-5 h-5" />
+                <Image src="/icons/apple.svg" alt="" width={20} height={20} />
+                <Image src="/icons/android.svg" alt="" width={20} height={20} />
                 <span>DOWLOAD</span>
               </div>
             </Button>
@@ -58,15 +60,17 @@ export default function World() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.8 }}
         >
-          <img 
+          <Image 
             src="/images/coins.png" 
             alt="" 
+            width={672}
+            height={400}
             className="w-full max-w-2xl"
           />
         </motion.div>
 
         {/* Stars */}
-        <motion.Image
+        <MotionImage
           src="/star3.svg"
           alt=""
           width={32}
@@ -76,7 +80,7 @@ export default function World() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
         />
-        <motion.Image
+        <MotionImage
           src="/star3.svg"
           alt=""
           width={32}
@@ -86,7 +90,7 @@ export default function World() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
         />
-        <motion.Image
+        <MotionImage
           src="/star3.svg"
           alt=""
           width={32}
