@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from './Button';
-import { Twitter, Instagram } from 'lucide-react';
+import { Instagram } from 'lucide-react';
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
@@ -162,7 +162,13 @@ export default function Header() {
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          <Twitter className="w-5 h-5" />
+                          <Image
+                            src="/images/x.svg"
+                            alt="X (Twitter)"
+                            width={20}
+                            height={20}
+                            className="w-5 h-5"
+                          />
                         </a>
                         <a 
                           href="https://www.instagram.com/nyrawallet" 
