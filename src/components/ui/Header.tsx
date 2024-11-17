@@ -149,7 +149,7 @@ export default function Header() {
 
                     {/* Mobile Menu Footer - Restructured with text first */}
                     <motion.div
-                      className="mt-[30px] w-full px-8 flex flex-col items-center gap-6"
+                      className="mt-[-4px] w-full px-8 flex flex-col items-center gap-6"
                       initial={{ y: 20, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: 0.3, duration: 0.4 }}
