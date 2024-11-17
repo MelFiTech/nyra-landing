@@ -13,7 +13,7 @@ const Button = ({
   size = 'md', 
   ...props 
 }: ButtonProps) => {
-  const baseStyles = "rounded-full font-bold text-base transition-all duration-200 font-redhat";
+  const baseStyles = "rounded-full font-bold text-base transition-all duration-200 font-redhat [box-shadow:inset_0_-4px_0_rgba(0,0,0,0.05)]";
   
   const variants = {
     primary: "bg-[#CEFE65] text-black hover:bg-[#b8e600]",

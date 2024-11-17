@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 export default function Paybuddy() {
   return (
@@ -63,21 +64,12 @@ export default function Paybuddy() {
       </motion.div>
 
       {/* Stars */}
-      <motion.img
-        src="/star3.svg"
+      <Image 
+        src="/star3.svg" 
         alt=""
-        className="absolute top-[40%] right-[42%] w-5 h-5 text-[#FFB800]"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.9 }}
-      />
-      <motion.img
-        src="/star3.svg"
-        alt=""
-        className="absolute bottom-[30%] left-[30%] w-5 h-5 text-[#FFB800]"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.1 }}
+        width={32} 
+        height={32}
+        className="absolute top-20 right-20 w-8 h-8"
       />
     </section>
   );

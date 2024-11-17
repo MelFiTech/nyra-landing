@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   icon?: string;
@@ -43,10 +44,12 @@ export function Card({
       {/* Image */}
       {image && (
         <div className="mt-auto">
-          <img 
+          <Image 
             src={image} 
-            alt="" 
-            className="w-full h-auto object-contain rounded-2xl"
+            alt={image} 
+            width={400} 
+            height={300}
+            className="w-full h-auto object-cover"
           />
         </div>
       )}

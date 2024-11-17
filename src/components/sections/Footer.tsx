@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+
 const footerLinks = {
   company: {
     title: 'Company',
@@ -63,7 +65,13 @@ const Footer = () => {
                 className="flex items-center justify-center bg-[#CEFE65] hover:bg-[#CEFE65]/90 text-black h-[75px] rounded-full w-[421px]"
               >
                 <div className="flex items-center gap-3">
-                  <img src="/icons/apple.svg" alt="" className="w-[30px] h-[30px] [filter:brightness(0)_saturate(100%)_invert(0)_sepia(0)_saturate(0)_hue-rotate(0)_brightness(0)_contrast(100%)]" />
+                  <Image 
+                    src="/icons/apple.svg" 
+                    alt="" 
+                    width={30} 
+                    height={30}
+                    className="w-5 h-5 [filter:brightness(0)_saturate(100%)_invert(0)_sepia(0)_saturate(0)_hue-rotate(0)_brightness(0)_contrast(100%)]"
+                  />
                   <div className="flex flex-col">
                     <span className="text-base font-medium">Get it on</span>
                     <span className="text-[20px] font-bold">App Store</span>
@@ -75,10 +83,12 @@ const Footer = () => {
                 className="flex items-center justify-center bg-[#2F3A1C] hover:bg-[#2F3A1C]/90 text-white h-[75px] rounded-full w-[421px]"
               >
                 <div className="flex items-center gap-3">
-                  <img 
+                  <Image 
                     src="/icons/android.svg" 
                     alt="" 
-                    className="w-[30px] h-[30px] [filter:brightness(0)_saturate(100%)_invert(0)_sepia(0)_saturate(0)_hue-rotate(0)_brightness(0)_contrast(100%)]"
+                    width={30} 
+                    height={30}
+                    className="w-5 h-5 [filter:brightness(0)_saturate(100%)_invert(0)_sepia(0)_saturate(0)_hue-rotate(0)_brightness(0)_contrast(100%)]"
                   />
                   <div className="flex flex-col">
                     <span className="text-base font-medium text-[#202715]">Soon on</span>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Button from '@/components/ui/Button';
+import Image from 'next/image';
 
 const Header = () => {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -18,7 +19,13 @@ const Header = () => {
         <nav className="flex items-center justify-between max-w-[1440px] mx-auto">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <img src="/nyra.svg" alt="Nyra" className="w-[78px] h-[27px] object-contain" />
+            <Image 
+              src="/logo.png" 
+              alt="Logo"
+              width={150} 
+              height={40}
+              className="h-10 w-auto"
+            />
           </div>
 
           {/* Navigation Links */}

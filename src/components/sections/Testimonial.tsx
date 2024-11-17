@@ -2,6 +2,7 @@
 import { motion } from 'framer-motion';
 import { cn } from "@/lib/utils";
 import Marquee from "@/components/magicui/marquee";
+import Image from 'next/image';
 
 const reviews = [
   {
@@ -40,11 +41,11 @@ const ReviewCard = ({
       "relative w-[400px] overflow-hidden rounded-[32px] bg-white p-8 shadow-sm mx-3",
     )}>
       <div className="mb-6">
-        <img src="/quote.svg" alt="Quote" className="w-8 h-8" />
+        <Image src="/quote.svg" alt="Quote" width={32} height={32} className="w-8 h-8" />
       </div>
       <blockquote className="text-xl mb-6">{body}</blockquote>
       <div className="flex items-center gap-3">
-        <img className="rounded-full w-12 h-12" alt={name} src={img} />
+        <Image className="rounded-full w-12 h-12" alt={name} src={img} width={48} height={48} />
         <div>
           <figcaption className="font-medium">{name}</figcaption>
           <p className="text-gray-500">{username}</p>
