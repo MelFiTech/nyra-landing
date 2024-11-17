@@ -76,14 +76,14 @@ export default function Header() {
             >
               Company
             </Link>
-            <a 
-              href="mailto:hello@nyrawallet.com"
-              className="text-black hover:text-gray-700 transition-colors opacity-50"
+            <Link 
+              href="https://mail.google.com/mail/?view=cm&fs=1&to=hello@nyrawallet.com&su=Contact%20Nyra"
               target="_blank"
               rel="noopener noreferrer"
+              className="text-black hover:text-gray-700 transition-colors opacity-50"
             >
               Contact Us
-            </a>
+            </Link>
           </div>
 
           {/* Mobile Menu - Fullscreen */}
@@ -134,15 +134,15 @@ export default function Header() {
                     >
                       Company
                     </Link>
-                    <a 
-                      href="mailto:hello@nyrawallet.com"
-                      className="text-white text-3xl font-medium hover:text-gray-200 transition-colors"
-                      onClick={() => setIsOpen(false)}
+                    <Link 
+                      href="https://mail.google.com/mail/?view=cm&fs=1&to=hello@nyrawallet.com&su=Contact%20Nyra"
                       target="_blank"
                       rel="noopener noreferrer"
+                      className="text-white text-3xl font-medium hover:text-gray-200 transition-colors"
+                      onClick={() => setIsOpen(false)}
                     >
                       Contact Us
-                    </a>
+                    </Link>
                     <Button 
                       variant="primary" 
                       size="lg"
