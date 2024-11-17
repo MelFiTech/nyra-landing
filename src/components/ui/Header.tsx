@@ -79,6 +79,8 @@ export default function Header() {
             <a 
               href="mailto:hello@nyrawallet.com"
               className="text-black hover:text-gray-700 transition-colors opacity-50"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               Contact Us
             </a>
@@ -136,6 +138,8 @@ export default function Header() {
                       href="mailto:hello@nyrawallet.com"
                       className="text-white text-3xl font-medium hover:text-gray-200 transition-colors"
                       onClick={() => setIsOpen(false)}
+                      target="_blank"
+                      rel="noopener noreferrer"
                     >
                       Contact Us
                     </a>
