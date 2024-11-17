@@ -6,23 +6,55 @@ import Header from '@/components/ui/Header';
 import Image from 'next/image';
 import { RetroGrid } from '@/components/magicui/retro-grid';
 import { Instagram } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function JointAccounts() {
+  const router = useRouter();
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    // Start progress animation after component mounts
+    const startTime = Date.now();
+    const duration = 10000; // 10 seconds
+
+    const updateProgress = () => {
+      const elapsed = Date.now() - startTime;
+      const newProgress = Math.min((elapsed / duration) * 100, 100);
+      
+      if (newProgress < 100) {
+        setProgress(newProgress);
+        requestAnimationFrame(updateProgress);
+      } else {
+        setProgress(100);
+        // Navigate after progress reaches 100%
+        setTimeout(() => {
+          router.push('/');
+        }, 400);
+      }
+    };
+
+    requestAnimationFrame(updateProgress);
+  }, [router]);
+
   return (
     <section className="relative bg-[#F5F5F6] min-h-screen flex items-start justify-center overflow-hidden">
       <Header />
 
       <div className="container mx-auto px-4 relative z-10 flex flex-col items-center justify-center pt-[120px] md:pt-[220px]">
         <div className="flex flex-col items-center text-center">
-          {/* Progress Bar - 100% filled for last screen */}
-          <div className="w-[200px] h-[2px] bg-gray-300 mb-4 md:mb-8 relative">
+          {/* Progress Bar - Animated from 0% to 100% over 10 seconds */}
+          <motion.div 
+            className="w-[200px] h-[8px] bg-gray-300 mb-4 md:mb-8 relative rounded-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
             <motion.div
-              className="absolute left-0 top-0 h-full bg-black"
-              initial={{ width: 0 }}
-              animate={{ width: '100%' }}
-              transition={{ duration: 0.6 }}
+              className="absolute left-0 top-0 h-full bg-black rounded-full"
+              style={{ width: `${progress}%` }}
             />
-          </div>
+          </motion.div>
 
           {/* Main Content */}
           <motion.h1 
@@ -94,8 +126,6 @@ export default function JointAccounts() {
       <div className="absolute inset-0 -z-0">
         <RetroGrid angle={65} className="opacity-30" />
       </div>
-
-
 
       {/* Footer - Hidden on Mobile */}
       <footer className="absolute bottom-0 w-full py-6 px-8 hidden md:block">
