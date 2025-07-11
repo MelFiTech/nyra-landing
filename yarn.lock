@@ -462,14 +462,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@next/swc-darwin-arm64@npm:^15.3.5":
-  version: 15.4.0
-  resolution: "@next/swc-darwin-arm64@npm:15.4.0"
-  checksum: 96377386f74ec4464ae3506028c9d0dccf679e7b22463c5815919f11325fd8a3d2a99b6eaf762e7c006944e047162aad23cbf0f9424c2ac91aaa12981ec70802
-  conditions: os=darwin & cpu=arm64
-  languageName: node
-  linkType: hard
-
 "@next/swc-darwin-x64@npm:15.0.3":
   version: 15.0.3
   resolution: "@next/swc-darwin-x64@npm:15.0.3"
@@ -4765,7 +4757,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "nyra-landing@workspace:."
   dependencies:
-    "@next/swc-darwin-arm64": ^15.3.5
     "@radix-ui/react-separator": ^1.1.0
     "@radix-ui/react-slot": ^1.1.0
     "@radix-ui/react-tooltip": ^1.1.4
