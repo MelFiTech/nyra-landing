@@ -1,12 +1,6 @@
 import type { Metadata } from "next";
-import { Red_Hat_Display } from 'next/font/google';
 import "../fonts/clash-display.css";
 import "./globals.css";
-
-const redHat = Red_Hat_Display({
-  subsets: ['latin'],
-  variable: '--font-redhat',
-});
 
 export const metadata: Metadata = {
   title: "Nyra Wallet",
@@ -31,8 +25,14 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${redHat.variable}`}>
-      <body>{children}</body>
+    <html lang="en">
+      <head>
+        <link 
+          href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@300..900&display=swap" 
+          rel="stylesheet"
+        />
+      </head>
+      <body className="font-['Red_Hat_Display',sans-serif]">{children}</body>
     </html>
   )
 }

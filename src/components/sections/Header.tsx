@@ -78,7 +78,10 @@ const Header = () => {
               </button>
               {activeMenu === 'company' && (
                 <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2">
-                  {menuItems.company.map((item) => (
+                  <a href="/about" className="block px-4 py-2 text-gray-600 hover:bg-gray-100">
+                    About Us
+                  </a>
+                  {menuItems.company.slice(1).map((item) => (
                     <a key={item} href="#" className="block px-4 py-2 text-gray-600 hover:bg-gray-100">
                       {item}
                     </a>

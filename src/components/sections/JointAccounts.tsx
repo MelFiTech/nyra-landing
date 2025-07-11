@@ -74,13 +74,13 @@ export default function JointAccounts() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.6 }}
           >
-            <a href="https://testflight.apple.com/join/9AWuTmtP" target="_blank" rel="noopener noreferrer">
+            <a href="https://apps.apple.com/ng/app/nyra-wallet/id6670797970" target="_blank" rel="noopener noreferrer">
               <Button 
                 variant="primary" 
                 size="lg"
                 className="bg-[#CEFE65] text-black hover:bg-[#CEFE65]/90 text-sm md:text-base"
               >
-                JOIN TESTFLIGHT NOW
+                Download Now
               </Button>
             </a>
           </motion.div>

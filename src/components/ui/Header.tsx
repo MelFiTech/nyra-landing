@@ -69,12 +69,10 @@ export default function Header() {
           {/* Navigation Links - Desktop */}
           <div className="hidden md:flex items-center gap-12">
             <Link 
-              href="https://linkedin.com/company/nyrawallet"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/about"
               className="text-black hover:text-gray-700 transition-colors opacity-50"
             >
-              Company
+              About
             </Link>
             <Link 
               href="https://mail.google.com/mail/?view=cm&fs=1&to=hello@nyrawallet.com&su=Contact%20Nyra"
@@ -126,13 +124,11 @@ export default function Header() {
                     transition={{ delay: 0.2, duration: 0.4 }}
                   >
                     <Link 
-                      href="https://linkedin.com/company/nyrawallet"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href="/about"
                       className="text-white text-3xl font-medium hover:text-gray-200 transition-colors"
                       onClick={() => setIsOpen(false)}
                     >
-                      Company
+                      About
                     </Link>
                     <Link 
                       href="https://mail.google.com/mail/?view=cm&fs=1&to=hello@nyrawallet.com&su=Contact%20Nyra"
