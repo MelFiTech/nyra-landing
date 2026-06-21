@@ -1,0 +1,233 @@
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  height: calc(100vh - 24px);
+  background: var(--surface);
+  border-right: none;
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 12px;
+  margin: 12px 0 12px 12px;
+  transition: width 0.22s ease, min-width 0.22s ease, background 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+}
+
+.sidebar.collapsed {
+  width: 60px;
+  min-width: 60px;
+}
+
+.logo {
+  height: 58px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.logo img {
+  flex: 1;
+  min-width: 0;
+}
+
+.collapseBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: background 0.12s, color 0.12s, transform 0.22s;
+  margin-left: auto;
+}
+
+.collapseBtn:hover {
+  background: var(--hover-bg);
+  color: var(--text-2);
+}
+
+.collapseBtnCollapsed {
+  transform: rotate(180deg);
+}
+
+.nav {
+  flex: 1;
+  padding: 16px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border-left: 3px solid transparent;
+  border-radius: 0 8px 8px 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-2);
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  text-align: left;
+  width: 100%;
+  white-space: nowrap;
+}
+
+.navItem:hover {
+  background: var(--hover-bg);
+  color: var(--text-1);
+}
+
+.navItem.active {
+  background: var(--hover-bg);
+  color: var(--text-1);
+  font-weight: 600;
+  border-left-color: var(--brand);
+}
+
+.navItem.active .icon svg {
+  stroke: var(--brand);
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.chevron {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  transition: transform 0.2s;
+}
+
+.chevron.open {
+  transform: rotate(180deg);
+}
+
+.navGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.subNav {
+  padding-left: 38px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+.subItem {
+  padding: 9px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-3);
+  text-align: left;
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+
+.subItem:hover {
+  background: var(--hover-bg);
+  color: var(--text-1);
+}
+
+.subItem.subActive {
+  color: var(--brand);
+  font-weight: 500;
+}
+
+.signOutWrap {
+  padding: 0 8px 8px;
+  flex-shrink: 0;
+}
+
+.bottom {
+  padding: 12px 8px 20px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.signOutBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-2);
+  width: 100%;
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+
+.signOutBtn:hover {
+  background: var(--hover-bg);
+  color: var(--text-1);
+}
+
+.inviteBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-2);
+  width: 100%;
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+
+.inviteBtn:hover {
+  background: var(--hover-bg);
+  color: var(--text-1);
+}
+
+.themePill {
+  display: flex;
+  align-items: center;
+  background: var(--pill-bg);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+  width: 100%;
+}
+
+.themeBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 5px 4px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.themeBtnActive {
+  background: var(--surface);
+  color: var(--text-1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}

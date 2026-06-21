@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --brand: #00DD79;
+  --brand-hover: #00c86f;
+  --bg: #f9fafb;
+  --surface: #ffffff;
+  --surface-2: #f3f4f6;
+  --border: #f0f0f0;
+  --border-mid: #e5e7eb;
+  --text-1: #111827;
+  --text-2: #4b5563;
+  --text-3: #6b7280;
+  --text-muted: #9ca3af;
+  --hover-bg: #f9fafb;
+  --active-bg: rgba(0, 221, 121, 0.1);
+  --active-color: #00b864;
+  --input-bg: #f9fafb;
+  --bubble-ai: #f3f4f6;
+  --shadow-card: 0 4px 24px rgba(0,0,0,0.07);
+  --pill-bg: #f3f4f6;
+}
+
+:root.dark {
+  --bg: #0a0a0a;
+  --surface: #141414;
+  --surface-2: #1c1c1c;
+  --border: #252525;
+  --border-mid: #2e2e2e;
+  --text-1: #ececec;
+  --text-2: #909090;
+  --text-3: #666666;
+  --text-muted: #444444;
+  --hover-bg: #1c1c1c;
+  --active-bg: rgba(0, 221, 121, 0.12);
+  --active-color: #00DD79;
+  --input-bg: #1c1c1c;
+  --bubble-ai: #1c1c1c;
+  --shadow-card: 0 4px 32px rgba(0,0,0,0.6);
+  --pill-bg: #1c1c1c;
+}
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text-1);
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.2s, color 0.2s;
+}
+
+@layer base {
+  button {
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: inherit;
+  }
+
+  input {
+    font-family: inherit;
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+}

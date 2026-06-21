@@ -1,0 +1,155 @@
+.visual {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  position: relative;
+  overflow: hidden;
+  margin: 12px 12px 12px 0;
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+  align-self: stretch;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.visualInner {
+  position: relative;
+  z-index: 1;
+  max-width: 400px;
+  width: 100%;
+}
+
+.glass {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 24px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--brand);
+  flex-shrink: 0;
+}
+
+.measure {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  width: calc(100% - 48px);
+  left: 24px;
+  top: 0;
+  z-index: -1;
+}
+
+.testimonialWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.testimonialWrapReady .testimonial {
+  position: absolute;
+  inset: 0;
+}
+
+.testimonial {
+  margin: 0;
+}
+
+.quote {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #111827;
+  font-weight: 500;
+}
+
+.author {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 14px;
+}
+
+.name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.meta {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.dots {
+  display: flex;
+  gap: 6px;
+  margin-top: 16px;
+  flex-shrink: 0;
+}
+
+.dot,
+.dotActive {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.18);
+  transition: width 0.25s ease, background 0.25s ease;
+}
+
+.dotActive {
+  width: 18px;
+  background: var(--brand);
+}
+
+@media (max-width: 900px) {
+  .visual {
+    display: none;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .visual {
+    box-shadow: 0 4px 32px rgba(0, 0, 0, 0.6);
+  }
+
+  .overlay {
+    background: rgba(10, 10, 10, 0.55);
+  }
+
+  .glass {
+    background: rgba(20, 20, 20, 0.5);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  }
+
+  .quote,
+  .name {
+    color: #ececec;
+  }
+
+  .meta {
+    color: #909090;
+  }
+
+  .dot {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}

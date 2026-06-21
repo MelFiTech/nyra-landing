@@ -1,0 +1,188 @@
+.hint {
+  font-size: 13px;
+  color: var(--text-3);
+  line-height: 1.5;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.dividerText {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: lowercase;
+}
+
+.optionList {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.optionItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  transition: background 0.12s;
+}
+
+.optionItem:last-child { border-bottom: none; }
+.optionItem:hover { background: var(--hover-bg); }
+
+.optionIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-2);
+  flex-shrink: 0;
+}
+
+.optionText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.optionLabel { font-size: 14px; font-weight: 600; color: var(--text-1); }
+.optionSub { font-size: 12px; color: var(--text-3); }
+.optionChevron { color: var(--text-muted); flex-shrink: 0; }
+
+.form { display: flex; flex-direction: column; gap: 16px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.fieldRow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.label { font-size: 13px; font-weight: 500; color: var(--text-2); }
+.input {
+  padding: 11px 14px; border: 1.5px solid var(--border-mid); border-radius: 8px;
+  font-size: 14px; color: var(--text-1); background: var(--input-bg); outline: none;
+  transition: border-color 0.12s; font-family: inherit; width: 100%;
+}
+.input:focus { border-color: var(--text-2); }
+.input::placeholder { color: var(--text-muted); }
+
+.helper { font-size: 12px; color: var(--text-muted); }
+.verifiedName { font-size: 13px; color: var(--text-1); font-weight: 600; }
+
+.primaryBtn {
+  width: 100%; padding: 13px; background: var(--text-1); color: var(--surface); border-radius: 9px;
+  font-size: 14px; font-weight: 600; transition: opacity 0.15s;
+}
+.primaryBtn:hover { opacity: 0.88; }
+.primaryBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.secondaryBtn {
+  width: 100%; padding: 11px; border: 1.5px solid var(--border-mid); border-radius: 9px;
+  font-size: 13px; font-weight: 500; color: var(--text-2); background: var(--surface);
+  transition: background 0.12s;
+}
+.secondaryBtn:hover { background: var(--hover-bg); }
+
+.skeletons { display: flex; flex-direction: column; gap: 0; }
+.skeleton {
+  height: 72px; border-bottom: 1px solid var(--border);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.skeleton:first-child { border-top: 1px solid var(--border); }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+.list {
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.listItem {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.listItem:last-child { border-bottom: none; }
+
+.listTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.bankName { font-size: 13px; font-weight: 600; color: var(--text-1); }
+
+.accountNumber {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-1);
+  letter-spacing: 1px;
+}
+
+.accountName { font-size: 12px; color: var(--text-3); }
+
+.copyBtn {
+  padding: 5px 10px;
+  border: 1px solid var(--border-mid);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+  background: var(--surface);
+  transition: background 0.12s, border-color 0.12s;
+  flex-shrink: 0;
+}
+
+.copyBtn:hover { background: var(--hover-bg); border-color: var(--text-muted); }
+
+.success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 32px 0 8px;
+  text-align: center;
+}
+
+.successIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--text-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.successSub { font-size: 13.5px; color: var(--text-3); line-height: 1.5; max-width: 280px; }
+
+.refPill {
+  background: var(--surface-2);
+  border: 1px solid var(--border-mid);
+  border-radius: 7px;
+  padding: 8px 16px;
+}
+
+.refText {
+  font-size: 12px;
+  font-family: 'SF Mono', 'Fira Mono', monospace;
+  color: var(--text-2);
+}

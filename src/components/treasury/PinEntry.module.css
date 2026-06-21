@@ -1,0 +1,74 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 8px 0 4px;
+}
+
+.sub {
+  font-size: 13px;
+  color: var(--text-3);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.dotsWrap {
+  display: flex;
+  gap: 12px;
+  outline: none;
+  cursor: default;
+}
+
+.dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--border-mid);
+  background: var(--surface-2);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.dotFilled {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+.dotLoading {
+  opacity: 0.6;
+}
+
+.error {
+  font-size: 13px;
+  color: #dc2626;
+  text-align: center;
+}
+
+.spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinnerInner {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--border-mid);
+  border-top-color: var(--brand);
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.forgotBtn {
+  font-size: 13px;
+  color: var(--brand);
+  font-weight: 500;
+}
+
+.forgotBtn:hover {
+  text-decoration: underline;
+}

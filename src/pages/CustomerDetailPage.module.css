@@ -1,0 +1,339 @@
+.page {
+  padding: 24px 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  color: var(--text-3);
+  flex-shrink: 0;
+}
+
+.breadcrumbLink {
+  color: var(--brand);
+  font-weight: 500;
+  transition: color 0.12s;
+}
+
+.breadcrumbLink:hover { color: var(--brand-hover); text-decoration: underline; }
+.breadcrumbCurrent { color: var(--text-1); font-weight: 500; }
+
+.body {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 16px;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.leftPanel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow-y: auto;
+}
+
+.avatarSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+}
+
+.avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--active-bg);
+  color: var(--active-color);
+  font-size: 22px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.customerName { font-size: 15px; font-weight: 700; color: var(--text-1); }
+.customerSince { font-size: 12px; color: var(--text-muted); }
+
+.centerState {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 60px 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13.5px;
+}
+
+.centerTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.centerSub {
+  font-size: 13px;
+  color: var(--text-muted);
+  max-width: 320px;
+}
+
+.statusActive,
+.statusFrozen,
+.statusMixed {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.statusActive { color: var(--active-color); }
+.statusFrozen { color: #dc2626; }
+.statusMixed { color: #92400e; }
+
+.dotActive,
+.dotFrozen,
+.dotMixed {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dotActive { background: var(--active-color); }
+.dotFrozen { background: #dc2626; }
+.dotMixed { background: #f59e0b; }
+
+.infoList { padding: 4px 0; }
+
+.detailsSection {
+  border-top: 1px solid var(--border);
+  padding-top: 4px;
+}
+
+.detailsHeading {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  padding: 14px 20px 4px;
+}
+
+.detailsEmpty {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 6px 20px 16px;
+  line-height: 1.5;
+}
+
+.amountCredit { color: var(--active-color); font-weight: 600; white-space: nowrap; }
+.amountDebit { color: var(--text-1); font-weight: 600; white-space: nowrap; }
+
+.infoRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+}
+
+.infoLabel { font-size: 12.5px; color: var(--text-3); font-weight: 500; white-space: nowrap; flex-shrink: 0; }
+
+.infoValueWrap { display: flex; align-items: center; gap: 6px; min-width: 0; }
+
+.infoValue { font-size: 12.5px; color: var(--text-1); font-weight: 500; text-align: right; }
+
+.truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
+
+.copyBtn {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition: color 0.12s;
+}
+
+.copyBtn:hover { color: var(--text-2); }
+
+.tierRow { display: flex; align-items: center; gap: 8px; }
+.tierValue { font-size: 12.5px; font-weight: 500; color: var(--text-1); }
+
+.upgradeBtn {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--brand);
+  background: var(--active-bg);
+  padding: 3px 10px;
+  border-radius: 20px;
+  transition: background 0.12s;
+}
+
+.upgradeBtn:hover { background: var(--active-bg); opacity: 0.8; }
+
+.blacklistRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+}
+
+.blacklistLabel { font-size: 13px; font-weight: 500; color: var(--text-2); }
+
+.toggle {
+  width: 42px;
+  height: 24px;
+  border-radius: 12px;
+  background: var(--border-mid);
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.toggleOn { background: var(--text-1); }
+
+.toggleThumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: left 0.2s;
+}
+
+.toggleOn .toggleThumb { left: 21px; }
+
+.rightPanel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  flex-shrink: 0;
+}
+
+.tabBtn {
+  padding: 14px 16px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-3);
+  border-bottom: 2.5px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.12s, border-color 0.12s;
+}
+
+.tabBtn:hover { color: var(--text-1); }
+
+.tabActive {
+  color: var(--brand);
+  border-bottom-color: var(--brand);
+  font-weight: 600;
+}
+
+.tabContent { overflow-y: auto; flex: 1; min-height: 0; }
+
+.tableWrap { overflow-x: auto; }
+
+.table { width: 100%; border-collapse: collapse; }
+
+.table th {
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-3);
+  text-align: left;
+  white-space: nowrap;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.table tbody tr:last-child td { border-bottom: none; }
+.table tbody tr:hover td { background: var(--hover-bg); }
+
+.rowHighlight td { background: var(--active-bg); }
+.rowHighlight:hover td { background: var(--active-bg); }
+
+.nameCell {
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.accountNumberCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.accountNumber {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.dateCell {
+  font-size: 12.5px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.emptyState { text-align: center; }
+
+.emptyInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 48px 24px;
+  color: var(--text-muted);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.emptyTab {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13.5px;
+}

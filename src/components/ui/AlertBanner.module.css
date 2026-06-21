@@ -1,0 +1,54 @@
+.banner {
+  background: #fffbeb;
+  border-bottom: 1px solid #fef3c7;
+  color: #92400e;
+  font-size: 13px;
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+}
+
+.bannerCentered {
+  justify-content: center;
+}
+
+.bannerClickable {
+  cursor: pointer;
+  border: none;
+  border-bottom: 1px solid #fef3c7;
+  transition: background 0.12s;
+}
+
+.bannerClickable:hover {
+  background: #fef3c7;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.message {
+  line-height: 1.45;
+}
+
+.actionWrap {
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.actionLink {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}

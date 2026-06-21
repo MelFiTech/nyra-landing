@@ -1,0 +1,43 @@
+.switch {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid hsl(var(--lp-border));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.tab,
+.tabActive {
+  padding: 6px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.tab {
+  color: hsl(var(--muted-foreground));
+  background: transparent;
+}
+
+.tab:hover {
+  color: hsl(var(--foreground));
+}
+
+.tabActive {
+  background: #111827;
+  color: #fff;
+}
+
+@media (max-width: 768px) {
+  .tab,
+  .tabActive {
+    padding: 6px 14px;
+    font-size: 12px;
+  }
+}

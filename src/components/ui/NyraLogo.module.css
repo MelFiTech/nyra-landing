@@ -1,0 +1,32 @@
+.logo,
+.icon {
+  filter: brightness(0);
+}
+
+.forceBlack,
+:global(.dark) .forceBlack {
+  filter: brightness(0) !important;
+}
+
+:global(.dark) .logo,
+:global(.dark) .icon {
+  filter: none;
+}
+
+.logo {
+  display: block;
+  height: 24px;
+  width: auto;
+  flex: 1;
+  min-width: 0;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.icon {
+  display: block;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  object-fit: contain;
+}

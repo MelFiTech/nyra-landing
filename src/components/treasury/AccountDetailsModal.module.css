@@ -1,0 +1,122 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.modal {
+  background: var(--surface);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 460px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  overflow: hidden;
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 22px 22px 18px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+
+.headerLeft { display: flex; align-items: center; gap: 12px; }
+
+.headerIcon {
+  width: 40px; height: 40px;
+  background: var(--active-bg);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--brand); flex-shrink: 0;
+}
+
+.headerTitle { font-size: 15px; font-weight: 700; color: var(--text-1); }
+.headerSub { font-size: 12.5px; color: var(--text-3); margin-top: 2px; }
+
+.closeBtn {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); flex-shrink: 0;
+  transition: background 0.12s, color 0.12s;
+}
+
+.closeBtn:hover { background: var(--hover-bg); color: var(--text-2); }
+
+.body { padding: 20px 22px; display: flex; flex-direction: column; gap: 16px; }
+
+.notice {
+  display: flex; align-items: center; gap: 8px;
+  background: #fffbeb; border: 1px solid #fde68a;
+  border-radius: 8px; padding: 10px 14px;
+  font-size: 12.5px; color: #92400e; font-weight: 500;
+}
+
+.noticeDot { width: 7px; height: 7px; border-radius: 50%; background: #f59e0b; flex-shrink: 0; }
+
+.accounts { display: flex; flex-direction: column; gap: 12px; }
+
+.accountCard {
+  border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 16px;
+  display: flex; flex-direction: column; gap: 14px;
+  transition: border-color 0.12s;
+}
+
+.accountCard:hover { border-color: var(--active-color); }
+
+.bankRow { display: flex; align-items: center; gap: 10px; }
+
+.bankBadge {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--brand); color: #fff;
+  font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.bankName { font-size: 13.5px; font-weight: 600; color: var(--text-1); }
+
+.fieldRow { display: flex; flex-direction: column; gap: 4px; }
+
+.field { display: flex; flex-direction: column; gap: 3px; }
+
+.fieldLabel {
+  font-size: 11px; font-weight: 500; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.4px;
+}
+
+.fieldValue { font-size: 13px; font-weight: 500; color: var(--text-2); }
+
+.fieldValueRow { display: flex; align-items: center; justify-content: space-between; }
+
+.fieldValueLarge { font-size: 20px; font-weight: 700; color: var(--text-1); letter-spacing: 1px; }
+
+.copyBtn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--border-mid);
+  border-radius: 7px; font-size: 12.5px; font-weight: 500;
+  color: var(--text-2); background: var(--surface);
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.copyBtn:hover { background: var(--hover-bg); border-color: var(--brand); color: var(--brand); }
+
+.footer { padding: 14px 22px 20px; border-top: 1px solid var(--border); }
+
+.footerNote { font-size: 12px; color: var(--text-muted); text-align: center; line-height: 1.5; }

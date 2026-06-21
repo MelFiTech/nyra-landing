@@ -1,0 +1,178 @@
+.page {
+  padding: 24px 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.pageTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-1);
+  letter-spacing: -0.3px;
+}
+
+.createBtn {
+  background: var(--brand);
+  color: #fff;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+.createBtn:hover { background: var(--brand-hover); }
+
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  padding-bottom: 24px;
+}
+
+.cardSkeleton {
+  height: 280px; border-radius: 16px;
+  background: var(--surface-2); animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+.cardItem {
+  display: flex; flex-direction: column; gap: 12px;
+}
+
+.cardVisual {
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  border-radius: 16px; padding: 22px; min-height: 180px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.cardVisual::before {
+  content: ''; position: absolute; top: -40px; right: -40px;
+  width: 160px; height: 160px; border-radius: 50%;
+  background: rgba(22, 163, 74, 0.12);
+}
+.cardFrozen { filter: grayscale(0.6) brightness(0.7); }
+
+.cardTop {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.cardCurrency { color: rgba(255,255,255,0.6); font-size: 13px; font-weight: 500; }
+.cardNetwork { color: #fff; font-size: 14px; font-weight: 700; letter-spacing: 0.5px; }
+
+.cardNumber {
+  font-size: 17px; font-weight: 600; color: #fff;
+  letter-spacing: 2px; font-family: 'SF Mono', 'Fira Mono', monospace;
+  margin: 16px 0;
+}
+
+.cardBottom { display: flex; gap: 24px; }
+.cardMeta { display: flex; flex-direction: column; gap: 3px; }
+.cardMetaLabel { font-size: 9px; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.8px; }
+.cardMetaValue { font-size: 12.5px; color: #fff; font-weight: 600; }
+
+.frozenOverlay {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 800; color: rgba(255,255,255,0.3); letter-spacing: 6px;
+  pointer-events: none;
+}
+
+.cardActions {
+  display: flex; gap: 8px;
+}
+.actionBtn {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 9px 8px; border: 1.5px solid var(--border-mid); border-radius: 9px;
+  font-size: 12.5px; font-weight: 500; color: var(--text-2); background: var(--surface);
+  transition: all 0.12s;
+}
+.actionBtn:hover { border-color: var(--brand); color: var(--brand); background: var(--active-bg); }
+.actionBtnActive { border-color: var(--brand); color: var(--brand); background: var(--active-bg); }
+.actionBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.comingSoonContainer {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+  min-height: 0; padding: 48px 24px;
+}
+.comingSoonIcon {
+  color: var(--text-muted);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface-2); border-radius: 20px; padding: 20px;
+  border: 1px solid var(--border);
+}
+.comingSoonBadge {
+  background: #fef3c7; color: #92400e; border: 1px solid #fde68a;
+  border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 600; letter-spacing: 0.3px;
+}
+.comingSoonTitle { font-size: 20px; font-weight: 700; color: var(--text-1); margin-top: 4px; }
+.comingSoonSub { font-size: 13.5px; color: var(--text-muted); text-align: center; line-height: 1.6; }
+
+/* Modals — side sheets */
+.overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+  z-index: 200; animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.smallModal {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  width: 420px;
+  max-width: calc(100vw - 24px);
+  height: calc(100vh - 24px);
+  border-radius: 20px;
+  background: var(--surface);
+  z-index: 201;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideIn 0.26s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+.modalHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 22px 16px; border-bottom: 1px solid var(--border);
+}
+.modalTitle { font-size: 15px; font-weight: 700; color: var(--text-1); }
+.modalClose {
+  width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center;
+  justify-content: center; color: var(--text-muted); transition: background 0.12s, color 0.12s;
+}
+.modalClose:hover { background: var(--hover-bg); color: var(--text-2); }
+.modalBody { padding: 24px; display: flex; flex-direction: column; gap: 16px; flex: 1; overflow-y: auto; }
+.modalSub { font-size: 13px; color: var(--text-3); }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.label { font-size: 13px; font-weight: 500; color: var(--text-2); }
+.input {
+  padding: 10px 12px; border: 1.5px solid var(--border-mid); border-radius: 8px;
+  font-size: 14px; color: var(--text-1); background: var(--input-bg); outline: none;
+  transition: border-color 0.12s; font-family: inherit;
+}
+.input:focus { border-color: var(--brand); }
+.input::placeholder { color: var(--text-muted); }
+.primaryBtn {
+  width: 100%; padding: 12px; background: var(--brand); color: #fff; border-radius: 9px;
+  font-size: 14px; font-weight: 600; transition: background 0.15s;
+}
+.primaryBtn:hover { background: var(--brand-hover); }
+.primaryBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.createCardInfo { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.createCardIcon { color: var(--brand); display: flex; align-items: center; justify-content: center; }
+.createCardTitle { font-size: 16px; font-weight: 700; color: var(--text-1); }
+.createCardSub { font-size: 13px; color: var(--text-3); }
+.feePill {
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 6px 14px; font-size: 13px; color: var(--text-2); margin-top: 4px;
+}

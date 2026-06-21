@@ -1,0 +1,139 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 200;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.stack {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 201;
+}
+
+.sheet {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  width: 480px;
+  max-width: calc(100vw - 24px);
+  height: calc(100vh - 24px);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  pointer-events: auto;
+  will-change: transform, opacity;
+  transition: transform 0.34s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sheetActive {
+  transform: translateX(0);
+  opacity: 1;
+  z-index: 2;
+}
+
+.sheetPushed {
+  transform: translateX(calc(-100% - 12px));
+  z-index: 1;
+  pointer-events: none;
+}
+
+.sheetEntering {
+  animation: sheetIn 0.34s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sheetExiting {
+  animation: sheetOut 0.34s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+.sheetRootEnter {
+  animation: sheetIn 0.34s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes sheetIn {
+  from {
+    transform: translateX(calc(100% + 24px));
+    opacity: 0.9;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes sheetOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(calc(100% + 24px));
+    opacity: 0.9;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 24px 18px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.backBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-3);
+  flex-shrink: 0;
+  transition: background 0.12s;
+}
+
+.backBtn:hover { background: var(--hover-bg); }
+
+.title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-1);
+  flex: 1;
+}
+
+.closeBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: background 0.12s, color 0.12s;
+}
+
+.closeBtn:hover {
+  background: var(--hover-bg);
+  color: var(--text-2);
+}
+
+.body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  overflow-y: auto;
+}
