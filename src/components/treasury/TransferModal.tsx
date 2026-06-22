@@ -11,6 +11,8 @@ type Props = {
   onClose: () => void
   /** The business float account the transfer is debited from. */
   sourceAccountNumber: string
+  /** When false, user must set a transaction PIN before transferring. */
+  pinReady?: boolean
 }
 
 type DetailView = 'form' | 'review' | 'pin'
@@ -19,7 +21,7 @@ const MIN_AMOUNT = 100
 
 let banksCache: Bank[] | null = null
 
-export default function TransferModal({ open, onClose, sourceAccountNumber }: Props) {
+export default function TransferModal({ open, onClose, sourceAccountNumber, pinReady = true }: Props) {
   const { showToast } = useToast()
   const [detailView, setDetailView] = useState<DetailView>('form')
   const [banks, setBanks] = useState<Bank[]>(() => banksCache ?? [])
@@ -75,7 +77,7 @@ export default function TransferModal({ open, onClose, sourceAccountNumber }: Pr
   const filteredBanks = banks.filter(b => b.bank_name.toLowerCase().includes(bankSearch.toLowerCase()))
 
   async function handleConfirm(pin: string) {
-    if (!selectedBank || !enquiry) return
+    if (!selectedBank || !enquiry?.account_name || !sourceAccountNumber) return
     setPinLoading(true)
     try {
       await transferApi.send({
@@ -88,7 +90,7 @@ export default function TransferModal({ open, onClose, sourceAccountNumber }: Pr
         },
         source_account_number: sourceAccountNumber,
         amount: Number(amount),
-        description: description || undefined,
+        description: description.trim() || undefined,
         wallet_pin: pin,
       })
       setPinLoading(false)
@@ -102,7 +104,15 @@ export default function TransferModal({ open, onClose, sourceAccountNumber }: Pr
   }
 
   function canContinue() {
-    return selectedBank && accountNumber.length === 10 && enquiry && amount && Number(amount) >= MIN_AMOUNT
+    return (
+      pinReady &&
+      Boolean(sourceAccountNumber) &&
+      selectedBank &&
+      accountNumber.length === 10 &&
+      enquiry?.account_name &&
+      amount &&
+      Number(amount) >= MIN_AMOUNT
+    )
   }
 
   function handleDetailBack() {
@@ -119,6 +129,16 @@ export default function TransferModal({ open, onClose, sourceAccountNumber }: Pr
 
   const form = (
     <div className={styles.form}>
+      {!sourceAccountNumber && (
+        <p className={styles.formNotice}>
+          Your business deposit account is not ready yet. Complete verification or try again shortly.
+        </p>
+      )}
+      {sourceAccountNumber && !pinReady && (
+        <p className={styles.formNotice}>
+          Set your transaction PIN before sending a transfer.
+        </p>
+      )}
       <div className={styles.field}>
         <label className={styles.label}>Bank</label>
         <div className={styles.bankSelect} onClick={() => setShowBankList(v => !v)}>

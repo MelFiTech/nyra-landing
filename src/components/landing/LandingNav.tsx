@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import NyraLogo from '../ui/NyraLogo'
 import styles from './LandingNav.module.css'
@@ -68,15 +68,54 @@ type DropdownProps = {
 }
 
 function DesktopDropdown({ label, links }: DropdownProps) {
+  const [open, setOpen] = useState(false)
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function clearCloseTimer() {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current)
+      closeTimer.current = null
+    }
+  }
+
+  function handleOpen() {
+    clearCloseTimer()
+    setOpen(true)
+  }
+
+  function handleClose() {
+    clearCloseTimer()
+    closeTimer.current = setTimeout(() => setOpen(false), 160)
+  }
+
+  useEffect(() => () => clearCloseTimer(), [])
+
   return (
-    <div className={styles.navItem}>
-      <button type="button" className={styles.navTrigger} aria-haspopup="true">
+    <div
+      className={`${styles.navItem} ${open ? styles.navItemOpen : ''}`}
+      onMouseEnter={handleOpen}
+      onMouseLeave={handleClose}
+      onFocus={handleOpen}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+          clearCloseTimer()
+          setOpen(false)
+        }
+      }}
+    >
+      <button
+        type="button"
+        className={styles.navTrigger}
+        aria-haspopup="true"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+      >
         <span>{label}</span>
-        <Chevron />
+        <Chevron open={open} />
       </button>
-      <div className={styles.dropdown}>
+      <div className={`${styles.dropdown} ${open ? styles.dropdownOpen : ''}`}>
         <div className={styles.dropdownPanel}>
-          {links.map(link => (
+          {links.map((link) => (
             <a key={link.label} href={link.href} className={styles.dropdownLink}>
               {link.label}
             </a>

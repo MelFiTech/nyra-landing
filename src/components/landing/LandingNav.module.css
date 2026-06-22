@@ -60,6 +60,11 @@
   position: relative;
 }
 
+.navItemOpen .navTrigger {
+  color: hsl(var(--foreground));
+  background: rgba(255, 255, 255, 0.72);
+}
+
 .navTrigger,
 .navLink {
   display: inline-flex;
@@ -81,7 +86,7 @@
 
 .navTrigger:hover,
 .navLink:hover,
-.navItem:hover .navTrigger,
+.navItemOpen .navTrigger,
 .navItem:focus-within .navTrigger {
   color: hsl(var(--foreground));
   background: rgba(255, 255, 255, 0.72);
@@ -94,23 +99,24 @@
 }
 
 .chevronOpen,
-.navItem:hover .navTrigger .chevron,
+.navItemOpen .navTrigger .chevron,
 .navItem:focus-within .navTrigger .chevron {
   transform: rotate(180deg);
 }
 
 .dropdown {
   position: absolute;
-  top: calc(100% + 10px);
+  top: 100%;
   left: 50%;
   transform: translateX(-50%);
-  padding-top: 4px;
+  padding-top: 10px;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
   transition: opacity 0.15s ease, visibility 0.15s ease;
 }
 
+.dropdownOpen,
 .navItem:hover .dropdown,
 .navItem:focus-within .dropdown {
   opacity: 1;

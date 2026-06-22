@@ -1,10 +1,13 @@
 import LandingShell from '../components/landing/LandingShell'
+import BusinessLandingSections from '../components/landing/BusinessLandingSections'
 import DashboardPreview from '../components/dashboard/DashboardPreview'
 
 export default function BusinessLandingPage() {
   return (
     <LandingShell
       audience="business"
+      scrollable
+      sections={<BusinessLandingSections />}
       badge="Now with instant settlements"
       title={
         <>

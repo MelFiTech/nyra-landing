@@ -420,17 +420,47 @@ export type AccountEnquiry = {
   enquiry_session_id?: string
 }
 
+type RawAccountEnquiry = {
+  account_name?: string
+  account_number?: string
+  bank_code?: string
+  enquiry_session_id?: string
+  sessionId?: string
+  account?: {
+    number?: string
+    name?: string
+  }
+}
+
+function normalizeAccountEnquiry(
+  raw: RawAccountEnquiry,
+  bankCode: string,
+  accountNumber: string,
+): AccountEnquiry {
+  const account_name = (raw.account_name ?? raw.account?.name ?? '').trim()
+  const account_number = (raw.account_number ?? raw.account?.number ?? accountNumber).trim()
+  if (!account_name) {
+    throw new ApiError('Could not verify this account. Try again.', 400)
+  }
+  return {
+    account_name,
+    account_number,
+    bank_code: raw.bank_code ?? bankCode,
+    enquiry_session_id: raw.enquiry_session_id ?? raw.sessionId,
+  }
+}
+
 export const bankApi = {
   async listBanks(): Promise<Bank[]> {
     const res = await request<{ data: Bank[] }>('/common/banks/list')
-    return res.data
+    return res.data ?? []
   },
 
   async enquireAccount(bankCode: string, accountNumber: string): Promise<AccountEnquiry> {
-    const res = await request<{ data: AccountEnquiry }>(
+    const res = await request<{ data: RawAccountEnquiry }>(
       `/common/banks/account/enquire?bank_code=${encodeURIComponent(bankCode)}&account_number=${encodeURIComponent(accountNumber)}`
     )
-    return res.data
+    return normalizeAccountEnquiry(res.data, bankCode, accountNumber)
   },
 }
 
@@ -690,6 +720,90 @@ export const webhooksApi = {
     return request(`/business/${businessId}/webhooks/deliveries/${deliveryId}/replay`, {
       method: 'POST',
     })
+  },
+}
+
+// ── Nyra AI assistant ───────────────────────────────────────────────────
+
+export type AssistantChatMessage = {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+export type AssistantListAction =
+  | { type: 'open_transaction'; transactionId: string }
+  | { type: 'open_customer'; customerId: string }
+  | { type: 'navigate'; path: string }
+  | { type: 'retry_webhook'; deliveryId: string }
+  | { type: 'open_transfer' }
+
+export type AssistantActionButton = {
+  label: string
+  action: AssistantListAction
+}
+
+export type AssistantListItem = {
+  label: string
+  description?: string
+  action?: AssistantListAction
+}
+
+export type AssistantList = {
+  intro?: string
+  outro?: string
+  items: AssistantListItem[]
+}
+
+export type AssistantChatResponse = {
+  message: string
+  list?: AssistantList
+  actions?: AssistantActionButton[]
+}
+
+export type AssistantBreakdownPeriod =
+  | '1h'
+  | '3h'
+  | '5h'
+  | '24h'
+  | '3d'
+  | '1w'
+  | '1m'
+  | '3m'
+  | '1y'
+
+export const ASSISTANT_BREAKDOWN_OPTIONS: { value: AssistantBreakdownPeriod; label: string }[] = [
+  { value: '1h', label: '1 hour' },
+  { value: '3h', label: '3 hours' },
+  { value: '5h', label: '5 hours' },
+  { value: '24h', label: '24 hours' },
+  { value: '3d', label: '3 days' },
+  { value: '1w', label: '1 week' },
+  { value: '1m', label: '1 month' },
+  { value: '3m', label: '3 months' },
+  { value: '1y', label: '1 year' },
+]
+
+export const assistantApi = {
+  async chat(businessId: string, messages: AssistantChatMessage[]): Promise<AssistantChatResponse> {
+    const res = await request<{ data: AssistantChatResponse }>(
+      `/business/${businessId}/assistant/chat`,
+      {
+        method: 'POST',
+        body: { messages },
+      },
+    )
+    return res.data
+  },
+
+  async breakdown(businessId: string, period: AssistantBreakdownPeriod): Promise<AssistantChatResponse> {
+    const res = await request<{ data: AssistantChatResponse }>(
+      `/business/${businessId}/assistant/breakdown`,
+      {
+        method: 'POST',
+        body: { period },
+      },
+    )
+    return res.data
   },
 }
 

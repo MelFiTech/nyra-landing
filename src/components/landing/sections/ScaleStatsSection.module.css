@@ -1,0 +1,224 @@
+.shell {
+  box-sizing: border-box;
+  background: #0f1419;
+  padding: 80px 20px;
+  display: flex;
+  justify-content: center;
+  font-family: var(--font-body-var);
+  color: #fff;
+}
+
+.shell *,
+.shell *::before,
+.shell *::after {
+  box-sizing: border-box;
+}
+
+.container {
+  max-width: 1100px;
+  width: 100%;
+  text-align: center;
+}
+
+.badge {
+  display: inline-block;
+  margin: 0 0 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background: linear-gradient(90deg, #f5c344, #f28482, #b567c2);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.title {
+  margin: 0 0 12px;
+  font-family: var(--font-display-var);
+  font-size: clamp(2.25rem, 4.5vw, 2.75rem);
+  font-weight: 400;
+  color: #fff;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.subtitle {
+  margin: 0 0 50px;
+  font-size: 1.125rem;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.5;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 340px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #1a1f26;
+  text-align: left;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.35);
+}
+
+.card1 {
+  background: radial-gradient(
+    circle at 50% 0%,
+    rgba(255, 179, 71, 0.3) 0%,
+    rgba(249, 237, 150, 0.16) 26%,
+    #1a1f26 54%,
+    #1a1f26 100%
+  );
+}
+
+.card2 {
+  background: radial-gradient(
+    circle at 50% 0%,
+    rgba(229, 161, 245, 0.28) 0%,
+    rgba(248, 172, 160, 0.14) 26%,
+    #1a1f26 54%,
+    #1a1f26 100%
+  );
+}
+
+.card3 {
+  background: radial-gradient(
+    circle at 50% 0%,
+    rgba(249, 237, 150, 0.26) 0%,
+    rgba(229, 161, 245, 0.14) 26%,
+    #1a1f26 54%,
+    #1a1f26 100%
+  );
+}
+
+.promptBox {
+  position: absolute;
+  top: 30px;
+  left: 24px;
+  right: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: #475569;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.blurText {
+  font-weight: 600;
+  background: linear-gradient(90deg, #ffb347, #e5a1f5);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.uptimeVisual {
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  transform: translateX(-50%);
+}
+
+.uptimeSvg {
+  width: 120px;
+  height: 120px;
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.12));
+}
+
+.uptimeCaption {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.mesh {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 16px 16px;
+  -webkit-mask-image: radial-gradient(circle at center top, black 0%, transparent 80%);
+  mask-image: radial-gradient(circle at center top, black 0%, transparent 80%);
+  pointer-events: none;
+}
+
+.barChart {
+  position: absolute;
+  top: 48px;
+  left: 50%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  width: calc(100% - 48px);
+  max-width: 200px;
+  height: 120px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  transform: translateX(-50%);
+}
+
+.bar {
+  flex: 1;
+  max-width: 22px;
+  border-radius: 6px 6px 4px 4px;
+  background: linear-gradient(180deg, rgba(249, 237, 150, 0.55) 0%, rgba(229, 161, 245, 0.45) 100%);
+  transform-origin: bottom center;
+}
+
+.statBlock {
+  position: relative;
+  z-index: 2;
+  padding: 24px;
+}
+
+.statValue {
+  font-family: var(--font-display-var);
+  font-size: clamp(2rem, 4vw, 2.5rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  margin-bottom: 6px;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.statLabel {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.72);
+}

@@ -1,0 +1,143 @@
+.shell {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  overflow: hidden;
+  color: #fff;
+  font-family: var(--font-body-var);
+}
+
+.video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.55) 100%);
+  pointer-events: none;
+}
+
+.content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 100vh;
+  padding: 16px;
+}
+
+@media (min-width: 1024px) {
+  .content {
+    padding: 24px;
+  }
+}
+
+.panel {
+  width: 100%;
+  max-width: 720px;
+  min-height: 420px;
+  border-radius: 1.5rem;
+  padding: 40px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+@media (min-width: 1024px) {
+  .panel {
+    padding: 56px 48px;
+  }
+}
+
+.heroCenter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+}
+
+.title {
+  margin: 0 auto 16px;
+  max-width: 560px;
+  font-family: var(--font-display-var);
+  font-size: clamp(2.25rem, 5vw, 3.75rem);
+  font-weight: 500;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  color: #fff;
+}
+
+.title em {
+  font-family: var(--font-display-var);
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.lead {
+  margin: 0 auto 28px;
+  max-width: 480px;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.ctaBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 22px 12px 24px;
+  margin-bottom: 24px;
+  border-radius: 999px;
+  background: transparent;
+  color: #fff;
+  font-family: var(--font-body-var);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.ctaBtn:hover {
+  transform: scale(1.05);
+}
+
+.ctaBtn:active {
+  transform: scale(0.95);
+}
+
+.ctaIconWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.pillRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.pill {
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  white-space: nowrap;
+}

@@ -104,6 +104,8 @@ export default function DashboardPage() {
   }, [wallet])
 
   const floatAccounts = wallet?.sub_wallets?.filter(sw => sw.is_business_float) ?? []
+  const sourceAccountNumber = floatAccounts[0]?.account_number ?? ''
+  const canTransfer = Boolean(sourceAccountNumber) && Boolean(wallet?.wallet_pin_changed) && !wallet?.frozen
   const unsettled = floatAccounts.reduce((sum, sw) => sum + Number(sw.staged_balance ?? 0), 0)
   const available = Number(wallet?.balance ?? 0)
   const total = available + unsettled
@@ -212,6 +214,16 @@ export default function DashboardPage() {
                       variant="ghost"
                       className={styles.walletActionBtn}
                       onClick={() => setTransferOpen(true)}
+                      disabled={!canTransfer}
+                      title={
+                        !sourceAccountNumber
+                          ? 'Deposit account not ready'
+                          : wallet?.frozen
+                            ? 'Wallet is frozen'
+                            : !wallet?.wallet_pin_changed
+                              ? 'Set your transaction PIN first'
+                              : undefined
+                      }
                     >
                       <div className={styles.actionIcon} style={{ background: '#f5f3ff', color: '#8b5cf6' }}>
                         <TransferIcon />
@@ -315,7 +327,7 @@ export default function DashboardPage() {
 
           {/* Right: AI Chat */}
           <div className={styles.rightCol}>
-            <ChatPanel />
+            <ChatPanel onOpenTransfer={() => setTransferOpen(true)} />
           </div>
         </div>
       </div>
@@ -335,7 +347,8 @@ export default function DashboardPage() {
           setTransferOpen(false)
           queryClient.invalidateQueries()
         }}
-        sourceAccountNumber={floatAccounts[0]?.account_number ?? ''}
+        sourceAccountNumber={sourceAccountNumber}
+        pinReady={Boolean(wallet?.wallet_pin_changed)}
       />
       {business && (
         <PinSetupModal

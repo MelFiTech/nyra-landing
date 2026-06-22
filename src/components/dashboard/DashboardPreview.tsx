@@ -5,6 +5,7 @@ import layoutStyles from '../layout/Layout.module.css'
 import sidebarStyles from '../layout/Sidebar.module.css'
 import topbarStyles from '../layout/Topbar.module.css'
 import bellStyles from '../layout/NotificationBell.module.css'
+import switcherStyles from '../layout/BusinessSwitcher.module.css'
 import dashStyles from '../../pages/DashboardPage.module.css'
 import chatStyles from './ChatPanel.module.css'
 import styles from './DashboardPreview.module.css'
@@ -20,7 +21,7 @@ const suggestions = ["What's my balance?", 'Show recent transfers', 'How do I to
 const DESIGN_WIDTH = 1280
 const DESIGN_HEIGHT = 760
 const MAX_SCALE = 1
-const PEEK_HEIGHT = 420
+const PEEK_HEIGHT = 520
 
 const TreasuryIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -173,7 +174,13 @@ export default function DashboardPreview() {
         </aside>
 
         <div className={`${layoutStyles.main} ${styles.previewMain}`}>
-          <header className={topbarStyles.topbar}>
+          <header className={`${topbarStyles.topbar} ${styles.previewTopbar}`}>
+            <div className={topbarStyles.left}>
+              <div className={switcherStyles.trigger}>
+                <span className={switcherStyles.name}>Mel-Fi Technology Limited</span>
+                <span className={switcherStyles.chevron}><ChevronDown /></span>
+              </div>
+            </div>
             <div className={topbarStyles.right}>
               <div className={topbarStyles.sandboxToggle}>
                 <span className={topbarStyles.sandboxLabel}>Go live</span>

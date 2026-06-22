@@ -41,6 +41,76 @@
   font-weight: 600;
   color: var(--text-1);
   flex: 1;
+  min-width: 0;
+}
+
+.headerRight {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.breakdownBtn {
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border-mid);
+  background: var(--surface);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-2);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+
+.breakdownBtn:hover:not(:disabled) {
+  border-color: var(--brand);
+  background: var(--active-bg);
+  color: var(--brand);
+}
+
+.breakdownBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.breakdownMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  min-width: 160px;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.breakdownMenuTitle {
+  margin: 0 8px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.breakdownMenuItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 12.5px;
+  color: var(--text-1);
+  cursor: pointer;
+}
+
+.breakdownMenuItem:hover {
+  background: var(--hover-bg);
+  color: var(--brand);
 }
 
 .headerEditBtn {
@@ -87,7 +157,7 @@
   border-radius: 14px 14px 4px 14px;
   font-size: 13px;
   line-height: 1.5;
-  background: var(--brand);
+  background: #000;
   color: #fff;
 }
 
@@ -103,6 +173,87 @@
   font-size: 13px;
   line-height: 1.6;
   color: var(--text-1);
+}
+
+.aiOptionList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aiOptionClickable {
+  width: 100%;
+  text-align: left;
+  padding: 8px 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: color 0.12s;
+}
+
+.aiOptionClickable:hover:not(:disabled) .aiOptionLabel {
+  color: var(--brand);
+}
+
+.aiOptionClickable:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.aiListItem {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 0;
+}
+
+.aiActionButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.aiActionPill {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border-mid);
+  background: var(--surface);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-1);
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+
+.aiActionPill:hover:not(:disabled) {
+  border-color: var(--brand);
+  background: var(--active-bg);
+  color: var(--brand);
+}
+
+.aiActionPill:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.aiOptionLabel {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.aiOptionDesc {
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--text-muted);
 }
 
 .aiActions {
@@ -180,10 +331,15 @@
   transition: border-color 0.12s, background 0.12s, color 0.12s;
 }
 
-.suggestion:hover {
+.suggestion:hover:not(:disabled) {
   border-color: var(--brand);
   background: var(--active-bg);
   color: var(--brand);
+}
+
+.suggestion:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 /* Input */

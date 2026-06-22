@@ -25,6 +25,10 @@ type Props = {
   badge?: string
   title: ReactNode
   subtitle: string
+  /** Allow scrolling with sections below the hero (business landing). */
+  scrollable?: boolean
+  /** Content rendered below the hero when scrollable. */
+  sections?: ReactNode
 }
 
 export default function LandingShell({
@@ -38,6 +42,8 @@ export default function LandingShell({
   ctaSlot,
   title,
   subtitle,
+  scrollable = false,
+  sections,
 }: Props) {
   const navigate = useNavigate()
 
@@ -49,8 +55,8 @@ export default function LandingShell({
     navigate(ctaHref ?? '/app/signup')
   }
 
-  return (
-    <div className={styles.page} style={{ fontFamily: 'var(--font-body-var)' }}>
+  const hero = (
+    <>
       <BackgroundVideo />
       <div className={styles.overlay} />
 
@@ -76,38 +82,38 @@ export default function LandingShell({
             </motion.div>
 
             <div className={styles.hero}>
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease, delay: 0.2 }}
-              className={styles.title}
-              style={{ fontFamily: 'var(--font-display-var)' }}
-            >
-              {title}
-            </motion.h1>
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease, delay: 0.2 }}
+                className={styles.title}
+                style={{ fontFamily: 'var(--font-display-var)' }}
+              >
+                {title}
+              </motion.h1>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease, delay: 0.3 }}
-              className={styles.subtitle}
-            >
-              {subtitle}
-            </motion.p>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease, delay: 0.3 }}
+                className={styles.subtitle}
+              >
+                {subtitle}
+              </motion.p>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease, delay: 0.4 }}
-            >
-              {ctaSlot ?? (
-                <button type="button" className={styles.cta} onClick={handleCta}>
-                  {ctaLabel}
-                </button>
-              )}
-            </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease, delay: 0.4 }}
+              >
+                {ctaSlot ?? (
+                  <button type="button" className={styles.cta} onClick={handleCta}>
+                    {ctaLabel}
+                  </button>
+                )}
+              </motion.div>
 
-            {children}
+              {children}
             </div>
           </div>
 
@@ -120,7 +126,11 @@ export default function LandingShell({
             >
               <div
                 className={
-                  previewVariant === 'phone' ? styles.previewInnerPhone : styles.previewInner
+                  previewVariant === 'phone'
+                    ? styles.previewInnerPhone
+                    : scrollable
+                      ? styles.previewInnerRaised
+                      : styles.previewInner
                 }
               >
                 {preview}
@@ -129,6 +139,24 @@ export default function LandingShell({
           )}
         </div>
       </div>
+    </>
+  )
+
+  if (scrollable) {
+    return (
+      <div
+        className={styles.pageScroll}
+        style={{ fontFamily: 'var(--font-body-var)' }}
+      >
+        <div className={styles.heroBlock}>{hero}</div>
+        {sections}
+      </div>
+    )
+  }
+
+  return (
+    <div className={styles.page} style={{ fontFamily: 'var(--font-body-var)' }}>
+      {hero}
     </div>
   )
 }
