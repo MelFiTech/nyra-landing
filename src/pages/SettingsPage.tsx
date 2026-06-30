@@ -162,7 +162,7 @@ function ApiKeysTab() {
         <div>
           <div className={styles.sectionTitle}>API Credentials</div>
           <div className={styles.sectionSub}>
-            Authenticate requests to the Nyra B2B API with these credentials. Your secret is shown only once — store it securely.
+            Authenticate requests to the Nyra B2B API with these credentials. Your secret is shown only once. Store it securely.
           </div>
         </div>
         {client && !createOpen && (

@@ -71,7 +71,7 @@ const suggestions = [
 ]
 
 const WELCOME_MESSAGE =
-  "Hi! I'm Nyra AI. Ask me anything about your wallet — balances, transactions, payments and more."
+  "Hi! I'm Nyra AI. Ask me anything about your wallet: balances, transactions, payments and more."
 
 let idCounter = 1
 

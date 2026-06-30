@@ -159,7 +159,7 @@
 .previewInnerPhone {
   display: flex;
   justify-content: center;
-  transform: translateY(32%);
+  transform: translateY(10%);
 }
 
 @media (max-width: 900px) {

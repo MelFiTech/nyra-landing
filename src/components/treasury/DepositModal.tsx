@@ -12,7 +12,7 @@ export type DepositAccount = {
 type Props = {
   open: boolean
   onClose: () => void
-  /** The business's dedicated (float) accounts — transfers to these fund the wallet. */
+  /** The business's dedicated (float) accounts, transfers to these fund the wallet. */
   accounts: DepositAccount[]
 }
 

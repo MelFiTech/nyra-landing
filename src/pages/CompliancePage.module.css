@@ -20,6 +20,12 @@
   display: block;
 }
 
+.logoLink {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
 .skipBtn {
   display: flex;
   align-items: center;

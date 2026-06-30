@@ -9,6 +9,11 @@ import { session } from './lib/api'
 import AppShell from './components/layout/AppShell'
 import LandingPage from './pages/LandingPage'
 import BusinessLandingPage from './pages/BusinessLandingPage'
+import AboutPage from './pages/AboutPage'
+import AmlKycPolicyPage from './pages/AmlKycPolicyPage'
+import LegalCompliancePage from './pages/LegalCompliancePage'
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
+import TermsOfServicePage from './pages/TermsOfServicePage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
 import DashboardPage from './pages/DashboardPage'
@@ -30,6 +35,11 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/business" element={<BusinessLandingPage />} />
+      <Route path="/company/about" element={<AboutPage />} />
+      <Route path="/legal/aml-kyc" element={<AmlKycPolicyPage />} />
+      <Route path="/legal/compliance" element={<LegalCompliancePage />} />
+      <Route path="/legal/privacy" element={<PrivacyPolicyPage />} />
+      <Route path="/legal/terms" element={<TermsOfServicePage />} />
       <Route path="/app/login" element={<LoginPage />} />
       <Route path="/app/signup" element={<SignupPage />} />
       <Route

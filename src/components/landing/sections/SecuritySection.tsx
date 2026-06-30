@@ -9,7 +9,7 @@ export default function SecuritySection() {
           Data privacy and security you can rely on
         </h2>
         <p className={styles.sectionLead}>
-          We take security and compliance seriously — investing in systems that keep you and your money safe.
+          We take security and compliance seriously, investing in systems that keep you and your money safe.
         </p>
         <div className={styles.securityGrid}>
           {SECURITY.map((item) => (

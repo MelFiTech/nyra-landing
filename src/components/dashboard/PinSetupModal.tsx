@@ -89,7 +89,7 @@ export default function PinSetupModal({ open, businessId, onComplete }: Props) {
         tabIndex={0}
         onKeyDown={handleKey}
         onBlur={e => {
-          // keep keyboard focus inside the modal — it cannot be dismissed
+          // keep keyboard focus inside the modal, it cannot be dismissed
           if (!e.currentTarget.contains(e.relatedTarget as Node)) e.currentTarget.focus()
         }}
         role="dialog"

@@ -152,7 +152,7 @@ export default function ScaleStatsSection() {
         <p className={styles.subtitle}>
           Infrastructure that handles payments, compliance,
           <br />
-          and operations — so you can focus on growth
+          and operations, so you can focus on growth
         </p>
 
         <div className={styles.grid}>

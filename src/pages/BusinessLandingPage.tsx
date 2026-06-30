@@ -16,7 +16,7 @@ export default function BusinessLandingPage() {
           <span style={{ whiteSpace: 'nowrap' }}>Business Banking</span>
         </>
       }
-      subtitle="Send, collect, and automate payments with intelligent tools that learn and adapt—so your team can focus on growing the business."
+      subtitle="Send, collect, and automate payments with intelligent tools that learn and adapt, so your team can focus on growing the business."
       ctaLabel="Open a business account"
       preview={<DashboardPreview />}
     />

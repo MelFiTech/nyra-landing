@@ -178,7 +178,7 @@ export default function SignupPage() {
         {step === 'personal' && (
           <>
             <h1 className={styles.heading}>Create your account</h1>
-            <p className={styles.subheading}>Step 1 of 3 — Personal details</p>
+            <p className={styles.subheading}>Step 1 of 3: Personal details</p>
             <form className={styles.form} onSubmit={handlePersonal}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div className={styles.field}>
@@ -239,7 +239,7 @@ export default function SignupPage() {
               Back
             </Button>
             <h1 className={styles.heading}>Verify your email</h1>
-            <p className={styles.subheading}>Step 2 of 3 — We sent a 6-digit code to <strong>{email}</strong></p>
+            <p className={styles.subheading}>Step 2 of 3: We sent a 6-digit code to <strong>{email}</strong></p>
             <form className={styles.form} onSubmit={handleOtp}>
               <div className={styles.otpRow}>
                 {otp.map((v, i) => (
@@ -269,7 +269,7 @@ export default function SignupPage() {
         {step === 'business' && (
           <>
             <h1 className={styles.heading}>Business details</h1>
-            <p className={styles.subheading}>Step 3 of 3 — Tell us about your business</p>
+            <p className={styles.subheading}>Step 3 of 3: Tell us about your business</p>
             <form className={styles.form} onSubmit={handleBusiness}>
               <div className={styles.field}>
                 <label className={styles.label}>Business name</label>

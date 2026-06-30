@@ -1,0 +1,128 @@
+.stage {
+  position: relative;
+  width: 100%;
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+/* ambient green glow behind the card */
+.glow {
+  position: absolute;
+  width: 78%;
+  height: 70%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(34, 197, 94, 0.55) 0%, rgba(16, 185, 129, 0.18) 45%, transparent 72%);
+  filter: blur(36px);
+  animation: glowPulse 4s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.75; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+
+.card {
+  position: relative;
+  width: min(360px, 100%);
+  aspect-ratio: 4 / 3;
+  border-radius: 36px;
+  padding: 30px 30px 26px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #fff;
+  background:
+    linear-gradient(155deg, rgba(74, 222, 128, 0.28) 0%, transparent 42%),
+    linear-gradient(160deg, #21c45d 0%, #11a14a 38%, #0c7a3a 70%, #0a5e2e 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.14) inset,
+    0 1px 1px rgba(255, 255, 255, 0.45) inset,
+    0 28px 60px -18px rgba(8, 70, 36, 0.7),
+    0 0 90px -10px rgba(34, 197, 94, 0.55);
+  overflow: hidden;
+  animation: cardFloat 6s ease-in-out infinite;
+}
+
+@keyframes cardFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.amount {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 18px rgba(255, 255, 255, 0.35);
+}
+
+.symbol {
+  font-size: 34px;
+  display: inline-block;
+  animation: swap 2.4s ease-in-out infinite;
+}
+
+.value {
+  font-size: 40px;
+  line-height: 1;
+  display: inline-block;
+  animation: swap 2.4s ease-in-out infinite;
+}
+
+/* fade/slide the currency as it cycles (re-triggered via key change) */
+@keyframes swap {
+  0% { opacity: 0; transform: translateY(6px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-6px); }
+}
+
+.chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 5px;
+  height: 46%;
+}
+
+.bar {
+  flex: 1;
+  height: var(--h);
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(220, 252, 231, 0.55));
+  transform-origin: bottom;
+  animation:
+    barIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards,
+    barPulse 2.8s ease-in-out infinite;
+  animation-delay: var(--delay), calc(var(--delay) + 0.7s);
+}
+
+@keyframes barIn {
+  from { transform: scaleY(0); opacity: 0; }
+  to { transform: scaleY(1); opacity: 1; }
+}
+
+@keyframes barPulse {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.82); }
+}
+
+.label {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow,
+  .card,
+  .symbol,
+  .value,
+  .bar {
+    animation: none;
+  }
+}

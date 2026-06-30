@@ -2,13 +2,13 @@ import type { StatConfig } from '../AnimatedStatValue'
 
 export const BUILD_POINTS = [
   'Build your fintech solution quickly by choosing payment modules from Nyra’s existing infrastructure.',
-  'Give your customers a tailored experience with features built for Nigerian businesses — and brand it as your own with our APIs.',
+  'Give your customers a tailored experience with features built for Nigerian businesses, and brand it as your own with our APIs.',
   'Verify identity documents in seconds to protect your business and stay ahead of fraud from day one.',
   'Launch, manage, and scale your commercial payment service from a single dashboard.',
 ]
 
 export const PAY_POINTS = [
-  'Payout to anyone, anywhere — directly into their bank account in NGN and supported currencies, often instantly.',
+  'Payout to anyone, anywhere, directly into their bank account in NGN and supported currencies, often instantly.',
   'Generate virtual account numbers and assign them to customers to accept bank transfer payments on the go.',
   'Collect from multiple channels, reconcile automatically, and move money at scale without spreadsheet chaos.',
 ]
@@ -21,7 +21,7 @@ export const PRODUCTS = [
   },
   {
     title: 'Payout',
-    description: 'Instantly send funds to anyone, anywhere — and do it at scale from your Nyra dashboard or API.',
+    description: 'Instantly send funds to anyone, anywhere, and do it at scale from your Nyra dashboard or API.',
     soon: false,
   },
   {
@@ -49,7 +49,7 @@ export const SEGMENTS: Record<
 > = {
   financial: {
     title: 'Financial services',
-    body: 'Everything you need to build, embed, launch, and scale your fintech products — process instant transfers, manage wallets, and move money within your system with a single API integration.',
+    body: 'Everything you need to build, embed, launch, and scale your fintech products: process instant transfers, manage wallets, and move money within your system with a single API integration.',
     tags: ['Lending', 'Digital bank', 'Business finance', 'Savings', 'Personal finance', 'Remittance'],
     cta: 'Contact sales',
   },
@@ -81,7 +81,7 @@ export const DEV_CARDS = [
   },
   {
     title: 'No-code',
-    body: 'Initiate transfers, manage customers, and run your treasury directly from the Nyra dashboard — no engineering required.',
+    body: 'Initiate transfers, manage customers, and run your treasury directly from the Nyra dashboard, no engineering required.',
     link: 'Open dashboard',
   },
   {
@@ -98,7 +98,7 @@ export const SECURITY = [
   },
   {
     title: 'Fully compliant',
-    body: 'Security controls aligned with industry standards — built to protect payments, data, and customer trust.',
+    body: 'Security controls aligned with industry standards, built to protect payments, data, and customer trust.',
   },
   {
     title: 'KYC verification',

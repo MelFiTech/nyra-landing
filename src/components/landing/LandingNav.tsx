@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import NyraLogo from '../ui/NyraLogo'
 import styles from './LandingNav.module.css'
 
@@ -20,8 +20,6 @@ const LEARN_LINKS: NavLink[] = [
   { label: 'Developer docs', href: '#' },
   { label: 'Why Nyra', href: '#' },
 ]
-
-const ABOUT_HREF = '#'
 
 function Chevron({ open }: { open?: boolean }) {
   return (
@@ -177,14 +175,16 @@ export default function LandingNav() {
     <header className={styles.header}>
       <div className={styles.navBar}>
         <div className={styles.zoneLeft}>
-          <NyraLogo forceBlack />
+          <Link to="/" className={styles.logoLink} aria-label="Nyra home">
+            <NyraLogo forceBlack />
+          </Link>
         </div>
 
         <nav className={styles.zoneCenter} aria-label="Site">
           <DesktopDropdown label="Products" links={PRODUCTS_LINKS} />
-          <a href={ABOUT_HREF} className={styles.navLink}>
+          <Link to="/company/about" className={styles.navLink}>
             About us
-          </a>
+          </Link>
           <DesktopDropdown label="Learn" links={LEARN_LINKS} />
         </nav>
 
@@ -228,9 +228,9 @@ export default function LandingNav() {
 
             <div className={styles.mobileDrawerBody}>
               <MobileAccordion label="Products" links={PRODUCTS_LINKS} onNavigate={closeMobile} />
-              <a href={ABOUT_HREF} className={styles.mobileLink} onClick={closeMobile}>
+              <Link to="/company/about" className={styles.mobileLink} onClick={closeMobile}>
                 About us
-              </a>
+              </Link>
               <MobileAccordion label="Learn" links={LEARN_LINKS} onNavigate={closeMobile} />
             </div>
 

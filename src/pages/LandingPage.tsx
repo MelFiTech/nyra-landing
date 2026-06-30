@@ -14,7 +14,7 @@ export default function LandingPage() {
           life <em style={{ fontStyle: 'italic' }}>together</em>
         </>
       }
-      subtitle="Open a joint account with Nyra — save, spend, and track shared finances with full visibility for you and your partner."
+      subtitle="Open a joint account with Nyra, save, spend, and track shared finances with full visibility for you and your partner."
       ctaSlot={<AppStoreButtons />}
       previewVariant="phone"
       preview={<PersonalPreview />}

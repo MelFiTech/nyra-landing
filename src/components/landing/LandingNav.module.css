@@ -23,6 +23,12 @@
   min-width: 0;
 }
 
+.logoLink {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
 .zoneRight {
   justify-self: end;
   display: flex;

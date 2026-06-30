@@ -16,7 +16,7 @@ export default function DevelopersSection() {
               One API to help you build and launch faster
             </h2>
             <p className={styles.devLead}>
-              Save time and remove engineering complexity so you can go to market quickly — with fewer revisions and
+              Save time and remove engineering complexity so you can go to market quickly, with fewer revisions and
               less stress.
             </p>
             <div className={styles.devFeatures}>

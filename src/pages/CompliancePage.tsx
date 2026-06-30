@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Button from '../components/ui/Button'
 import NyraLogo from '../components/ui/NyraLogo'
 import { getComplianceStatus, setComplianceStatus } from '../lib/complianceStatus'
@@ -188,7 +188,9 @@ export default function CompliancePage() {
     return (
       <div className={styles.fullScreen}>
         <div className={styles.topbar}>
-          <NyraLogo />
+          <Link to="/" className={styles.logoLink} aria-label="Nyra home">
+            <NyraLogo />
+          </Link>
         </div>
         <div className={styles.doneWrap}>
           <div className={styles.doneBlock}>
@@ -215,7 +217,9 @@ export default function CompliancePage() {
   return (
     <div className={styles.fullScreen}>
       <div className={styles.topbar}>
-        <NyraLogo />
+        <Link to="/" className={styles.logoLink} aria-label="Nyra home">
+          <NyraLogo />
+        </Link>
         <Button variant="outline" size="sm" onClick={() => navigate('/app/dashboard')} type="button">
           Skip for now
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -408,7 +412,7 @@ export default function CompliancePage() {
                           <polyline points="17 8 12 3 7 8"/>
                           <line x1="12" y1="3" x2="12" y2="15"/>
                         </svg>
-                        <span>{files[doc.key] ? files[doc.key]!.name : 'Click to upload — JPG or PNG'}</span>
+                        <span>{files[doc.key] ? files[doc.key]!.name : 'Click to upload (JPG or PNG)'}</span>
                       </label>
                     </div>
                   ))}

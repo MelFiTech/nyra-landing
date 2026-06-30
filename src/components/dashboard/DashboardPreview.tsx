@@ -307,7 +307,7 @@ export default function DashboardPreview() {
                     <div className={chatStyles.messages}>
                       <div className={chatStyles.aiMessage}>
                         <p className={chatStyles.aiText}>
-                          Hi! I&apos;m Nyra AI. Ask me anything about your wallet — balances, transactions, payments and more.
+                          Hi! I&apos;m Nyra AI. Ask me anything about your wallet: balances, transactions, payments and more.
                         </p>
                       </div>
                     </div>

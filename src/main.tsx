@@ -11,7 +11,7 @@ import App from './App.tsx'
   } else if (saved === 'light') {
     document.documentElement.classList.remove('dark')
   } else {
-    // 'default' or no pref — follow system
+    // 'default' or no pref, follow system
     if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
       document.documentElement.classList.add('dark')
     }

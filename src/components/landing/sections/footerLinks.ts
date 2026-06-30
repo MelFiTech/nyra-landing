@@ -11,7 +11,7 @@ export const FOOTER_LINKS: Record<string, FooterLink[]> = {
     { label: 'Invoicing', href: '#' },
   ],
   company: [
-    { label: 'About', href: '#' },
+    { label: 'About', href: '/company/about' },
     { label: 'Blog', href: '#' },
     { label: 'Careers', href: '#' },
     { label: 'Contact', href: '#' },
@@ -23,9 +23,10 @@ export const FOOTER_LINKS: Record<string, FooterLink[]> = {
     { label: 'Status', href: '#' },
   ],
   legal: [
-    { label: 'Privacy', href: '#' },
-    { label: 'Terms', href: '#' },
-    { label: 'Compliance', href: '#' },
+    { label: 'Privacy', href: '/legal/privacy' },
+    { label: 'Terms', href: '/legal/terms' },
+    { label: 'AML/KYC Policy', href: '/legal/aml-kyc' },
+    { label: 'Compliance', href: '/legal/compliance' },
   ],
 }
 
