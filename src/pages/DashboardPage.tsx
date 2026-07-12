@@ -5,9 +5,11 @@ import DepositModal from '../components/treasury/DepositModal'
 import TransferModal from '../components/treasury/TransferModal'
 import ChatPanel from '../components/dashboard/ChatPanel'
 import PinSetupModal from '../components/dashboard/PinSetupModal'
+import TransactionDrawer, { type Transaction } from '../components/treasury/TransactionDrawer'
 import { useBalance } from '../context/BalanceContext'
 import { useBusiness, usePermissions } from '../context/BusinessContext'
 import { useBusinessWallet, useTransactions } from '../hooks/useAppData'
+import { mapApiTransaction } from '../lib/mapTransaction'
 import TrendSparkline from '../components/dashboard/TrendSparkline'
 import styles from './DashboardPage.module.css'
 
@@ -95,6 +97,7 @@ export default function DashboardPage() {
   const [depositOpen, setDepositOpen] = useState(false)
   const [transferOpen, setTransferOpen] = useState(false)
   const [pinModalOpen, setPinModalOpen] = useState(false)
+  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null)
   const { data: wallet } = useBusinessWallet()
   const { data: transactions = [] } = useTransactions({ page_size: 10 })
 
@@ -289,7 +292,20 @@ export default function DashboardPage() {
               ) : (
                 <ul className={styles.txList}>
                   {transactions.map(tx => (
-                    <li key={tx.transaction_id} className={styles.txRow}>
+                    <li
+                      key={tx.transaction_id}
+                      className={styles.txRow}
+                      onClick={() => setSelectedTx(mapApiTransaction(tx))}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          setSelectedTx(mapApiTransaction(tx))
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`View transaction: ${tx.description || tx.transaction_reference}`}
+                    >
                       <div
                         className={styles.txIcon}
                         data-credit={tx.transaction_type === 'CREDIT' || undefined}
@@ -361,6 +377,7 @@ export default function DashboardPage() {
           onComplete={() => setPinModalOpen(false)}
         />
       )}
+      <TransactionDrawer tx={selectedTx} onClose={() => setSelectedTx(null)} />
     </>
   )
 }
