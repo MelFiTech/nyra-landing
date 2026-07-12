@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Button from '../components/ui/Button'
+import EmptyState, { CardEmptyIcon, DocumentEmptyIcon, WalletEmptyIcon } from '../components/ui/EmptyState'
 import { useCustomer, useCustomers, useCustomerTransactions } from '../hooks/useAppData'
 import {
   findCustomerByWalletId,
@@ -213,7 +214,11 @@ export default function CustomerDetailPage() {
             <div className={styles.tabContent}>
               {tab === 'accounts' && (
                 accounts.length === 0 ? (
-                  <div className={styles.emptyTab}>No accounts found for this customer.</div>
+                  <EmptyState
+                    icon={<WalletEmptyIcon />}
+                    title="No accounts yet"
+                    description="No accounts found for this customer"
+                  />
                 ) : (
                   <div className={styles.tableWrap}>
                     <table className={styles.table}>
@@ -272,9 +277,17 @@ export default function CustomerDetailPage() {
               )}
               {tab === 'transactions' && (
                 loadingTxns ? (
-                  <div className={styles.emptyTab}>Loading transactions…</div>
+                  <EmptyState
+                    icon={<DocumentEmptyIcon />}
+                    title="Loading transactions…"
+                    description="Please wait while we fetch this customer’s activity"
+                  />
                 ) : transactions.length === 0 ? (
-                  <div className={styles.emptyTab}>No transactions found for this customer.</div>
+                  <EmptyState
+                    icon={<DocumentEmptyIcon />}
+                    title="No transactions yet"
+                    description="Transactions for this customer will appear here"
+                  />
                 ) : (
                   <div className={styles.tableWrap}>
                     <table className={styles.table}>
@@ -314,7 +327,11 @@ export default function CustomerDetailPage() {
                 )
               )}
               {tab === 'cards' && (
-                <div className={styles.emptyTab}>Card issuing is coming soon.</div>
+                <EmptyState
+                  icon={<CardEmptyIcon />}
+                  title="Cards coming soon"
+                  description="Card issuing for this customer isn’t available yet"
+                />
               )}
             </div>
           </div>

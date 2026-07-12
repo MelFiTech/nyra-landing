@@ -119,6 +119,8 @@
   overflow-y: auto;
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .table {
@@ -199,12 +201,6 @@
 .actionsCell {
   width: 48px;
   text-align: right;
-}
-
-.emptyCell {
-  text-align: center;
-  padding: 40px 0;
-  color: var(--text-muted);
 }
 
 .idCell { display: flex; align-items: center; gap: 6px; }

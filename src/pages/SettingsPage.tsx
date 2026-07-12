@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import Button from '../components/ui/Button'
+import EmptyState, { UsersEmptyIcon } from '../components/ui/EmptyState'
 import AddWebhookEndpointSheet, { type WebhookConfig } from '../components/webhooks/AddWebhookEndpointSheet'
 import AddTeamMemberSheet from '../components/team/AddTeamMemberSheet'
 import { getComplianceStatus } from '../lib/complianceStatus'
@@ -803,10 +804,11 @@ function TeamTab() {
                 ))}
               </div>
             ) : teamMembers.length === 0 ? (
-              <div className={styles.teamEmpty}>
-                <p className={styles.teamEmptyTitle}>No team members yet</p>
-                <p className={styles.teamEmptySub}>Add people to give them access to this business.</p>
-              </div>
+              <EmptyState
+                icon={<UsersEmptyIcon />}
+                title="No team members yet"
+                description="Add people to give them access to this business"
+              />
             ) : (
               teamMembers.map(member => (
                 <div key={member.id} className={styles.teamRow}>

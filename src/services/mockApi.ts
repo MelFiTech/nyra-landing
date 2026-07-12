@@ -193,25 +193,6 @@ export async function getBeneficiaries() {
   ]
 }
 
-export type Notification = {
-  id: string
-  title: string
-  body: string
-  read: boolean
-  created_at: string
-  type: 'credit' | 'debit' | 'info'
-}
-
-export async function getNotifications(): Promise<Notification[]> {
-  await delay(300)
-  return [
-    { id: 'n1', title: 'Transfer Successful', body: 'Your transfer of ₦5,000 to Sarah Johnson was successful.', read: false, created_at: '2026-06-11T09:30:00Z', type: 'debit' },
-    { id: 'n2', title: 'Wallet Funded', body: '₦50,000 has been credited to your NGN wallet.', read: false, created_at: '2026-06-10T14:15:00Z', type: 'credit' },
-    { id: 'n3', title: 'Card Created', body: 'Your virtual USD card ending in 1234 is ready to use.', read: true, created_at: '2026-06-09T11:00:00Z', type: 'info' },
-    { id: 'n4', title: 'Airtime Purchase', body: 'Airtime of ₦200 purchased successfully for 08031234567.', read: true, created_at: '2026-06-08T16:45:00Z', type: 'debit' },
-  ]
-}
-
 export function getTransactionCategories() {
   return ['all', 'transfer', 'airtime', 'data', 'bills', 'card', 'top-up']
 }

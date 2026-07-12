@@ -448,6 +448,24 @@ export const businessApi = {
   },
 }
 
+// ── In-app notifications ────────────────────────────────────────────────
+
+export type DashboardNotification = {
+  id: string
+  title: string
+  body: string
+  read: boolean
+  created_at: string
+  type: 'credit' | 'debit' | 'info'
+}
+
+export const notificationsApi = {
+  /** In-app alerts for the active business (empty until notifications API ships). */
+  async list(_businessId: string): Promise<DashboardNotification[]> {
+    return []
+  },
+}
+
 // ── Team ────────────────────────────────────────────────────────────────
 
 export const teamApi = {

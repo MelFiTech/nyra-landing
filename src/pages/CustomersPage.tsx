@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import Button from '../components/ui/Button'
+import EmptyState, { UsersEmptyIcon } from '../components/ui/EmptyState'
 import CreateCustomerModal from '../components/customers/CreateCustomerModal'
 import CustomerRowMenu from '../components/customers/CustomerRowMenu'
 import { useBusiness, usePermissions } from '../context/BusinessContext'
@@ -166,107 +167,119 @@ export default function CustomersPage() {
         </div>
 
         <div className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Customer Name</th>
-                <th>Account Number</th>
-                <th>Date Added</th>
-                <th>Status</th>
-                <th className={styles.actionsHead} aria-label="Actions" />
-              </tr>
-            </thead>
-            <tbody>
-              {pageItems.length === 0 ? (
+          {pageItems.length === 0 ? (
+            <EmptyState
+              icon={<UsersEmptyIcon />}
+              title={
+                loading && customers.length === 0
+                  ? 'Loading customers…'
+                  : isError
+                    ? 'Could not load customers'
+                    : customers.length === 0
+                      ? 'No customers yet'
+                      : 'No matching customers'
+              }
+              description={
+                loading && customers.length === 0
+                  ? 'Please wait while we fetch your customers'
+                  : isError
+                    ? (error as Error)?.message || 'Check your connection and try again'
+                    : customers.length === 0
+                      ? 'Add your first customer to get started'
+                      : 'Try adjusting your search or filters'
+              }
+              action={
+                isError ? (
+                  <Button variant="outline" size="sm" onClick={() => refetch()}>
+                    Retry
+                  </Button>
+                ) : undefined
+              }
+            />
+          ) : (
+            <table className={styles.table}>
+              <thead>
                 <tr>
-                  <td colSpan={5} className={styles.emptyCell}>
-                    {loading && customers.length === 0
-                      ? 'Loading customers…'
-                      : isError
-                        ? (
-                          <>
-                            {(error as Error)?.message || 'Could not load customers.'}{' '}
-                            <button type="button" className={styles.nameLink} onClick={() => refetch()}>
-                              Retry
-                            </button>
-                          </>
-                        )
-                      : filtered.length === 0 && customers.length === 0
-                        ? 'No customers yet. Add your first customer to get started.'
-                        : 'No customers match your filters.'}
-                  </td>
+                  <th>Customer Name</th>
+                  <th>Account Number</th>
+                  <th>Date Added</th>
+                  <th>Status</th>
+                  <th className={styles.actionsHead} aria-label="Actions" />
                 </tr>
-              ) : pageItems.map(group => (
-                <tr key={group.key}>
-                  <td>
-                    <button
-                      className={styles.nameLink}
-                      onClick={() => navigate(`/app/customers/${group.primaryWalletId}`)}
-                    >
-                      <div className={styles.customerName}>{group.name}</div>
-                      {group.accounts.length > 1 && (
-                        <div className={styles.accountCount}>{group.accounts.length} accounts</div>
-                      )}
-                    </button>
-                  </td>
-                  <td>
-                    <div className={styles.accountCell}>
-                      <span className={styles.accountNumber}>{group.primaryAccount.account_number}</span>
-                      <span className={styles.accountBank}>{group.primaryAccount.bank_name}</span>
-                      <Button
-                        variant="icon"
-                        iconSm
-                        title="Copy account number"
-                        onClick={() => copyText(group.primaryAccount.account_number, 'Account number copied')}
+              </thead>
+              <tbody>
+                {pageItems.map(group => (
+                  <tr key={group.key}>
+                    <td>
+                      <button
+                        className={styles.nameLink}
+                        onClick={() => navigate(`/app/customers/${group.primaryWalletId}`)}
                       >
-                        <CopyIcon />
-                      </Button>
-                      {copied === group.primaryAccount.account_number && (
-                        <span className={styles.copiedHint}>Copied</span>
+                        <div className={styles.customerName}>{group.name}</div>
+                        {group.accounts.length > 1 && (
+                          <div className={styles.accountCount}>{group.accounts.length} accounts</div>
+                        )}
+                      </button>
+                    </td>
+                    <td>
+                      <div className={styles.accountCell}>
+                        <span className={styles.accountNumber}>{group.primaryAccount.account_number}</span>
+                        <span className={styles.accountBank}>{group.primaryAccount.bank_name}</span>
+                        <Button
+                          variant="icon"
+                          iconSm
+                          title="Copy account number"
+                          onClick={() => copyText(group.primaryAccount.account_number, 'Account number copied')}
+                        >
+                          <CopyIcon />
+                        </Button>
+                        {copied === group.primaryAccount.account_number && (
+                          <span className={styles.copiedHint}>Copied</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className={styles.dateCell}>{formatDate(group.createdAt)}</td>
+                    <td>
+                      {group.status === 'active' ? (
+                        <span className={styles.statusActive}>
+                          <span className={styles.dotActive} />
+                          Active
+                        </span>
+                      ) : group.status === 'frozen' ? (
+                        <span className={styles.statusPending}>
+                          <span className={styles.dot} />
+                          Frozen
+                        </span>
+                      ) : (
+                        <span className={styles.statusMixed}>
+                          <span className={styles.dotMixed} />
+                          Mixed
+                        </span>
                       )}
-                    </div>
-                  </td>
-                  <td className={styles.dateCell}>{formatDate(group.createdAt)}</td>
-                  <td>
-                    {group.status === 'active' ? (
-                      <span className={styles.statusActive}>
-                        <span className={styles.dotActive} />
-                        Active
-                      </span>
-                    ) : group.status === 'frozen' ? (
-                      <span className={styles.statusPending}>
-                        <span className={styles.dot} />
-                        Frozen
-                      </span>
-                    ) : (
-                      <span className={styles.statusMixed}>
-                        <span className={styles.dotMixed} />
-                        Mixed
-                      </span>
-                    )}
-                  </td>
-                  <td className={styles.actionsCell}>
-                    <CustomerRowMenu
-                      items={[
-                        {
-                          label: 'View details',
-                          onClick: () => navigate(`/app/customers/${group.primaryWalletId}`),
-                        },
-                        {
-                          label: 'Copy wallet ID',
-                          onClick: () => copyText(group.primaryWalletId, 'Wallet ID copied'),
-                        },
-                        {
-                          label: 'Copy account number',
-                          onClick: () => copyText(group.primaryAccount.account_number, 'Account number copied'),
-                        },
-                      ]}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    </td>
+                    <td className={styles.actionsCell}>
+                      <CustomerRowMenu
+                        items={[
+                          {
+                            label: 'View details',
+                            onClick: () => navigate(`/app/customers/${group.primaryWalletId}`),
+                          },
+                          {
+                            label: 'Copy wallet ID',
+                            onClick: () => copyText(group.primaryWalletId, 'Wallet ID copied'),
+                          },
+                          {
+                            label: 'Copy account number',
+                            onClick: () => copyText(group.primaryAccount.account_number, 'Account number copied'),
+                          },
+                        ]}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
 
         <div className={styles.footer}>

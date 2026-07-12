@@ -13,4 +13,5 @@ export const queryKeys = {
   apiClient: (businessId: string) => ['api-client', businessId] as const,
   team: (businessId: string) => ['team', businessId] as const,
   teamRole: (businessId: string) => ['team-role', businessId] as const,
+  notifications: (businessId: string) => ['notifications', businessId] as const,
 }

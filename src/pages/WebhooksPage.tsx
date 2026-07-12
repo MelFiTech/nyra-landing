@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import Button from '../components/ui/Button'
+import EmptyState, { WebhookEmptyIcon } from '../components/ui/EmptyState'
 import FilterMenu, {
   FilterCheckboxOption,
   FilterDateFields,
@@ -197,6 +198,11 @@ export default function WebhooksPage() {
     }))
   }
 
+  const hasActiveFilters =
+    search.trim() !== '' ||
+    statusFilter !== 'all' ||
+    activeFilterCount > 0
+
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const currentPage = Math.min(page, totalPages)
   const pageItems = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
@@ -321,51 +327,66 @@ export default function WebhooksPage() {
         </div>
 
         <div className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Event</th>
-                <th>Endpoint</th>
-                <th>HTTP</th>
-                <th>Attempt</th>
-                <th>Time</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pageItems.length === 0 ? (
+          {pageItems.length === 0 ? (
+            <EmptyState
+              icon={<WebhookEmptyIcon />}
+              title={
+                loading
+                  ? 'Loading deliveries…'
+                  : logs.length === 0
+                    ? 'No deliveries yet'
+                    : 'No matching deliveries'
+              }
+              description={
+                loading
+                  ? 'Please wait while we fetch webhook activity'
+                  : logs.length === 0
+                    ? 'Webhook deliveries will appear here once events fire'
+                    : hasActiveFilters
+                      ? 'Try adjusting your search or filters'
+                      : 'No deliveries match the current view'
+              }
+            />
+          ) : (
+            <table className={styles.table}>
+              <thead>
                 <tr>
-                  <td colSpan={6} className={styles.emptyCell}>
-                    <p className={styles.emptyTitle}>{loading ? 'Loading deliveries…' : 'No deliveries found'}</p>
-                    {!loading && <p className={styles.emptySub}>Webhook deliveries will appear here once events fire</p>}
-                  </td>
+                  <th>Event</th>
+                  <th>Endpoint</th>
+                  <th>HTTP</th>
+                  <th>Attempt</th>
+                  <th>Time</th>
+                  <th>Status</th>
                 </tr>
-              ) : pageItems.map(log => (
-                <tr
-                  key={log.id}
-                  className={styles.row}
-                  onClick={() => setSelectedLog(log)}
-                >
-                  <td className={styles.eventCell}>{log.event}</td>
-                  <td className={styles.endpointCell}>{log.target_url}</td>
-                  <td>
-                    {log.http_status ? (
-                      <span className={`${styles.httpStatus} ${log.http_status >= 200 && log.http_status < 300 ? styles.httpOk : styles.httpFail}`}>
-                        {log.http_status}
-                      </span>
-                    ) : (
-                      <span className={styles.httpNull}>—</span>
-                    )}
-                  </td>
-                  <td className={styles.attemptCell}>
-                    {log.attempt_number}{log.attempt_number === 5 ? ' (max)' : ''}
-                  </td>
-                  <td className={styles.timeCell}>{timeAgo(log.created_at)}</td>
-                  <td><OutcomeBadge outcome={log.outcome} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {pageItems.map(log => (
+                  <tr
+                    key={log.id}
+                    className={styles.row}
+                    onClick={() => setSelectedLog(log)}
+                  >
+                    <td className={styles.eventCell}>{log.event}</td>
+                    <td className={styles.endpointCell}>{log.target_url}</td>
+                    <td>
+                      {log.http_status ? (
+                        <span className={`${styles.httpStatus} ${log.http_status >= 200 && log.http_status < 300 ? styles.httpOk : styles.httpFail}`}>
+                          {log.http_status}
+                        </span>
+                      ) : (
+                        <span className={styles.httpNull}>—</span>
+                      )}
+                    </td>
+                    <td className={styles.attemptCell}>
+                      {log.attempt_number}{log.attempt_number === 5 ? ' (max)' : ''}
+                    </td>
+                    <td className={styles.timeCell}>{timeAgo(log.created_at)}</td>
+                    <td><OutcomeBadge outcome={log.outcome} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
 
         <div className={styles.footer}>

@@ -1,5 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
-import { getNotifications, type Notification } from '../../services/mockApi'
+import { useQueryClient } from '@tanstack/react-query'
+import EmptyState, { NotificationEmptyIcon } from '../ui/EmptyState'
+import { useBusiness } from '../../context/BusinessContext'
+import { useNotifications } from '../../hooks/useAppData'
+import { queryKeys } from '../../lib/queryKeys'
 import styles from './NotificationBell.module.css'
 
 function timeAgo(iso: string) {
@@ -12,11 +16,11 @@ function timeAgo(iso: string) {
 }
 
 export default function NotificationBell() {
+  const queryClient = useQueryClient()
+  const { businessId } = useBusiness()
+  const { data: notifications = [], isLoading } = useNotifications()
   const [open, setOpen] = useState(false)
-  const [notifications, setNotifications] = useState<Notification[]>([])
   const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => { getNotifications().then(setNotifications) }, [])
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -29,7 +33,11 @@ export default function NotificationBell() {
   const unread = notifications.filter(n => !n.read).length
 
   function markAllRead() {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    if (!businessId || notifications.length === 0) return
+    queryClient.setQueryData(
+      queryKeys.notifications(businessId),
+      notifications.map(n => ({ ...n, read: true })),
+    )
   }
 
   return (
@@ -47,12 +55,26 @@ export default function NotificationBell() {
           <div className={styles.panelHeader}>
             <span className={styles.panelTitle}>Notifications</span>
             {unread > 0 && (
-              <button className={styles.markRead} onClick={markAllRead}>Mark all read</button>
+              <button type="button" className={styles.markRead} onClick={markAllRead}>
+                Mark all read
+              </button>
             )}
           </div>
           <div className={styles.list}>
-            {notifications.length === 0 ? (
-              <div className={styles.empty}>No notifications yet</div>
+            {isLoading ? (
+              <EmptyState
+                variant="panel"
+                icon={<NotificationEmptyIcon />}
+                title="Loading notifications…"
+                description="Please wait"
+              />
+            ) : notifications.length === 0 ? (
+              <EmptyState
+                variant="panel"
+                icon={<NotificationEmptyIcon />}
+                title="No notifications yet"
+                description="Alerts for transfers, collections, and account activity will appear here"
+              />
             ) : (
               notifications.map(n => (
                 <div key={n.id} className={`${styles.item} ${!n.read ? styles.itemUnread : ''}`}>

@@ -679,25 +679,9 @@
   border-radius: 12px;
   overflow: hidden;
   background: var(--surface);
-}
-
-.teamEmpty {
-  padding: 36px 20px;
-  text-align: center;
-}
-
-.teamEmptyTitle {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-1);
-}
-
-.teamEmptySub {
-  margin: 6px 0 0;
-  font-size: 13px;
-  color: var(--text-3);
-  line-height: 1.45;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
 }
 
 .teamSkeletons {

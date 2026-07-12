@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import {
   apiClientApi,
   customersApi,
+  notificationsApi,
   transactionsApi,
   type TransactionListParams,
   walletApi,
@@ -82,5 +83,15 @@ export function useWebhookDeliveries() {
       return items
     },
     enabled: !!businessId,
+  })
+}
+
+export function useNotifications() {
+  const { businessId } = useBusiness()
+  return useQuery({
+    queryKey: queryKeys.notifications(businessId ?? ''),
+    queryFn: () => notificationsApi.list(businessId!),
+    enabled: !!businessId,
+    staleTime: 30_000,
   })
 }
