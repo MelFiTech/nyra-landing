@@ -1,8 +1,6 @@
 import { useRef, useCallback, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import Button from '../components/ui/Button'
-import AlertBanner from '../components/ui/AlertBanner'
 import DepositModal from '../components/treasury/DepositModal'
 import TransferModal from '../components/treasury/TransferModal'
 import ChatPanel from '../components/dashboard/ChatPanel'
@@ -11,7 +9,6 @@ import { useBalance } from '../context/BalanceContext'
 import { useBusiness } from '../context/BusinessContext'
 import { useBusinessWallet, useTransactions } from '../hooks/useAppData'
 import TrendSparkline from '../components/dashboard/TrendSparkline'
-import { getComplianceStatus } from '../lib/complianceStatus'
 import styles from './DashboardPage.module.css'
 
 function naira(value: number | string | undefined | null) {
@@ -88,11 +85,12 @@ const SearchIllustration = () => (
 
 
 export default function DashboardPage() {
-  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { business } = useBusiness()
   const { visible: balanceVisible, toggle: toggleBalance } = useBalance()
-  const complianceStatus = getComplianceStatus()
+  // const verificationStatus = business?.verification_status
+  // const showVerificationBanner =
+  //   verificationStatus === 'NOT_STARTED' || verificationStatus === 'REJECTED'
   const [depositOpen, setDepositOpen] = useState(false)
   const [transferOpen, setTransferOpen] = useState(false)
   const [pinModalOpen, setPinModalOpen] = useState(false)
@@ -143,7 +141,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      {complianceStatus === 'unverified' && (
+      {/* {showVerificationBanner && (
         <AlertBanner
           centered
           actionLabel="Verify now"
@@ -151,7 +149,7 @@ export default function DashboardPage() {
         >
           Your business is not yet verified. Complete KYB compliance to unlock full transaction limits.
         </AlertBanner>
-      )}
+      )} */}
       <div className={styles.content}>
         <h1 className={styles.greeting}>Hello, {business?.name ?? 'Mel-Fi Technology Limited'}</h1>
 
