@@ -624,14 +624,251 @@
 .errorText { font-size: 13px; color: #dc2626; }
 .successText { font-size: 13px; color: var(--brand); font-weight: 500; }
 
-/* Notifications */
+/* Team */
+.roleHint {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--text-3);
+  line-height: 1.5;
+}
+
+.roleBadgeRow {
+  margin: 14px 0 8px;
+}
+
+.roleBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--surface-2);
+  color: var(--text-2);
+  border: 1px solid var(--border);
+}
+
+.teamRoleGuide {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.teamRoleGuideItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 12.5px;
+  color: var(--text-3);
+  line-height: 1.45;
+}
+
+.teamRoleGuideItem strong {
+  font-size: 13px;
+  color: var(--text-1);
+}
+
+.teamList {
+  margin-top: 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.teamEmpty {
+  padding: 36px 20px;
+  text-align: center;
+}
+
+.teamEmptyTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.teamEmptySub {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--text-3);
+  line-height: 1.45;
+}
+
+.teamSkeletons {
+  display: flex;
+  flex-direction: column;
+}
+
+.teamSkeletonRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.teamSkeletonRow:last-child {
+  border-bottom: none;
+}
+
+.teamSkeletonAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  flex-shrink: 0;
+  animation: teamPulse 1.2s ease-in-out infinite;
+}
+
+.teamSkeletonInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.teamSkeletonLine {
+  height: 10px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  animation: teamPulse 1.2s ease-in-out infinite;
+}
+
+.teamSkeletonAction {
+  width: 120px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  flex-shrink: 0;
+  animation: teamPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes teamPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+.teamRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.teamRow:last-child {
+  border-bottom: none;
+}
+
+.teamAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text-1);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.teamInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.teamName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.teamMeta {
+  font-size: 12.5px;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+
+.teamActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.teamRoleSelect {
+  padding: 7px 10px;
+  border: 1.5px solid var(--border-mid);
+  border-radius: 8px;
+  font-size: 13px;
+  background: var(--input-bg);
+  color: var(--text-1);
+  font-family: inherit;
+}
+
+@media (max-width: 900px) {
+  .teamRoleGuide {
+    grid-template-columns: 1fr;
+  }
+}
 .notifList {
   display: flex;
   flex-direction: column;
+  margin-top: 16px;
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
   background: var(--surface-2);
+}
+
+.notifSkeletons {
+  display: flex;
+  flex-direction: column;
+}
+
+.notifSkeletonRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.notifSkeletonRow:last-child {
+  border-bottom: none;
+}
+
+.notifSkeletonInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.notifSkeletonLine {
+  height: 10px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  animation: teamPulse 1.2s ease-in-out infinite;
+}
+
+.notifSkeletonToggle {
+  width: 42px;
+  height: 24px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  flex-shrink: 0;
+  animation: teamPulse 1.2s ease-in-out infinite;
 }
 
 .notifRow {
@@ -652,6 +889,10 @@
 .toggle {
   width: 42px; height: 24px; border-radius: 12px; background: var(--border-mid);
   position: relative; flex-shrink: 0; transition: background 0.2s;
+}
+.toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .toggleOn { background: var(--brand); }
 .toggleKnob {

@@ -1,0 +1,58 @@
+.hint {
+  font-size: 13px;
+  color: var(--text-3);
+  line-height: 1.5;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.input {
+  padding: 11px 14px;
+  border: 1.5px solid var(--border-mid);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text-1);
+  background: var(--input-bg);
+  outline: none;
+  transition: border-color 0.12s;
+  font-family: inherit;
+  width: 100%;
+}
+
+.input:focus {
+  border-color: var(--text-2);
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+.roleHint {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-3);
+  line-height: 1.45;
+}
+
+.error {
+  margin: 0;
+  font-size: 13px;
+  color: #dc2626;
+  line-height: 1.4;
+}

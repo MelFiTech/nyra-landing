@@ -1,5 +1,9 @@
 // Thin client for the Nyra Wallet backend (NestJS, global prefix /api/v1).
 
+import type { BusinessTeamRole, TeamMember } from './teamPermissions'
+
+export type { BusinessTeamRole, TeamMember }
+
 const BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:2900/api/v1'
 
@@ -63,8 +67,9 @@ export const session = {
   },
   get selectedBusinessId(): string | null {
     const id = localStorage.getItem(SELECTED_BUSINESS_KEY)
-    if (id) return id
-    return this.businesses[0]?.id ?? null
+    const list = this.businesses
+    if (id && (list.length === 0 || list.some(b => b.id === id))) return id
+    return list[0]?.id ?? null
   },
   setSelectedBusiness(id: string) {
     localStorage.setItem(SELECTED_BUSINESS_KEY, id)
@@ -109,10 +114,14 @@ type RequestOptions = {
   /** multipart FormData — sent as-is, no JSON headers */
   formData?: FormData
   auth?: boolean
+  /** Abort the request after this many ms (default 25s). */
+  timeoutMs?: number
 }
 
+const DEFAULT_TIMEOUT_MS = 25_000
+
 async function request<T = unknown>(path: string, opts: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, formData, auth = true } = opts
+  const { method = 'GET', body, formData, auth = true, timeoutMs = DEFAULT_TIMEOUT_MS } = opts
 
   const headers: Record<string, string> = {}
   if (!formData) headers['Content-Type'] = 'application/json'
@@ -123,15 +132,24 @@ async function request<T = unknown>(path: string, opts: RequestOptions = {}): Pr
     if (selected) headers['x-business-id'] = selected
   }
 
+  const controller = new AbortController()
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs)
+
   let res: Response
   try {
     res = await fetch(`${BASE_URL}${path}`, {
       method,
       headers,
       body: formData ?? (body !== undefined ? JSON.stringify(body) : undefined),
+      signal: controller.signal,
     })
-  } catch {
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new ApiError('Request timed out. Check your connection and try again.', 0)
+    }
     throw new ApiError('Cannot reach the server. Check your connection and try again.', 0)
+  } finally {
+    window.clearTimeout(timeoutId)
   }
 
   let json: any = null
@@ -194,7 +212,7 @@ function normalizeSessionUser(raw: Record<string, unknown>): SessionUser {
 }
 
 /** Backend signin returns data.tokens.accessToken; signup returns data.token. */
-function applyAuthSession(res: RawAuthResponse) {
+function applyAuthSession(res: RawAuthResponse, businesses?: Business[]) {
   const nested = res.data
   const token =
     nested?.tokens?.accessToken ??
@@ -209,7 +227,37 @@ function applyAuthSession(res: RawAuthResponse) {
   const user = normalizeSessionUser(rawUser)
   session.setToken(token)
   session.setUser(user)
+  if (businesses?.length) session.setBusinesses(businesses)
   return { token, user }
+}
+
+export type BusinessSigninChallenge = {
+  requiresOtp: true
+  otpToken: string
+  expiresIn: number
+  email: string
+  businesses: Business[]
+}
+
+type BusinessSigninStep1Response = {
+  data: BusinessSigninChallenge
+  message?: string
+}
+
+type BusinessSigninOtpResponse = RawAuthResponse & {
+  data?: RawAuthResponse['data'] & {
+    businesses?: Business[]
+  }
+}
+
+type BusinessResendOtpResponse = {
+  data: {
+    requiresOtp: true
+    otpToken: string
+    expiresIn: number
+    email: string
+  }
+  message?: string
 }
 
 export const authApi = {
@@ -242,6 +290,103 @@ export const authApi = {
     return applyAuthSession(res)
   },
 
+  /** Email-first lookup: password login vs invited set-password. */
+  async businessSigninLookup(field: string): Promise<{
+    next: 'password' | 'set_password' | 'invite_expired'
+    email: string
+    name?: string | null
+    businessName?: string | null
+  }> {
+    const res = await request<{
+      data: {
+        next: 'password' | 'set_password' | 'invite_expired'
+        email: string
+        name?: string | null
+        businessName?: string | null
+      }
+    }>('/auth/business/signin/lookup', {
+      method: 'POST',
+      body: { field: field.trim().toLowerCase() },
+      auth: false,
+    })
+    if (!res.data?.next) {
+      throw new ApiError('Unexpected login lookup response from server', 500)
+    }
+    return res.data
+  },
+
+  /** Invited team member: set password, then receive login OTP. */
+  async businessSetPassword(field: string, password: string): Promise<BusinessSigninChallenge> {
+    const res = await request<BusinessSigninStep1Response>('/auth/business/signin/set-password', {
+      method: 'POST',
+      body: { field: field.trim().toLowerCase(), password },
+      auth: false,
+      timeoutMs: 60_000,
+    })
+    const payload = res.data
+    const otpToken = payload?.otpToken ?? (payload as { token?: string } | undefined)?.token
+    if (!otpToken) {
+      throw new ApiError('Unexpected set-password response from server', 500)
+    }
+    return {
+      requiresOtp: true,
+      otpToken,
+      expiresIn: payload?.expiresIn ?? 600,
+      email: payload?.email ?? field.trim().toLowerCase(),
+      businesses: payload?.businesses ?? [],
+    }
+  },
+
+  /** Business dashboard login step 1: password check, email OTP issued (no JWT). */
+  async businessSignin(field: string, password: string): Promise<BusinessSigninChallenge> {
+    const res = await request<BusinessSigninStep1Response>('/auth/business/signin', {
+      method: 'POST',
+      body: { field: field.trim().toLowerCase(), password },
+      auth: false,
+      timeoutMs: 60_000,
+    })
+    const payload = res.data
+    const otpToken = payload?.otpToken ?? (payload as { token?: string } | undefined)?.token
+    if (!otpToken) {
+      throw new ApiError('Unexpected login response from server', 500)
+    }
+    return {
+      requiresOtp: true,
+      otpToken,
+      expiresIn: payload?.expiresIn ?? 600,
+      email: payload?.email ?? field.trim().toLowerCase(),
+      businesses: payload?.businesses ?? [],
+    }
+  },
+
+  /** Business dashboard login step 2: verify OTP and issue JWT. */
+  async businessSigninOtp(field: string, otpToken: string, otp: string) {
+    const res = await request<BusinessSigninOtpResponse>('/auth/business/signin/otp', {
+      method: 'POST',
+      body: {
+        field: field.trim().toLowerCase(),
+        otpToken,
+        otp,
+      },
+      auth: false,
+    })
+    return applyAuthSession(res, res.data?.businesses)
+  },
+
+  /** Resend business login OTP; returns a new otpToken. */
+  async businessResendOtp(field: string) {
+    const res = await request<BusinessResendOtpResponse>('/auth/business/signin/resend-otp', {
+      method: 'POST',
+      body: { field: field.trim().toLowerCase() },
+      auth: false,
+    })
+    if (!res.data?.otpToken) {
+      throw new ApiError('Could not resend verification code', 500)
+    }
+    return res.data
+  },
+
+  /** @deprecated Use businessSignin + businessSigninOtp for the business dashboard. */
   async signin(email: string, password: string) {
     const res = await request<RawAuthResponse>('/auth/signin', {
       method: 'POST',
@@ -253,6 +398,11 @@ export const authApi = {
 }
 
 // ── Business ────────────────────────────────────────────────────────────
+
+export type BusinessNotificationPreferences = {
+  email_float_topups: boolean
+  email_customer_collection_credits: boolean
+}
 
 export const businessApi = {
   async register(data: { business_name: string; business_type: string; address: string }) {
@@ -268,6 +418,84 @@ export const businessApi = {
     const res = await request<{ data: Business[] }>('/business/all')
     if (res.data) session.setBusinesses(res.data)
     return res.data
+  },
+
+  async getNotificationPreferences(businessId: string): Promise<BusinessNotificationPreferences> {
+    const res = await request<{ data: BusinessNotificationPreferences }>(
+      `/business/${businessId}/notification-preferences`,
+    )
+    return {
+      email_float_topups: res.data?.email_float_topups !== false,
+      email_customer_collection_credits: res.data?.email_customer_collection_credits === true,
+    }
+  },
+
+  async updateNotificationPreferences(
+    businessId: string,
+    prefs: Partial<BusinessNotificationPreferences>,
+  ): Promise<BusinessNotificationPreferences> {
+    const res = await request<{ data: BusinessNotificationPreferences }>(
+      `/business/${businessId}/notification-preferences`,
+      {
+        method: 'PUT',
+        body: prefs,
+      },
+    )
+    return {
+      email_float_topups: res.data?.email_float_topups !== false,
+      email_customer_collection_credits: res.data?.email_customer_collection_credits === true,
+    }
+  },
+}
+
+// ── Team ────────────────────────────────────────────────────────────────
+
+export const teamApi = {
+  async list(businessId: string): Promise<TeamMember[]> {
+    const res = await request<{ data: TeamMember[] }>(`/business/${businessId}/team`)
+    return res.data ?? []
+  },
+
+  async myRole(businessId: string): Promise<{ role: BusinessTeamRole; status: string } | null> {
+    const res = await request<{ data: { role: BusinessTeamRole; status: string } | null }>(
+      `/business/${businessId}/team/me`,
+    )
+    return res.data ?? null
+  },
+
+  async invite(
+    businessId: string,
+    data: { name: string; email: string; role: Exclude<BusinessTeamRole, 'OWNER'> },
+  ) {
+    const res = await request<{ data: TeamMember }>(`/business/${businessId}/team/invite`, {
+      method: 'POST',
+      body: {
+        name: data.name.trim(),
+        email: data.email.trim().toLowerCase(),
+        role: data.role,
+      },
+    })
+    return res.data
+  },
+
+  async updateRole(businessId: string, memberId: string, role: Exclude<BusinessTeamRole, 'OWNER'>) {
+    const res = await request<{ data: TeamMember }>(`/business/${businessId}/team/${memberId}`, {
+      method: 'PATCH',
+      body: { role },
+    })
+    return res.data
+  },
+
+  async resendInvite(businessId: string, memberId: string) {
+    const res = await request<{ data: TeamMember }>(
+      `/business/${businessId}/team/${memberId}/resend`,
+      { method: 'POST' },
+    )
+    return res.data
+  },
+
+  async remove(businessId: string, memberId: string) {
+    return request(`/business/${businessId}/team/${memberId}`, { method: 'DELETE' })
   },
 }
 
@@ -385,7 +613,8 @@ export type TransactionListParams = {
 }
 
 export const transactionsApi = {
-  async list(params: TransactionListParams = {}): Promise<Transaction[]> {
+  async list(params: TransactionListParams = {}, businessId?: string): Promise<Transaction[]> {
+    const id = businessId ?? activeBusinessId()
     const qs = new URLSearchParams()
     if (params.page_size !== undefined) qs.set('page_size', String(params.page_size))
     if (params.cursor) qs.set('cursor', params.cursor)
@@ -396,14 +625,15 @@ export const transactionsApi = {
     if (params.method) qs.set('method', params.method)
     const query = qs.toString()
     const res = await request<{ data: Transaction[] }>(
-      `/business/${activeBusinessId()}/transactions${query ? `?${query}` : ''}`
+      `/business/${id}/transactions${query ? `?${query}` : ''}`
     )
     return res.data ?? []
   },
 
-  async get(transactionId: string): Promise<Transaction> {
+  async get(transactionId: string, businessId?: string): Promise<Transaction> {
+    const id = businessId ?? activeBusinessId()
     const res = await request<{ data: Transaction }>(
-      `/business/${activeBusinessId()}/transactions/${transactionId}`
+      `/business/${id}/transactions/${transactionId}`
     )
     return res.data
   },
@@ -545,32 +775,40 @@ function activeBusinessId(): string {
 }
 
 export const customersApi = {
-  async list(): Promise<CustomerWallet[]> {
-    const res = await request<{ data: CustomerWallet[] }>(`/business/${activeBusinessId()}/customers`)
+  async list(businessId?: string): Promise<CustomerWallet[]> {
+    const id = businessId ?? activeBusinessId()
+    const res = await request<{ data: CustomerWallet[] }>(`/business/${id}/customers`)
     return res.data ?? []
   },
 
-  async get(walletId: string): Promise<CustomerWallet | null> {
+  async get(walletId: string, businessId?: string): Promise<CustomerWallet | null> {
+    const id = businessId ?? activeBusinessId()
     const res = await request<{ data: CustomerWallet | null }>(
-      `/business/${activeBusinessId()}/customers/${walletId}`
+      `/business/${id}/customers/${walletId}`
     )
     return res.data ?? null
   },
 
-  create(payload: CreateCustomerPayload) {
-    return request<{ data: CustomerWallet }>(`/business/${activeBusinessId()}/customers`, {
+  create(payload: CreateCustomerPayload, businessId?: string) {
+    const id = businessId ?? activeBusinessId()
+    return request<{ data: CustomerWallet }>(`/business/${id}/customers`, {
       method: 'POST',
       body: payload,
     })
   },
 
-  async transactions(walletId: string, params: { limit?: number; status?: string } = {}): Promise<Transaction[]> {
+  async transactions(
+    walletId: string,
+    params: { limit?: number; status?: string } = {},
+    businessId?: string,
+  ): Promise<Transaction[]> {
+    const id = businessId ?? activeBusinessId()
     const qs = new URLSearchParams()
     if (params.limit !== undefined) qs.set('page_size', String(params.limit))
     if (params.status) qs.set('status', params.status)
     const query = qs.toString()
     const res = await request<{ data: Transaction[] }>(
-      `/business/${activeBusinessId()}/customers/${walletId}/transactions${query ? `?${query}` : ''}`
+      `/business/${id}/customers/${walletId}/transactions${query ? `?${query}` : ''}`
     )
     return res.data ?? []
   },

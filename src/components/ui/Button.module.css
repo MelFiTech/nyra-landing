@@ -40,7 +40,7 @@
 /* Variants */
 .primary {
   background: var(--brand);
-  color: #fff;
+  color: #111;
 }
 
 .primary:hover:not(:disabled) {
@@ -209,6 +209,7 @@
   display: inline-block;
 }
 
+.primary .spinner,
 .inverted .spinner,
 .secondary .spinner,
 .outline .spinner {

@@ -31,17 +31,17 @@ export function prefetchRouteData(
         walletApi.getBusinessWallet(businessId),
       )
       void prefetch(queryClient, queryKeys.transactions(businessId, { page_size: 10 }), () =>
-        transactionsApi.list({ page_size: 10 }),
+        transactionsApi.list({ page_size: 10 }, businessId),
       )
       break
     case '/app/transactions':
       void prefetch(queryClient, queryKeys.transactions(businessId, { page_size: 200 }), () =>
-        transactionsApi.list({ page_size: 200 }),
+        transactionsApi.list({ page_size: 200 }, businessId),
       )
       break
     case '/app/customers':
       void prefetch(queryClient, queryKeys.customers(businessId), () =>
-        customersApi.list(),
+        customersApi.list(businessId),
       )
       break
     case '/app/webhooks':

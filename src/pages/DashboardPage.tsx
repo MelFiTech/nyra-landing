@@ -6,7 +6,7 @@ import TransferModal from '../components/treasury/TransferModal'
 import ChatPanel from '../components/dashboard/ChatPanel'
 import PinSetupModal from '../components/dashboard/PinSetupModal'
 import { useBalance } from '../context/BalanceContext'
-import { useBusiness } from '../context/BusinessContext'
+import { useBusiness, usePermissions } from '../context/BusinessContext'
 import { useBusinessWallet, useTransactions } from '../hooks/useAppData'
 import TrendSparkline from '../components/dashboard/TrendSparkline'
 import styles from './DashboardPage.module.css'
@@ -87,6 +87,7 @@ const SearchIllustration = () => (
 export default function DashboardPage() {
   const queryClient = useQueryClient()
   const { business } = useBusiness()
+  const { canAct } = usePermissions()
   const { visible: balanceVisible, toggle: toggleBalance } = useBalance()
   // const verificationStatus = business?.verification_status
   // const showVerificationBanner =
@@ -103,7 +104,8 @@ export default function DashboardPage() {
 
   const floatAccounts = wallet?.sub_wallets?.filter(sw => sw.is_business_float) ?? []
   const sourceAccountNumber = floatAccounts[0]?.account_number ?? ''
-  const canTransfer = Boolean(sourceAccountNumber) && Boolean(wallet?.wallet_pin_changed) && !wallet?.frozen
+  const canTransfer = canAct && Boolean(sourceAccountNumber) && Boolean(wallet?.wallet_pin_changed) && !wallet?.frozen
+  const canDeposit = canAct
   const unsettled = floatAccounts.reduce((sum, sw) => sum + Number(sw.staged_balance ?? 0), 0)
   const available = Number(wallet?.balance ?? 0)
   const total = available + unsettled
@@ -202,6 +204,8 @@ export default function DashboardPage() {
                       variant="ghost"
                       className={styles.walletActionBtn}
                       onClick={() => setDepositOpen(true)}
+                      disabled={!canDeposit}
+                      title={!canDeposit ? 'Only the business owner can deposit' : undefined}
                     >
                       <div className={styles.actionIcon} style={{ background: '#eff6ff', color: '#3b82f6' }}>
                         <DepositIcon />
@@ -214,7 +218,9 @@ export default function DashboardPage() {
                       onClick={() => setTransferOpen(true)}
                       disabled={!canTransfer}
                       title={
-                        !sourceAccountNumber
+                        !canAct
+                          ? 'Only the business owner can transfer'
+                          : !sourceAccountNumber
                           ? 'Deposit account not ready'
                           : wallet?.frozen
                             ? 'Wallet is frozen'
@@ -348,7 +354,7 @@ export default function DashboardPage() {
         sourceAccountNumber={sourceAccountNumber}
         pinReady={Boolean(wallet?.wallet_pin_changed)}
       />
-      {business && (
+      {business && canAct && (
         <PinSetupModal
           open={pinModalOpen}
           businessId={business.id}

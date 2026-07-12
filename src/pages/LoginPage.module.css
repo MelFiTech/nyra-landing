@@ -74,6 +74,13 @@
   text-decoration: underline;
 }
 
+.passwordHint {
+  margin: 0;
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
 .input {
   padding: 11px 14px;
   border: 1.5px solid #e5e7eb;
@@ -229,7 +236,24 @@
   caret-color: transparent;
 }
 .otpBox:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(0,221,121,0.08); }
+.otpBoxDisabled,
+.otpBox:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: #f9fafb;
+}
 .otpHint { font-size: 12.5px; color: #9ca3af; text-align: center; margin-top: 4px; }
+.otpExpiry {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  color: #6b7280;
+  font-variant-numeric: tabular-nums;
+}
+.otpExpiryExpired {
+  color: #dc2626;
+}
 .resendBtn { background: none; border: none; color: var(--brand); font-size: 13px; font-weight: 500; cursor: pointer; padding: 0; }
 .resendBtn:hover { text-decoration: underline; }
 
@@ -350,6 +374,17 @@
   .stepDotActive { background: var(--brand); }
   .stepNote { color: #666; }
   .otpHint { color: #666; }
+  .otpExpiry { color: #909090; }
+  .otpExpiryExpired { color: #f87171; }
+  .otpBox {
+    background: #1c1c1c;
+    border-color: #2e2e2e;
+    color: #ececec;
+  }
+  .otpBoxDisabled,
+  .otpBox:disabled {
+    background: #181818;
+  }
   .resendBtn { color: var(--brand); }
   .businessTypeSelect {
     background: #1c1c1c;

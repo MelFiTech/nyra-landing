@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import Button from '../components/ui/Button'
 import AddWebhookEndpointSheet, { type WebhookConfig } from '../components/webhooks/AddWebhookEndpointSheet'
+import AddTeamMemberSheet from '../components/team/AddTeamMemberSheet'
 import { getComplianceStatus } from '../lib/complianceStatus'
 import { BRAND } from '../lib/brand'
 import {
@@ -11,21 +12,28 @@ import {
   passwordApi,
   walletApi,
   apiClientApi,
+  businessApi,
+  teamApi,
   ApiError,
 } from '../lib/api'
-import { useBusiness } from '../context/BusinessContext'
+import { useBusiness, usePermissions } from '../context/BusinessContext'
 import { useApiClient, useWebhookConfigs } from '../hooks/useAppData'
 import { queryKeys } from '../lib/queryKeys'
 import { useToast } from '../context/ToastContext'
+import {
+  ASSIGNABLE_TEAM_ROLES,
+  type BusinessTeamRole,
+} from '../lib/teamPermissions'
 import styles from './SettingsPage.module.css'
 
-type Tab = 'profile' | 'compliance' | 'api-keys' | 'webhooks' | 'security' | 'notifications'
+type Tab = 'profile' | 'compliance' | 'api-keys' | 'webhooks' | 'team' | 'security' | 'notifications'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'profile', label: 'Profile' },
   { id: 'compliance', label: 'Compliance' },
   { id: 'api-keys', label: 'API Keys' },
   { id: 'webhooks', label: 'Webhooks' },
+  { id: 'team', label: 'Team' },
   { id: 'security', label: 'Security' },
   { id: 'notifications', label: 'Notifications' },
 ]
@@ -38,9 +46,15 @@ const BUSINESS_TYPE_LABELS: Record<string, string> = {
   LIMITED_LIABILITY_PARTNERSHIP: 'Limited Liability Partnership',
 }
 
-function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
+function Toggle({ on, onChange, disabled }: { on: boolean; onChange: () => void; disabled?: boolean }) {
   return (
-    <button className={`${styles.toggle} ${on ? styles.toggleOn : ''}`} onClick={onChange}>
+    <button
+      type="button"
+      className={`${styles.toggle} ${on ? styles.toggleOn : ''}`}
+      onClick={onChange}
+      disabled={disabled}
+      aria-pressed={on}
+    >
       <span className={styles.toggleKnob} />
     </button>
   )
@@ -68,6 +82,7 @@ function ApiKeysTab() {
   const navigate = useNavigate()
   const { showToast } = useToast()
   const { businessId, business } = useBusiness()
+  const { canManageApiKeys } = usePermissions()
   const queryClient = useQueryClient()
   const verificationStatus = business?.verification_status ?? 'NOT_STARTED'
   const isVerified = verificationStatus === 'VERIFIED'
@@ -165,10 +180,16 @@ function ApiKeysTab() {
             Authenticate requests to the Nyra B2B API with these credentials. Your secret is shown only once. Store it securely.
           </div>
         </div>
-        {client && !createOpen && (
+        {canManageApiKeys && client && !createOpen && (
           <Button variant="text" onClick={() => openCreate(client.app_name)}>Rotate Key</Button>
         )}
       </div>
+
+      {!canManageApiKeys && (
+        <p className={styles.roleHint}>
+          Your role can view API credentials but cannot create or rotate keys. Ask the business owner or a developer.
+        </p>
+      )}
 
       {newCredentials && (
         <div className={styles.secretBanner}>
@@ -205,7 +226,7 @@ function ApiKeysTab() {
         </div>
       )}
 
-      {createOpen && (
+      {canManageApiKeys && createOpen && (
         <div className={styles.createCard}>
           <div className={styles.createCardTitle}>{client ? 'Rotate' : 'Generate'} API Key</div>
           {client && <div className={styles.sectionSub} style={{ marginBottom: 10 }}>Rotating replaces your existing secret. Update your integrations after rotating.</div>}
@@ -267,7 +288,9 @@ function ApiKeysTab() {
           </div>
           <p className={styles.emptyTitle}>No API key yet</p>
           <p className={styles.emptySub}>Generate credentials to start using the Nyra API</p>
-          <Button variant="primary" size="sm" onClick={() => openCreate()}>Generate Key</Button>
+          {canManageApiKeys && (
+            <Button variant="primary" size="sm" onClick={() => openCreate()}>Generate Key</Button>
+          )}
         </div>
       )}
 
@@ -291,6 +314,7 @@ function ApiKeysTab() {
 function WebhooksTab() {
   const { showToast } = useToast()
   const { businessId } = useBusiness()
+  const { canManageWebhooks } = usePermissions()
   const queryClient = useQueryClient()
   const { data: rawConfigs = [], isLoading: loading } = useWebhookConfigs()
   const configs = useMemo<WebhookConfig[]>(
@@ -362,12 +386,20 @@ function WebhooksTab() {
           <div className={styles.sectionSub}>Configure URLs to receive real-time event notifications from Nyra.</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          {configs.length > 0 && (
+          {canManageWebhooks && configs.length > 0 && (
             <Button variant="secondary" size="sm" onClick={sendTest} loading={testing === 'all'}>Send test event</Button>
           )}
-          <Button variant="primary" size="sm" onClick={() => setSheetOpen(true)}>+ Add Endpoint</Button>
+          {canManageWebhooks && (
+            <Button variant="primary" size="sm" onClick={() => setSheetOpen(true)}>+ Add Endpoint</Button>
+          )}
         </div>
       </div>
+
+      {!canManageWebhooks && (
+        <p className={styles.roleHint}>
+          Your role can view webhooks but cannot add or change endpoints. Ask the business owner or a developer.
+        </p>
+      )}
 
       {newSecret && (
         <div className={styles.secretBanner}>
@@ -401,7 +433,9 @@ function WebhooksTab() {
           </div>
           <p className={styles.emptyTitle}>No webhook endpoints</p>
           <p className={styles.emptySub}>Add an endpoint to receive real-time transaction events</p>
-          <Button variant="primary" size="sm" onClick={() => setSheetOpen(true)}>+ Add Endpoint</Button>
+          {canManageWebhooks && (
+            <Button variant="primary" size="sm" onClick={() => setSheetOpen(true)}>+ Add Endpoint</Button>
+          )}
         </div>
       ) : (
         <div className={styles.webhookList}>
@@ -413,16 +447,20 @@ function WebhooksTab() {
                   <div className={styles.webhookUrl}>{cfg.url}</div>
                 </div>
                 <div className={styles.webhookActions}>
-                  <Button variant="icon" title="Regenerate signing secret" onClick={() => regenerateSecret(cfg.id)} loading={busy === cfg.id}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-                    </svg>
-                  </Button>
-                  <Button variant="icon" style={{ color: '#dc2626' }} title="Delete" onClick={() => deleteConfig(cfg.id)} loading={busy === cfg.id}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
-                    </svg>
-                  </Button>
+                  {canManageWebhooks && (
+                    <>
+                      <Button variant="icon" title="Regenerate signing secret" onClick={() => regenerateSecret(cfg.id)} loading={busy === cfg.id}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                        </svg>
+                      </Button>
+                      <Button variant="icon" style={{ color: '#dc2626' }} title="Delete" onClick={() => deleteConfig(cfg.id)} loading={busy === cfg.id}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                        </svg>
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
               <div className={styles.eventTags}>
@@ -572,7 +610,8 @@ function ComplianceTab() {
 // --- Security Tab ---
 function SecurityTab() {
   const { showToast } = useToast()
-  const businessId = session.business?.id
+  const { businessId } = useBusiness()
+  const { canManageSecurity } = usePermissions()
 
   const [currentPwd, setCurrentPwd] = useState('')
   const [newPwd, setNewPwd] = useState('')
@@ -637,39 +676,315 @@ function SecurityTab() {
         <div className={styles.secCard}>
           <div className={styles.secCardTitle}>Transaction PIN</div>
           <div className={styles.secCardSub}>4-digit PIN to authorize fund movements</div>
-          <div className={styles.secCardForm}>
-            <div className={styles.pinRow}>
-              <div className={styles.field}><label className={styles.label}>Current PIN</label><input className={styles.input} type="password" inputMode="numeric" maxLength={4} placeholder="••••" value={oldPin} onChange={e => setOldPin(e.target.value.replace(/\D/g, ''))} /></div>
-              <div className={styles.field}><label className={styles.label}>New PIN</label><input className={styles.input} type="password" inputMode="numeric" maxLength={4} placeholder="••••" value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, ''))} /></div>
+          {!canManageSecurity ? (
+            <p className={styles.roleHint}>Only the business owner can change the transaction PIN.</p>
+          ) : (
+            <div className={styles.secCardForm}>
+              <div className={styles.pinRow}>
+                <div className={styles.field}><label className={styles.label}>Current PIN</label><input className={styles.input} type="password" inputMode="numeric" maxLength={4} placeholder="••••" value={oldPin} onChange={e => setOldPin(e.target.value.replace(/\D/g, ''))} /></div>
+                <div className={styles.field}><label className={styles.label}>New PIN</label><input className={styles.input} type="password" inputMode="numeric" maxLength={4} placeholder="••••" value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, ''))} /></div>
+              </div>
+              {pinError && <p className={styles.errorText}>{pinError}</p>}
+              <Button variant="primary" size="sm" className={styles.formAction} disabled={oldPin.length !== 4 || newPin.length !== 4} loading={pinLoading} onClick={changePin}>Change PIN</Button>
             </div>
-            {pinError && <p className={styles.errorText}>{pinError}</p>}
-            <Button variant="primary" size="sm" className={styles.formAction} disabled={oldPin.length !== 4 || newPin.length !== 4} loading={pinLoading} onClick={changePin}>Change PIN</Button>
-          </div>
+          )}
         </div>
       </div>
     </div>
   )
 }
 
-// --- Notifications Tab (local preferences) ---
+// --- Team Tab ---
+function TeamTab() {
+  const { showToast } = useToast()
+  const { businessId } = useBusiness()
+  const { canManageTeam } = usePermissions()
+  const queryClient = useQueryClient()
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const [resendingId, setResendingId] = useState<string | null>(null)
+
+  const { data: members = [], isLoading, isFetching } = useQuery({
+    queryKey: queryKeys.team(businessId ?? ''),
+    queryFn: () => teamApi.list(businessId!),
+    enabled: !!businessId && canManageTeam,
+  })
+
+  const teamMembers = members.filter(
+    m => !m.is_owner && m.role !== 'OWNER',
+  )
+
+  async function refresh() {
+    if (!businessId) return
+    await queryClient.invalidateQueries({ queryKey: queryKeys.team(businessId) })
+  }
+
+  async function handleRoleChange(memberId: string, nextRole: Exclude<BusinessTeamRole, 'OWNER'>) {
+    if (!businessId) return
+    try {
+      await teamApi.updateRole(businessId, memberId, nextRole)
+      showToast('Role updated')
+      await refresh()
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'Could not update role', 'error')
+    }
+  }
+
+  async function handleResend(memberId: string) {
+    if (!businessId) return
+    setResendingId(memberId)
+    try {
+      await teamApi.resendInvite(businessId, memberId)
+      showToast('Invite resent. It expires in 24 hours.')
+      await refresh()
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'Could not resend invite', 'error')
+    } finally {
+      setResendingId(null)
+    }
+  }
+
+  async function handleRemove(memberId: string) {
+    if (!businessId) return
+    try {
+      await teamApi.remove(businessId, memberId)
+      showToast('Member removed')
+      await refresh()
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'Could not remove member', 'error')
+    }
+  }
+
+  function memberStatusLabel(member: (typeof teamMembers)[number]) {
+    if (member.status !== 'PENDING') return ''
+    if (member.invite_expired) return ' · Expired'
+    return ' · Pending'
+  }
+
+  return (
+    <div className={styles.section}>
+      <div className={styles.sectionHeader}>
+        <div>
+          <div className={styles.sectionTitle}>Team</div>
+        </div>
+        {canManageTeam && (
+          <Button variant="primary" size="sm" onClick={() => setSheetOpen(true)}>
+            + Add team member
+          </Button>
+        )}
+      </div>
+
+      {!canManageTeam ? (
+        <p className={styles.roleHint}>
+          Only the business owner can invite or manage team members.
+        </p>
+      ) : (
+        <>
+          <div className={styles.teamRoleGuide}>
+            {ASSIGNABLE_TEAM_ROLES.map(r => (
+              <div key={r.value} className={styles.teamRoleGuideItem}>
+                <strong>{r.label}</strong>
+                <span>{r.description}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className={styles.teamList}>
+            {isLoading || (isFetching && teamMembers.length === 0) ? (
+              <div className={styles.teamSkeletons} aria-busy="true" aria-label="Loading team members">
+                {[0, 1, 2].map(i => (
+                  <div key={i} className={styles.teamSkeletonRow}>
+                    <div className={styles.teamSkeletonAvatar} />
+                    <div className={styles.teamSkeletonInfo}>
+                      <div className={styles.teamSkeletonLine} style={{ width: '42%' }} />
+                      <div className={styles.teamSkeletonLine} style={{ width: '58%' }} />
+                    </div>
+                    <div className={styles.teamSkeletonAction} />
+                  </div>
+                ))}
+              </div>
+            ) : teamMembers.length === 0 ? (
+              <div className={styles.teamEmpty}>
+                <p className={styles.teamEmptyTitle}>No team members yet</p>
+                <p className={styles.teamEmptySub}>Add people to give them access to this business.</p>
+              </div>
+            ) : (
+              teamMembers.map(member => (
+                <div key={member.id} className={styles.teamRow}>
+                  <div className={styles.teamAvatar}>
+                    {(member.name || member.email || '?').charAt(0).toUpperCase()}
+                  </div>
+                  <div className={styles.teamInfo}>
+                    <div className={styles.teamName}>{member.name || member.email}</div>
+                    <div className={styles.teamMeta}>
+                      {member.email}
+                      {memberStatusLabel(member)}
+                    </div>
+                  </div>
+                  <div className={styles.teamActions}>
+                    {member.status === 'PENDING' ? (
+                      <Button
+                        variant="text"
+                        size="sm"
+                        loading={resendingId === member.id}
+                        onClick={() => handleResend(member.id)}
+                      >
+                        Resend invite
+                      </Button>
+                    ) : (
+                      <select
+                        className={styles.teamRoleSelect}
+                        value={member.role}
+                        onChange={e =>
+                          handleRoleChange(
+                            member.id,
+                            e.target.value as Exclude<BusinessTeamRole, 'OWNER'>,
+                          )
+                        }
+                      >
+                        {ASSIGNABLE_TEAM_ROLES.map(r => (
+                          <option key={r.value} value={r.value}>{r.label}</option>
+                        ))}
+                      </select>
+                    )}
+                    <Button variant="text" size="sm" onClick={() => handleRemove(member.id)}>
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {businessId && (
+            <AddTeamMemberSheet
+              open={sheetOpen}
+              onClose={() => setSheetOpen(false)}
+              businessId={businessId}
+              onCreated={() => {
+                showToast('Team member invited. Invite expires in 24 hours.')
+                void refresh()
+              }}
+            />
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+// --- Notifications Tab ---
 function NotificationsTab() {
-  const [notifs, setNotifs] = useState({ email: true, push: true, sms: false, transactions: true, marketing: false })
+  const { showToast } = useToast()
+  const { businessId } = useBusiness()
+  const { canManageNotifications } = usePermissions()
+  const [prefs, setPrefs] = useState({
+    email_float_topups: true,
+    email_customer_collection_credits: false,
+  })
+  const [loading, setLoading] = useState(true)
+  const [savingKey, setSavingKey] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!businessId) {
+      setLoading(false)
+      return
+    }
+
+    let cancelled = false
+    setLoading(true)
+    businessApi
+      .getNotificationPreferences(businessId)
+      .then(next => {
+        if (cancelled) return
+        setPrefs(next)
+      })
+      .catch(err => {
+        if (cancelled) return
+        showToast(err instanceof ApiError ? err.message : 'Could not load notification preferences', 'error')
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [businessId, showToast])
+
+  async function togglePref(key: keyof typeof prefs, labelOn: string, labelOff: string) {
+    if (!businessId || loading || savingKey || !canManageNotifications) return
+    const next = !prefs[key]
+    setPrefs(prev => ({ ...prev, [key]: next }))
+    setSavingKey(key)
+    try {
+      const updated = await businessApi.updateNotificationPreferences(businessId, { [key]: next })
+      setPrefs(updated)
+      showToast(updated[key] ? labelOn : labelOff)
+    } catch (err) {
+      setPrefs(prev => ({ ...prev, [key]: !next }))
+      showToast(err instanceof ApiError ? err.message : 'Could not update preference', 'error')
+    } finally {
+      setSavingKey(null)
+    }
+  }
+
+  const rows: {
+    key: keyof typeof prefs
+    label: string
+    desc: string
+    labelOn: string
+    labelOff: string
+  }[] = [
+    {
+      key: 'email_float_topups',
+      label: 'Email me for float top-ups',
+      desc: 'Get an email when your float wallet is credited.',
+      labelOn: 'Float top-up emails enabled',
+      labelOff: 'Float top-up emails disabled',
+    },
+    {
+      key: 'email_customer_collection_credits',
+      label: 'Email me for every customer collection',
+      desc: 'Get an email when a customer account receives a collection credit.',
+      labelOn: 'Customer collection emails enabled',
+      labelOff: 'Customer collection emails disabled',
+    },
+  ]
+
   return (
     <div className={styles.section}>
       <div className={styles.sectionTitle}>Notification Preferences</div>
+      {!canManageNotifications && (
+        <p className={styles.roleHint}>Only the business owner can change notification preferences.</p>
+      )}
       <div className={styles.notifList}>
-        {([
-          { key: 'email' as const, label: 'Email Notifications', desc: 'Receive notifications via email' },
-          { key: 'push' as const, label: 'Push Notifications', desc: 'Browser push notifications' },
-          { key: 'sms' as const, label: 'SMS Alerts', desc: 'Receive SMS for important activity' },
-          { key: 'transactions' as const, label: 'Transaction Alerts', desc: 'Get notified for every debit and credit' },
-          { key: 'marketing' as const, label: 'Marketing Emails', desc: 'News, updates, and product announcements' },
-        ]).map(({ key, label, desc }) => (
-          <div key={key} className={styles.notifRow}>
-            <div><div className={styles.notifLabel}>{label}</div><div className={styles.notifDesc}>{desc}</div></div>
-            <Toggle on={notifs[key]} onChange={() => setNotifs(p => ({ ...p, [key]: !p[key] }))} />
+        {loading ? (
+          <div className={styles.notifSkeletons} aria-busy="true" aria-label="Loading notification preferences">
+            {[0, 1].map(i => (
+              <div key={i} className={styles.notifSkeletonRow}>
+                <div className={styles.notifSkeletonInfo}>
+                  <div className={styles.notifSkeletonLine} style={{ width: '48%' }} />
+                  <div className={styles.notifSkeletonLine} style={{ width: '72%' }} />
+                </div>
+                <div className={styles.notifSkeletonToggle} />
+              </div>
+            ))}
           </div>
-        ))}
+        ) : (
+          rows.map(row => (
+            <div key={row.key} className={styles.notifRow}>
+              <div>
+                <div className={styles.notifLabel}>{row.label}</div>
+                <div className={styles.notifDesc}>{row.desc}</div>
+              </div>
+              <Toggle
+                on={prefs[row.key]}
+                onChange={() => togglePref(row.key, row.labelOn, row.labelOff)}
+                disabled={!canManageNotifications || !!savingKey || !businessId}
+              />
+            </div>
+          ))
+        )}
       </div>
     </div>
   )
@@ -707,6 +1022,9 @@ export default function SettingsPage() {
           </div>
           <div className={tab === 'webhooks' ? styles.tabPane : styles.tabPaneHidden}>
             <WebhooksTab />
+          </div>
+          <div className={tab === 'team' ? styles.tabPane : styles.tabPaneHidden}>
+            <TeamTab />
           </div>
           <div className={tab === 'security' ? styles.tabPane : styles.tabPaneHidden}>
             <SecurityTab />

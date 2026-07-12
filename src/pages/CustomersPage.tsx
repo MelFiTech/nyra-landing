@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import Button from '../components/ui/Button'
 import CreateCustomerModal from '../components/customers/CreateCustomerModal'
 import CustomerRowMenu from '../components/customers/CustomerRowMenu'
-import { useBusiness } from '../context/BusinessContext'
+import { useBusiness, usePermissions } from '../context/BusinessContext'
 import { useCustomers } from '../hooks/useAppData'
 import { queryKeys } from '../lib/queryKeys'
 import {
@@ -70,7 +70,7 @@ function groupCustomers(wallets: CustomerWallet[]): GroupedCustomer[] {
 
     return {
       key,
-      name: primaryAccount.owners_fullname,
+      name: primaryAccount.owners_fullname?.trim() || 'Unnamed customer',
       accounts: sorted,
       primaryWalletId: primaryAccount.wallet_id,
       primaryAccount,
@@ -84,12 +84,13 @@ export default function CustomersPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { businessId } = useBusiness()
+  const { canAct } = usePermissions()
   const { showToast } = useToast()
   const [modalOpen, setModalOpen] = useState(false)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
-  const { data: customers = [], isLoading: loading } = useCustomers()
+  const { data: customers = [], isLoading: loading, isError, error, refetch } = useCustomers()
   const [copied, setCopied] = useState<string | null>(null)
 
   function copyText(text: string, hint = 'Copied') {
@@ -139,9 +140,11 @@ export default function CustomersPage() {
       <div className={styles.page}>
         <div className={styles.pageHeader}>
           <h1 className={styles.pageTitle}>Customers</h1>
-          <Button variant="primary" size="sm" onClick={() => setModalOpen(true)}>
-            Add Customer +
-          </Button>
+          {canAct && (
+            <Button variant="primary" size="sm" onClick={() => setModalOpen(true)}>
+              Add Customer +
+            </Button>
+          )}
         </div>
 
         <div className={styles.toolbar}>
@@ -179,6 +182,15 @@ export default function CustomersPage() {
                   <td colSpan={5} className={styles.emptyCell}>
                     {loading && customers.length === 0
                       ? 'Loading customers…'
+                      : isError
+                        ? (
+                          <>
+                            {(error as Error)?.message || 'Could not load customers.'}{' '}
+                            <button type="button" className={styles.nameLink} onClick={() => refetch()}>
+                              Retry
+                            </button>
+                          </>
+                        )
                       : filtered.length === 0 && customers.length === 0
                         ? 'No customers yet. Add your first customer to get started.'
                         : 'No customers match your filters.'}

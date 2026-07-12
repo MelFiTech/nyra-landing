@@ -23,7 +23,7 @@ export function useTransactions(params?: TransactionListParams) {
   const { businessId } = useBusiness()
   return useQuery({
     queryKey: queryKeys.transactions(businessId ?? '', params),
-    queryFn: () => transactionsApi.list(params),
+    queryFn: () => transactionsApi.list(params, businessId!),
     enabled: !!businessId,
   })
 }
@@ -32,7 +32,7 @@ export function useCustomers() {
   const { businessId } = useBusiness()
   return useQuery({
     queryKey: queryKeys.customers(businessId ?? ''),
-    queryFn: () => customersApi.list(),
+    queryFn: () => customersApi.list(businessId!),
     enabled: !!businessId,
   })
 }
@@ -41,7 +41,7 @@ export function useCustomer(walletId: string | undefined) {
   const { businessId } = useBusiness()
   return useQuery({
     queryKey: queryKeys.customer(businessId ?? '', walletId ?? ''),
-    queryFn: () => customersApi.get(walletId!),
+    queryFn: () => customersApi.get(walletId!, businessId!),
     enabled: !!businessId && !!walletId,
   })
 }
@@ -50,7 +50,7 @@ export function useCustomerTransactions(walletId: string | undefined) {
   const { businessId } = useBusiness()
   return useQuery({
     queryKey: queryKeys.customerTransactions(businessId ?? '', walletId ?? ''),
-    queryFn: () => customersApi.transactions(walletId!, { limit: 50 }),
+    queryFn: () => customersApi.transactions(walletId!, { limit: 50 }, businessId!),
     enabled: !!businessId && !!walletId,
   })
 }

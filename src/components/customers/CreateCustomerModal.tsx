@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Button from '../ui/Button'
 import SideSheetStack, { type SheetLayer } from '../treasury/SideSheetStack'
 import { customersApi, ApiError } from '../../lib/api'
+import { useBusiness } from '../../context/BusinessContext'
 import styles from './CreateCustomerModal.module.css'
 
 type Props = {
@@ -16,6 +17,7 @@ const GENDERS = [
 ]
 
 export default function CreateCustomerModal({ onClose, onCreated }: Props) {
+  const { businessId } = useBusiness()
   const [form, setForm] = useState({
     first_name: '',
     last_name: '',
@@ -63,7 +65,7 @@ export default function CreateCustomerModal({ onClose, onCreated }: Props) {
         phone_number: form.phone_number.trim(),
         email: form.email.trim(),
         bvn: form.bvn,
-      })
+      }, businessId ?? undefined)
       onCreated()
     } catch (err) {
       setLoading(false)

@@ -2,8 +2,8 @@ import type { CustomerWallet } from './api'
 
 export type GroupStatus = 'active' | 'frozen' | 'mixed'
 
-export function customerNameKey(name: string) {
-  return name.trim().toLowerCase()
+export function customerNameKey(name: string | null | undefined) {
+  return (name ?? '').trim().toLowerCase() || 'unnamed'
 }
 
 export function sortCustomerAccounts(accounts: CustomerWallet[]) {
