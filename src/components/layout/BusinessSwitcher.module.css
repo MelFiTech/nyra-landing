@@ -111,6 +111,13 @@
 }
 .addBtn:hover { background: var(--hover-bg); }
 
+.addBtnDisabled,
+.addBtnDisabled:hover {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: transparent;
+}
+
 /* Add-business form */
 .addForm { display: flex; flex-direction: column; gap: 12px; padding: 4px; }
 .field { display: flex; flex-direction: column; gap: 5px; }

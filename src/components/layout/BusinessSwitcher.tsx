@@ -5,6 +5,8 @@ import { useBusiness } from '../../context/BusinessContext'
 import { useToast } from '../../context/ToastContext'
 import styles from './BusinessSwitcher.module.css'
 
+const ADD_BUSINESS_ENABLED = false
+
 const BUSINESS_TYPES = [
   { value: 'BUSINESS_NAME', label: 'Business Name' },
   { value: 'REGISTERED_COMPANY', label: 'Registered Company' },
@@ -104,7 +106,16 @@ export default function BusinessSwitcher() {
                   )
                 })}
               </div>
-              <button className={styles.addBtn} onClick={() => { setAdding(true); setForm({ business_name: '', business_type: '', address: '' }) }}>
+              <button
+                type="button"
+                className={`${styles.addBtn} ${!ADD_BUSINESS_ENABLED ? styles.addBtnDisabled : ''}`}
+                disabled={!ADD_BUSINESS_ENABLED}
+                onClick={() => {
+                  if (!ADD_BUSINESS_ENABLED) return
+                  setAdding(true)
+                  setForm({ business_name: '', business_type: '', address: '' })
+                }}
+              >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
