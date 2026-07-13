@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { bankApi, transferApi, ApiError, type Bank, type AccountEnquiry } from '../../lib/api'
+import { loadBanks, getCachedBanks } from '../../lib/banks'
 import { useToast } from '../../context/ToastContext'
 import Button from '../ui/Button'
+import BankLogo from '../ui/BankLogo'
 import PinEntry from './PinEntry'
 import SideSheetStack, { type SheetLayer } from './SideSheetStack'
 import styles from './TransferModal.module.css'
@@ -19,12 +21,10 @@ type DetailView = 'form' | 'review' | 'pin'
 
 const MIN_AMOUNT = 100
 
-let banksCache: Bank[] | null = null
-
 export default function TransferModal({ open, onClose, sourceAccountNumber, pinReady = true }: Props) {
   const { showToast } = useToast()
   const [detailView, setDetailView] = useState<DetailView>('form')
-  const [banks, setBanks] = useState<Bank[]>(() => banksCache ?? [])
+  const [banks, setBanks] = useState<Bank[]>(() => getCachedBanks())
   const [bankSearch, setBankSearch] = useState('')
   const [showBankList, setShowBankList] = useState(false)
   const [selectedBank, setSelectedBank] = useState<Bank | null>(null)
@@ -48,12 +48,9 @@ export default function TransferModal({ open, onClose, sourceAccountNumber, pinR
       setBankSearch('')
       setShowBankList(false)
       setPinLoading(false)
-      if (!banksCache) {
-        bankApi
-          .listBanks()
-          .then(b => { banksCache = b; setBanks(b) })
-          .catch(() => setVerifyError('Could not load bank list. Check your connection.'))
-      }
+      loadBanks()
+        .then(b => setBanks(b))
+        .catch(() => setVerifyError('Could not load bank list. Check your connection.'))
     }
   }, [open])
 
@@ -142,9 +139,14 @@ export default function TransferModal({ open, onClose, sourceAccountNumber, pinR
       <div className={styles.field}>
         <label className={styles.label}>Bank</label>
         <div className={styles.bankSelect} onClick={() => setShowBankList(v => !v)}>
-          <span className={selectedBank ? styles.bankSelected : styles.bankPlaceholder}>
-            {selectedBank ? selectedBank.bank_name : 'Select bank'}
-          </span>
+          {selectedBank ? (
+            <span className={styles.bankSelectedRow}>
+              <BankLogo bank={selectedBank} size={28} />
+              <span className={styles.bankSelected}>{selectedBank.bank_name}</span>
+            </span>
+          ) : (
+            <span className={styles.bankPlaceholder}>Select bank</span>
+          )}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="6 9 12 15 18 9"/>
           </svg>
@@ -161,10 +163,19 @@ export default function TransferModal({ open, onClose, sourceAccountNumber, pinR
             />
             <div className={styles.bankList}>
               {filteredBanks.map(b => (
-                <button key={b.bank_code} className={styles.bankOption} onClick={() => { setSelectedBank(b); setBankSearch(''); setShowBankList(false) }}>
-                  {b.bank_name}
+                <button
+                  key={b.bank_code}
+                  type="button"
+                  className={styles.bankOption}
+                  onClick={() => { setSelectedBank(b); setBankSearch(''); setShowBankList(false) }}
+                >
+                  <BankLogo bank={b} size={28} />
+                  <span>{b.bank_name}</span>
                 </button>
               ))}
+              {filteredBanks.length === 0 && (
+                <div className={styles.bankEmpty}>No banks match your search</div>
+              )}
             </div>
           </div>
         )}
@@ -202,7 +213,13 @@ export default function TransferModal({ open, onClose, sourceAccountNumber, pinR
       <div className={styles.reviewAmount}>₦{Number(amount).toLocaleString()}</div>
       <div className={styles.reviewRows}>
         <div className={styles.reviewRow}><span>To</span><span>{enquiry?.account_name}</span></div>
-        <div className={styles.reviewRow}><span>Bank</span><span>{selectedBank?.bank_name}</span></div>
+        <div className={styles.reviewRow}>
+          <span>Bank</span>
+          <span className={styles.reviewBank}>
+            <BankLogo bank={selectedBank} size={22} />
+            {selectedBank?.bank_name}
+          </span>
+        </div>
         <div className={styles.reviewRow}><span>Account</span><span>{accountNumber}</span></div>
         {description && <div className={styles.reviewRow}><span>Note</span><span>{description}</span></div>}
         <div className={styles.reviewRow}><span>From</span><span>{sourceAccountNumber}</span></div>

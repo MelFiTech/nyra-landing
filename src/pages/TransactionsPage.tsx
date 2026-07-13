@@ -47,6 +47,14 @@ const SearchIcon = () => (
   </svg>
 )
 
+const RefreshIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="23 4 23 10 17 10"/>
+    <polyline points="1 20 1 14 7 14"/>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+  </svg>
+)
+
 function exportTransactions(rows: Transaction[]) {
   const headers = ['Reference', 'From / To', 'Method', 'Amount', 'Date', 'Status']
   const escape = (value: string) => `"${String(value).replace(/"/g, '""')}"`
@@ -110,19 +118,32 @@ export default function TransactionsPage() {
   const listParams = useMemo(
     () => ({
       page_size: 200,
-      ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
       ...(filters.startDate ? { from: filters.startDate } : {}),
       ...(filters.endDate ? { to: filters.endDate } : {}),
     }),
-    [statusFilter, filters.startDate, filters.endDate],
+    [filters.startDate, filters.endDate],
   )
 
-  const { data: apiTransactions = [], isLoading: loading, isError } = useTransactions(listParams)
+  const { data: apiTransactions = [], isLoading: loading, isFetching, isError, refetch } = useTransactions(listParams)
 
   const transactions = useMemo(
     () => apiTransactions.map(mapApiTransaction),
     [apiTransactions]
   )
+
+  const statusCounts = useMemo(() => {
+    let successful = 0
+    let failed = 0
+    for (const tx of transactions) {
+      if (tx.status === 'successful') successful += 1
+      else if (tx.status === 'failed') failed += 1
+    }
+    return {
+      all: transactions.length,
+      successful,
+      failed,
+    }
+  }, [transactions])
 
   const txMethods = useMemo(
     () => [...new Set(transactions.map(tx => tx.method))].filter(m => m !== '—'),
@@ -231,7 +252,7 @@ export default function TransactionsPage() {
                   active={statusFilter === f.key}
                   onClick={() => { setStatusFilter(f.key); setPage(1) }}
                 >
-                  {f.label}
+                  {f.label} <span className={styles.tabCount}>{statusCounts[f.key]}</span>
                 </Button>
               ))}
             </div>
@@ -302,17 +323,30 @@ export default function TransactionsPage() {
               </FilterSection>
             </FilterMenu>
 
-            <Button
-              variant="outline"
-              size="sm"
-              type="button"
-              className={styles.exportBtn}
-              disabled={filtered.length === 0}
-              onClick={() => exportTransactions(filtered)}
-            >
-              <ExportIcon />
-              Export
-            </Button>
+            <div className={styles.toolbarEnd}>
+              <button
+                type="button"
+                className={styles.refreshBtn}
+                onClick={() => refetch()}
+                disabled={isFetching}
+                title="Refresh transactions"
+                aria-label="Refresh transactions"
+              >
+                <span className={isFetching ? styles.refreshSpinning : undefined}>
+                  <RefreshIcon />
+                </span>
+              </button>
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                disabled={filtered.length === 0}
+                onClick={() => exportTransactions(filtered)}
+              >
+                <ExportIcon />
+                Export
+              </Button>
+            </div>
           </div>
         </div>
 

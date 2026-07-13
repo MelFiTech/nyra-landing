@@ -1,6 +1,7 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
+import { loadBanks } from '../../lib/banks'
 import styles from './Layout.module.css'
 
 type Props = {
@@ -9,6 +10,12 @@ type Props = {
 
 export default function Layout({ children }: Props) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
+  useEffect(() => {
+    void loadBanks().catch(() => {
+      /* bank list warms cache; transfer UI retries if needed */
+    })
+  }, [])
 
   return (
     <div className={styles.layout}>

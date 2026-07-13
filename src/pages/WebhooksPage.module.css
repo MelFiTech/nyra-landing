@@ -43,8 +43,8 @@
   align-items: center;
   gap: 8px;
   border: 1px solid var(--border-mid);
-  border-radius: 8px;
-  padding: 0 12px;
+  border-radius: 999px;
+  padding: 0 14px;
   height: 36px;
   box-sizing: border-box;
   background: var(--surface);
@@ -127,8 +127,53 @@
   box-sizing: border-box;
 }
 
-.exportBtn {
+.tabCount {
+  margin-left: 4px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+  font-weight: 500;
+}
+
+.toolbarEnd {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.refreshBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border-mid);
+  background: var(--surface);
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.refreshBtn:hover:not(:disabled) {
+  background: var(--hover-bg);
+  color: var(--text-1);
+  border-color: var(--border);
+}
+
+.refreshBtn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.refreshSpinning {
+  display: flex;
+  animation: refreshSpin 0.7s linear infinite;
+}
+
+@keyframes refreshSpin {
+  to { transform: rotate(360deg); }
 }
 
 .tableWrap {

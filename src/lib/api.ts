@@ -659,7 +659,15 @@ export const transactionsApi = {
 
 // ── Banks ───────────────────────────────────────────────────────────────
 
-export type Bank = { bank_code: string; bank_name: string }
+export type Bank = {
+  bank_code: string
+  bank_name: string
+  bank_long_code?: string
+  /** PNG logo (400×400) — broad compatibility */
+  logo_url?: string | null
+  /** SVG logo — prefer on web */
+  logo_url_svg?: string | null
+}
 
 export type AccountEnquiry = {
   account_name: string
@@ -910,6 +918,8 @@ export type WebhookDelivery = {
   attempt_number: number
   error_message: string | null
   response_preview: string | null
+  /** Full webhook body that was POSTed to the endpoint. */
+  payload?: Record<string, unknown> | null
   created_at: string
 }
 

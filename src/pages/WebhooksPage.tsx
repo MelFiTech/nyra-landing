@@ -35,6 +35,14 @@ const SearchIcon = () => (
   </svg>
 )
 
+const RefreshIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="23 4 23 10 17 10"/>
+    <polyline points="1 20 1 14 7 14"/>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+  </svg>
+)
+
 const CheckIcon = () => (
   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="20 6 9 17 4 12"/>
@@ -128,7 +136,7 @@ function timeAgo(iso: string) {
 export default function WebhooksPage() {
   const { showToast } = useToast()
   const { businessId } = useBusiness()
-  const { data: logs = [], isLoading: loading, refetch } = useWebhookDeliveries()
+  const { data: logs = [], isLoading: loading, isFetching, refetch } = useWebhookDeliveries()
   const [search, setSearch] = useState('')
   const [filters, setFilters] = useState<WebhookFilters>(EMPTY_FILTERS)
   const [draftFilters, setDraftFilters] = useState<WebhookFilters>(EMPTY_FILTERS)
@@ -143,6 +151,23 @@ export default function WebhooksPage() {
     () => [...new Set(logs.map(l => l.event))].sort(),
     [logs]
   )
+
+  const statusCounts = useMemo(() => {
+    let delivered = 0
+    let failed_retrying = 0
+    let failed_final = 0
+    for (const log of logs) {
+      if (log.outcome === 'delivered') delivered += 1
+      else if (log.outcome === 'failed_retrying') failed_retrying += 1
+      else if (log.outcome === 'failed_final') failed_final += 1
+    }
+    return {
+      all: logs.length,
+      delivered,
+      failed_retrying,
+      failed_final,
+    }
+  }, [logs])
 
   const activeFilterCount = countActiveFilters(filters)
 
@@ -247,7 +272,7 @@ export default function WebhooksPage() {
                   active={statusFilter === f.key}
                   onClick={() => { setStatusFilter(f.key); setPage(1) }}
                 >
-                  {f.label}
+                  {f.label} <span className={styles.tabCount}>{statusCounts[f.key]}</span>
                 </Button>
               ))}
             </div>
@@ -319,10 +344,24 @@ export default function WebhooksPage() {
               </FilterSection>
             </FilterMenu>
 
-            <Button variant="outline" size="sm" type="button" className={styles.exportBtn}>
-              <ExportIcon />
-              Export
-            </Button>
+            <div className={styles.toolbarEnd}>
+              <button
+                type="button"
+                className={styles.refreshBtn}
+                onClick={() => refetch()}
+                disabled={isFetching}
+                title="Refresh deliveries"
+                aria-label="Refresh deliveries"
+              >
+                <span className={isFetching ? styles.refreshSpinning : undefined}>
+                  <RefreshIcon />
+                </span>
+              </button>
+              <Button variant="outline" size="sm" type="button">
+                <ExportIcon />
+                Export
+              </Button>
+            </div>
           </div>
         </div>
 

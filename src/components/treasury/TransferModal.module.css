@@ -56,10 +56,17 @@
 .bankSelect {
   padding: 11px 14px; border: 1.5px solid var(--border-mid); border-radius: 8px;
   background: var(--input-bg); display: flex; align-items: center; justify-content: space-between;
-  cursor: pointer; transition: border-color 0.12s;
+  cursor: pointer; transition: border-color 0.12s; gap: 10px;
 }
 .bankSelect:hover { border-color: var(--text-muted); }
-.bankSelected { font-size: 14px; color: var(--text-1); }
+.bankSelectedRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+.bankSelected { font-size: 14px; color: var(--text-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bankPlaceholder { font-size: 14px; color: var(--text-muted); }
 .bankDropdown {
   position: absolute; top: 100%; left: 0; right: 0; background: var(--surface);
@@ -72,12 +79,25 @@
   border-radius: 10px 10px 0 0; font-family: inherit;
 }
 .bankSearch::placeholder { color: var(--text-muted); }
-.bankList { max-height: 200px; overflow-y: auto; }
+.bankList { max-height: 220px; overflow-y: auto; }
 .bankOption {
-  width: 100%; text-align: left; padding: 10px 14px; font-size: 13.5px; color: var(--text-1);
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  color: var(--text-1);
   transition: background 0.1s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 .bankOption:hover { background: var(--hover-bg); }
+.bankEmpty {
+  padding: 14px;
+  font-size: 13px;
+  color: var(--text-3);
+  text-align: center;
+}
 
 .verifying { font-size: 12px; color: var(--text-muted); }
 
@@ -124,6 +144,12 @@
 .reviewRow:last-child { border-bottom: none; }
 .reviewRow span:first-child { color: var(--text-3); }
 .reviewRow span:last-child { color: var(--text-1); font-weight: 600; }
+.reviewBank {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+}
 .reviewTotal span { font-size: 14.5px; font-weight: 700; color: var(--text-1) !important; }
 
 .success {
