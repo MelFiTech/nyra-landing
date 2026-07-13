@@ -103,6 +103,16 @@ export default function CustomersPage() {
 
   const grouped = useMemo(() => groupCustomers(customers), [customers])
 
+  const statusCounts = useMemo(() => {
+    let active = 0
+    let frozen = 0
+    for (const group of grouped) {
+      if (group.status === 'active') active += 1
+      else frozen += 1
+    }
+    return { all: grouped.length, active, frozen }
+  }, [grouped])
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     return grouped.filter(group => {
@@ -150,9 +160,15 @@ export default function CustomersPage() {
 
         <div className={styles.toolbar}>
           <div className={styles.filters}>
-            <Button variant="segment" active={statusFilter === 'all'} onClick={() => { setStatusFilter('all'); setPage(1) }}>All</Button>
-            <Button variant="segment" active={statusFilter === 'active'} onClick={() => { setStatusFilter('active'); setPage(1) }}>Active</Button>
-            <Button variant="segment" active={statusFilter === 'frozen'} onClick={() => { setStatusFilter('frozen'); setPage(1) }}>Frozen</Button>
+            <Button variant="segment" active={statusFilter === 'all'} onClick={() => { setStatusFilter('all'); setPage(1) }}>
+              All <span className={styles.tabCount}>{statusCounts.all}</span>
+            </Button>
+            <Button variant="segment" active={statusFilter === 'active'} onClick={() => { setStatusFilter('active'); setPage(1) }}>
+              Active <span className={styles.tabCount}>{statusCounts.active}</span>
+            </Button>
+            <Button variant="segment" active={statusFilter === 'frozen'} onClick={() => { setStatusFilter('frozen'); setPage(1) }}>
+              Frozen <span className={styles.tabCount}>{statusCounts.frozen}</span>
+            </Button>
           </div>
 
           <div className={styles.searchWrap}>
