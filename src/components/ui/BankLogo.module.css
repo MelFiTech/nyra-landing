@@ -19,6 +19,15 @@
   background: #fff;
 }
 
+.fill {
+  border: none;
+  background: #fff;
+}
+
+.fill .img {
+  object-fit: cover;
+}
+
 .fallback {
   display: flex;
   align-items: center;

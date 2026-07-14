@@ -56,6 +56,32 @@ export function banksByCode(banks: Bank[]): Record<string, Bank> {
   return map
 }
 
+function normalizeBankKey(value: string): string {
+  return value.trim().toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+
+/** Resolve a bank from cached list by code or name. */
+export function findBank(
+  banks: Bank[],
+  query?: { bankCode?: string | null; bankName?: string | null },
+): Bank | undefined {
+  if (!banks.length || !query) return undefined
+  const code = query.bankCode?.trim()
+  if (code) {
+    const byCode = banksByCode(banks)
+    if (byCode[code]) return byCode[code]
+  }
+  const name = query.bankName?.trim()
+  if (!name) return undefined
+  const exact = banks.find(b => b.bank_name.toLowerCase() === name.toLowerCase())
+  if (exact) return exact
+  const key = normalizeBankKey(name)
+  return banks.find(b => {
+    const bankKey = normalizeBankKey(b.bank_name)
+    return bankKey === key || bankKey.includes(key) || key.includes(bankKey)
+  })
+}
+
 /**
  * Load banks once (memory → localStorage → API).
  * Logos come on the same list endpoint — no extra request.

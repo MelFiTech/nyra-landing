@@ -62,20 +62,50 @@
 }
 
 .heroAvatar {
-  width: 44px; height: 44px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 16px; font-weight: 700; color: #fff;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 4px;
+  background: var(--surface-2);
+  color: var(--text-3);
+  border: 1px solid var(--border);
 }
 
-.heroAvatarCredit { background: var(--brand); }
-.heroAvatarDebit { background: var(--text-3); }
+.heroBankLogo {
+  margin-bottom: 4px;
+}
 
 .heroAmount { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
 .heroAmountCredit { color: var(--brand); }
 .heroAmountDebit { color: var(--text-1); }
 
 .heroSub { font-size: 13px; color: var(--text-3); }
+
+.heroMeta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.loadingBar {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--brand), transparent);
+  animation: txDrawerLoad 1.2s ease-in-out infinite;
+}
+
+@keyframes txDrawerLoad {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.bankRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
 .divider { height: 1px; background: var(--border); margin: 0 24px; }
 
@@ -118,34 +148,50 @@
 .detailValue { font-size: 13.5px; color: var(--text-1); font-weight: 500; }
 .detailValueSummary { line-height: 1.5; color: var(--text-2); }
 
-.refPill {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: var(--surface-2); border: 1px solid var(--border-mid);
-  border-radius: 7px; padding: 6px 10px;
-  width: fit-content; max-width: 100%;
+.copyRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
 }
 
-.refText {
-  font-size: 12.5px; font-family: 'SF Mono','Fira Mono',monospace;
-  color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+.copyText {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-1);
+  word-break: break-all;
 }
 
 .copyBtn {
-  color: var(--text-muted); display: flex; align-items: center;
-  flex-shrink: 0; transition: color 0.12s;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 2px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.12s;
 }
 
 .copyBtn:hover { color: var(--text-2); }
 
+.copyBtnDone { color: #16a34a; }
+
+.copyBtnDone:hover { color: #16a34a; }
+
 .timeline { display: flex; flex-direction: column; gap: 12px; }
 
-.timelineItem { display: flex; align-items: center; gap: 10px; }
+.timelineItem { display: flex; align-items: flex-start; gap: 10px; }
 
-.timelineDot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.timelineDot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
 
-.timelineLabel { font-size: 13px; color: var(--text-2); font-weight: 500; flex: 1; }
+.timelineContent { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
 
-.timelineDate { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+.timelineLabel { font-size: 13px; color: var(--text-2); font-weight: 500; }
+
+.timelineDate { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
 
 .balanceGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 

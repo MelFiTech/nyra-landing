@@ -6,17 +6,19 @@ import styles from './BankLogo.module.css'
 type Props = {
   bank?: Pick<Bank, 'bank_name' | 'logo_url' | 'logo_url_svg'> | null
   size?: number
+  /** Fill the circle edge-to-edge (cover). Default contains the logo. */
+  fill?: boolean
   className?: string
 }
 
-export default function BankLogo({ bank, size = 32, className }: Props) {
+export default function BankLogo({ bank, size = 32, fill = false, className }: Props) {
   const [failed, setFailed] = useState(false)
   const src = bankLogoSrc(bank)
   const showImg = Boolean(src) && !failed
 
   return (
     <span
-      className={`${styles.root}${className ? ` ${className}` : ''}`}
+      className={`${styles.root}${fill ? ` ${styles.fill}` : ''}${className ? ` ${className}` : ''}`}
       style={{ width: size, height: size, fontSize: Math.max(10, Math.round(size * 0.34)) }}
       aria-hidden={!bank?.bank_name}
     >

@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import {
   apiClientApi,
   customersApi,
@@ -20,11 +20,38 @@ export function useBusinessWallet() {
   })
 }
 
+const TX_HISTORY_PAGE_SIZE = 100
+
 export function useTransactions(params?: TransactionListParams) {
   const { businessId } = useBusiness()
   return useQuery({
     queryKey: queryKeys.transactions(businessId ?? '', params),
     queryFn: () => transactionsApi.list(params, businessId!),
+    enabled: !!businessId,
+  })
+}
+
+/** Cursor-paginated fetch so the transactions page can load full wallet history. */
+export function useAllTransactions(
+  params?: Omit<TransactionListParams, 'cursor' | 'page_size'>,
+) {
+  const { businessId } = useBusiness()
+  return useInfiniteQuery({
+    queryKey: queryKeys.transactions(businessId ?? '', { ...params, mode: 'all' }),
+    queryFn: ({ pageParam }) =>
+      transactionsApi.list(
+        {
+          ...params,
+          page_size: TX_HISTORY_PAGE_SIZE,
+          ...(pageParam ? { cursor: pageParam } : {}),
+        },
+        businessId!,
+      ),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: lastPage => {
+      if (lastPage.length < TX_HISTORY_PAGE_SIZE) return undefined
+      return lastPage[lastPage.length - 1]?.transaction_id
+    },
     enabled: !!businessId,
   })
 }

@@ -9,7 +9,7 @@ import FilterMenu, {
 } from '../components/ui/FilterMenu'
 import TransactionDrawer, { type Transaction } from '../components/treasury/TransactionDrawer'
 import { useBalance } from '../context/BalanceContext'
-import { useTransactions } from '../hooks/useAppData'
+import { useAllTransactions } from '../hooks/useAppData'
 import { mapApiTransaction } from '../lib/mapTransaction'
 import styles from './TransactionsPage.module.css'
 
@@ -117,14 +117,27 @@ export default function TransactionsPage() {
 
   const listParams = useMemo(
     () => ({
-      page_size: 200,
       ...(filters.startDate ? { from: filters.startDate } : {}),
       ...(filters.endDate ? { to: filters.endDate } : {}),
     }),
     [filters.startDate, filters.endDate],
   )
 
-  const { data: apiTransactions = [], isLoading: loading, isFetching, isError, refetch } = useTransactions(listParams)
+  const {
+    data: txPages,
+    isLoading: loading,
+    isFetching,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useAllTransactions(listParams)
+
+  const apiTransactions = useMemo(
+    () => txPages?.pages.flat() ?? [],
+    [txPages?.pages],
+  )
 
   const transactions = useMemo(
     () => apiTransactions.map(mapApiTransaction),
@@ -407,7 +420,8 @@ export default function TransactionsPage() {
 
         <div className={styles.footer}>
           <span className={styles.footerMeta}>
-            Showing {pageItems.length} of {filtered.length} transactions
+            Showing {pageItems.length} of {filtered.length} loaded transactions
+            {hasNextPage ? ' · more available' : ''}
           </span>
           <div className={styles.pagination}>
             <Button
@@ -427,6 +441,16 @@ export default function TransactionsPage() {
             >
               Next
             </Button>
+            {hasNextPage && (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isFetchingNextPage}
+                onClick={() => void fetchNextPage()}
+              >
+                {isFetchingNextPage ? 'Loading…' : 'Load more'}
+              </Button>
+            )}
           </div>
         </div>
 
