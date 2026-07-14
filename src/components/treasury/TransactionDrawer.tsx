@@ -272,8 +272,7 @@ export default function TransactionDrawer({ tx, onClose }: Props) {
               )}
             </div>
 
-            <div className={styles.divider} />
-
+            <div className={styles.body}>
             <div className={styles.metaGrid}>
               <div className={styles.metaItem}>
                 <span className={styles.metaLabel}>Date & time</span>
@@ -433,18 +432,20 @@ export default function TransactionDrawer({ tx, onClose }: Props) {
               </div>
             </div>
 
-            <div className={styles.divider} />
+            </div>
 
-            <div className={styles.section}>
-              <div className={styles.sectionTitle}>Balance Summary</div>
-              <div className={styles.balanceGrid}>
-                <div className={styles.balanceItem}>
-                  <span className={styles.balanceLabel}>Previous Balance</span>
-                  <span className={styles.balanceValue}>{mask(display.prevBalance)}</span>
-                </div>
-                <div className={styles.balanceItem}>
-                  <span className={styles.balanceLabel}>Current Balance</span>
-                  <span className={styles.balanceValue}>{mask(display.currBalance)}</span>
+            <div className={styles.balanceFooter}>
+              <div className={styles.section}>
+                <div className={styles.sectionTitle}>Balance Summary</div>
+                <div className={styles.balanceGrid}>
+                  <div className={styles.balanceItem}>
+                    <span className={styles.balanceLabel}>Previous Balance</span>
+                    <span className={styles.balanceValue}>{mask(display.prevBalance)}</span>
+                  </div>
+                  <div className={styles.balanceItem}>
+                    <span className={styles.balanceLabel}>Current Balance</span>
+                    <span className={styles.balanceValue}>{mask(display.currBalance)}</span>
+                  </div>
                 </div>
               </div>
             </div>

@@ -611,6 +611,7 @@ export type Transaction = {
   currency?: string
   description: string
   created_at: string
+  updated_at?: string
   charge?: number | string
   balance_before?: number | string
   balance_after?: number | string
