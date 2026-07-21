@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
+import BusinessVerificationBanner from './BusinessVerificationBanner'
 import { loadBanks } from '../../lib/banks'
 import styles from './Layout.module.css'
 
@@ -22,6 +23,7 @@ export default function Layout({ children }: Props) {
       <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(v => !v)} />
       <div className={styles.main}>
         <Topbar />
+        <BusinessVerificationBanner />
         <div className={styles.content}>
           {children}
         </div>

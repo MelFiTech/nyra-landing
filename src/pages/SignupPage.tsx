@@ -147,7 +147,16 @@ export default function SignupPage() {
   return (
     <div className={styles.page}>
       <div className={styles.card}>
-        <AuthGoBack />
+        <AuthGoBack
+          onGoBack={
+            step === 'otp'
+              ? () => {
+                  setOtp(['', '', '', '', '', ''])
+                  setStep('personal')
+                }
+              : undefined
+          }
+        />
         <Link to="/" className={styles.logo} aria-label="Go to home">
           <NyraLogo />
         </Link>
@@ -232,12 +241,6 @@ export default function SignupPage() {
         {/* Step 2: Email OTP */}
         {step === 'otp' && (
           <>
-            <Button variant="ghost" onClick={() => setStep('personal')} type="button">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
-              </svg>
-              Back
-            </Button>
             <h1 className={styles.heading}>Verify your email</h1>
             <p className={styles.subheading}>Step 2 of 3: We sent a 6-digit code to <strong>{email}</strong></p>
             <form className={styles.form} onSubmit={handleOtp}>

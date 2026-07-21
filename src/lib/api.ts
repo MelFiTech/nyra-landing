@@ -263,7 +263,7 @@ type BusinessResendOtpResponse = {
 export const authApi = {
   /** Step 1: send a registration OTP to the email. Returns the OTP token. */
   async signupVerify(email: string): Promise<string> {
-    const res = await request<{ token: string }>('/auth/signup-verify', {
+    const res = await request<{ token: string }>('/auth/business/signup-verify', {
       method: 'POST',
       body: { field: email },
       auth: false,
@@ -282,7 +282,7 @@ export const authApi = {
 
   /** Step 3: create the user. Returns JWT + user. */
   async signup(data: { email: string; password: string; firstname: string; lastname: string }) {
-    const res = await request<RawAuthResponse>('/auth/signup', {
+    const res = await request<RawAuthResponse>('/auth/business/signup', {
       method: 'POST',
       body: data,
       auth: false,

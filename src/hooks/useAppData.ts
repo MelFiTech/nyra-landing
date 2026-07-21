@@ -12,22 +12,24 @@ import { queryKeys } from '../lib/queryKeys'
 import { useBusiness } from '../context/BusinessContext'
 
 export function useBusinessWallet() {
-  const { businessId } = useBusiness()
+  const { businessId, business } = useBusiness()
+  const approved = business?.verification_status === 'VERIFIED'
   return useQuery({
     queryKey: queryKeys.wallet(businessId ?? ''),
     queryFn: () => walletApi.getBusinessWallet(businessId!),
-    enabled: !!businessId,
+    enabled: !!businessId && approved,
   })
 }
 
 const TX_HISTORY_PAGE_SIZE = 100
 
 export function useTransactions(params?: TransactionListParams) {
-  const { businessId } = useBusiness()
+  const { businessId, business } = useBusiness()
+  const approved = business?.verification_status === 'VERIFIED'
   return useQuery({
     queryKey: queryKeys.transactions(businessId ?? '', params),
     queryFn: () => transactionsApi.list(params, businessId!),
-    enabled: !!businessId,
+    enabled: !!businessId && approved,
   })
 }
 
@@ -35,7 +37,8 @@ export function useTransactions(params?: TransactionListParams) {
 export function useAllTransactions(
   params?: Omit<TransactionListParams, 'cursor' | 'page_size'>,
 ) {
-  const { businessId } = useBusiness()
+  const { businessId, business } = useBusiness()
+  const approved = business?.verification_status === 'VERIFIED'
   return useInfiniteQuery({
     queryKey: queryKeys.transactions(businessId ?? '', { ...params, mode: 'all' }),
     queryFn: ({ pageParam }) =>
@@ -52,34 +55,37 @@ export function useAllTransactions(
       if (lastPage.length < TX_HISTORY_PAGE_SIZE) return undefined
       return lastPage[lastPage.length - 1]?.transaction_id
     },
-    enabled: !!businessId,
+    enabled: !!businessId && approved,
   })
 }
 
 export function useCustomers() {
-  const { businessId } = useBusiness()
+  const { businessId, business } = useBusiness()
+  const approved = business?.verification_status === 'VERIFIED'
   return useQuery({
     queryKey: queryKeys.customers(businessId ?? ''),
     queryFn: () => customersApi.list(businessId!),
-    enabled: !!businessId,
+    enabled: !!businessId && approved,
   })
 }
 
 export function useCustomer(walletId: string | undefined) {
-  const { businessId } = useBusiness()
+  const { businessId, business } = useBusiness()
+  const approved = business?.verification_status === 'VERIFIED'
   return useQuery({
     queryKey: queryKeys.customer(businessId ?? '', walletId ?? ''),
     queryFn: () => customersApi.get(walletId!, businessId!),
-    enabled: !!businessId && !!walletId,
+    enabled: !!businessId && !!walletId && approved,
   })
 }
 
 export function useCustomerTransactions(walletId: string | undefined) {
-  const { businessId } = useBusiness()
+  const { businessId, business } = useBusiness()
+  const approved = business?.verification_status === 'VERIFIED'
   return useQuery({
     queryKey: queryKeys.customerTransactions(businessId ?? '', walletId ?? ''),
     queryFn: () => customersApi.transactions(walletId!, { limit: 50 }, businessId!),
-    enabled: !!businessId && !!walletId,
+    enabled: !!businessId && !!walletId && approved,
   })
 }
 
