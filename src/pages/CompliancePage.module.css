@@ -336,6 +336,23 @@
   color: var(--active-color);
   border-style: solid;
 }
+.fileInputUploading {
+  border-color: var(--border-mid);
+  color: var(--text-2);
+  cursor: wait;
+  opacity: 0.85;
+}
+.fileInputError {
+  border-color: var(--danger, #dc2626);
+  color: var(--danger, #dc2626);
+  border-style: solid;
+}
+.fileInputCheck {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  color: var(--active-color);
+}
 
 .notice {
   display: flex;

@@ -167,6 +167,11 @@ async function request<T = unknown>(path: string, opts: RequestOptions = {}): Pr
     }
     const message =
       (Array.isArray(json?.message) ? json.message[0] : json?.message) ||
+      (typeof json?.message === 'object' && json?.message?.message
+        ? Array.isArray(json.message.message)
+          ? json.message.message[0]
+          : json.message.message
+        : undefined) ||
       json?.error ||
       `Request failed (${res.status})`
     throw new ApiError(message, res.status)
@@ -542,16 +547,43 @@ export const identityApi = {
   },
 
   /**
-   * Multipart upload. Accepted file fields: certificate_of_incorporation,
-   * application_for_registration, memorandum_of_association, proof_of_address.
+   * Upload a single KYB document field (multipart). Does not submit for review.
+   */
+  uploadDoc(businessId: string, field: string, file: File) {
+    const formData = new FormData()
+    formData.append('business_id', businessId)
+    formData.append('finalize', 'false')
+    formData.append(field, file)
+    return request('/business/identities/docs/upload', {
+      method: 'POST',
+      formData,
+      timeoutMs: 120_000,
+    })
+  },
+
+  /** Marks uploaded documents as pending admin review (all required docs must already be on server). */
+  submitDocsForReview(businessId: string) {
+    return request('/business/identities/docs/submit', {
+      method: 'POST',
+      body: { business_id: businessId },
+    })
+  },
+
+  /**
+   * @deprecated Prefer uploadDoc per file, then submitDocsForReview.
    */
   uploadDocs(businessId: string, files: Partial<Record<string, File>>) {
     const formData = new FormData()
     formData.append('business_id', businessId)
+    formData.append('finalize', 'true')
     for (const [field, file] of Object.entries(files)) {
       if (file) formData.append(field, file)
     }
-    return request('/business/identities/docs/upload', { method: 'POST', formData })
+    return request('/business/identities/docs/upload', {
+      method: 'POST',
+      formData,
+      timeoutMs: 120_000,
+    })
   },
 }
 

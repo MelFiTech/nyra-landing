@@ -25,6 +25,28 @@ const DOC_FIELDS = [
 
 const REQUIRED_DOCS = DOC_FIELDS.filter(d => d.required).map(d => d.key)
 
+type DocFieldKey = (typeof DOC_FIELDS)[number]['key']
+
+type DocUploadStatus = 'idle' | 'uploading' | 'uploaded' | 'error'
+
+function initialDocUploadState(): Record<DocFieldKey, DocUploadStatus> {
+  return {
+    certificate_of_incorporation: 'idle',
+    memorandum_of_association: 'idle',
+    proof_of_address: 'idle',
+    application_for_registration: 'idle',
+  }
+}
+
+function initialDocFileNames(): Record<DocFieldKey, string | null> {
+  return {
+    certificate_of_incorporation: null,
+    memorandum_of_association: null,
+    proof_of_address: null,
+    application_for_registration: null,
+  }
+}
+
 function StepNav({
   current,
   done,
@@ -101,12 +123,8 @@ export default function CompliancePage() {
   const [cacLoading, setCacLoading] = useState(false)
   const [cacVerified, setCacVerified] = useState(false)
 
-  const [files, setFiles] = useState<Record<string, File | null>>({
-    certificate_of_incorporation: null,
-    memorandum_of_association: null,
-    proof_of_address: null,
-    application_for_registration: null,
-  })
+  const [docUploadStatus, setDocUploadStatus] = useState(initialDocUploadState)
+  const [docFileNames, setDocFileNames] = useState(initialDocFileNames)
   const [docsLoading, setDocsLoading] = useState(false)
 
   function fail(err: unknown) {
@@ -156,18 +174,14 @@ export default function CompliancePage() {
 
   async function handleDocSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!allRequiredDocsUploaded) return
+    if (!canSubmitForReview) return
     if (!business) {
       showToast('No business found for your account. Please sign in again.', 'error')
       return
     }
     setDocsLoading(true)
     try {
-      const toUpload: Partial<Record<string, File>> = {}
-      for (const [field, file] of Object.entries(files)) {
-        if (file) toUpload[field] = file
-      }
-      await identityApi.uploadDocs(business.id, toUpload)
+      await identityApi.submitDocsForReview(business.id)
       setDocsLoading(false)
       setDone(d => (d.includes('documents') ? d : [...d, 'documents']))
       setComplianceStatus('pending')
@@ -178,11 +192,38 @@ export default function CompliancePage() {
     }
   }
 
-  function handleFileChange(field: string, file: File | null) {
-    setFiles(prev => ({ ...prev, [field]: file }))
+  async function handleFileChange(field: DocFieldKey, file: File | null) {
+    if (!file) return
+    if (!business) {
+      showToast('No business found for your account. Please sign in again.', 'error')
+      return
+    }
+
+    setDocUploadStatus(prev => ({ ...prev, [field]: 'uploading' }))
+    setDocFileNames(prev => ({ ...prev, [field]: file.name }))
+
+    try {
+      await identityApi.uploadDoc(business.id, field, file)
+      setDocUploadStatus(prev => ({ ...prev, [field]: 'uploaded' }))
+    } catch (err) {
+      setDocUploadStatus(prev => ({ ...prev, [field]: 'error' }))
+      setDocFileNames(prev => ({ ...prev, [field]: null }))
+      fail(err)
+    }
   }
 
-  const allRequiredDocsUploaded = REQUIRED_DOCS.every(key => files[key])
+  const anyDocUploading = DOC_FIELDS.some(d => docUploadStatus[d.key] === 'uploading')
+  const requiredDocsUploaded = REQUIRED_DOCS.every(
+    key => docUploadStatus[key] === 'uploaded',
+  )
+  const optionalDocPending =
+    docUploadStatus.application_for_registration === 'uploading' ||
+    (docFileNames.application_for_registration &&
+      docUploadStatus.application_for_registration !== 'uploaded' &&
+      docUploadStatus.application_for_registration !== 'idle')
+
+  const canSubmitForReview =
+    requiredDocsUploaded && !anyDocUploading && !optionalDocPending
 
   if (step === 'done') {
     return (
@@ -393,29 +434,61 @@ export default function CompliancePage() {
                 </div>
 
                 <form className={styles.form} onSubmit={handleDocSubmit}>
-                  {DOC_FIELDS.map(doc => (
+                  {DOC_FIELDS.map(doc => {
+                    const status = docUploadStatus[doc.key]
+                    const fileName = docFileNames[doc.key]
+                    const fileInputClass = [
+                      styles.fileInput,
+                      status === 'uploaded' ? styles.fileInputFilled : '',
+                      status === 'uploading' ? styles.fileInputUploading : '',
+                      status === 'error' ? styles.fileInputError : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')
+
+                    return (
                     <div key={doc.key} className={styles.field}>
                       <label className={styles.label}>
                         {doc.label}
                         {!doc.required && <span className={styles.optionalTag}>Optional</span>}
                       </label>
                       {'sub' in doc && doc.sub && <span className={styles.fieldHint}>{doc.sub}</span>}
-                      <label className={`${styles.fileInput} ${files[doc.key] ? styles.fileInputFilled : ''}`}>
+                      <label className={fileInputClass}>
                         <input
                           type="file"
-                          accept=".jpg,.jpeg,.png"
+                          accept=".jpg,.jpeg,.png,.pdf,application/pdf"
                           style={{ display: 'none' }}
-                          onChange={e => handleFileChange(doc.key, e.target.files?.[0] ?? null)}
+                          disabled={status === 'uploading'}
+                          onChange={e => {
+                            const picked = e.target.files?.[0] ?? null
+                            e.target.value = ''
+                            void handleFileChange(doc.key, picked)
+                          }}
                         />
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                           <polyline points="17 8 12 3 7 8"/>
                           <line x1="12" y1="3" x2="12" y2="15"/>
                         </svg>
-                        <span>{files[doc.key] ? files[doc.key]!.name : 'Click to upload (JPG or PNG)'}</span>
+                        <span>
+                          {status === 'uploading'
+                            ? `Uploading ${fileName ?? 'file'}…`
+                            : status === 'uploaded'
+                              ? fileName ?? 'Uploaded'
+                              : status === 'error'
+                                ? 'Upload failed — click to try again'
+                                : 'Click to upload (PDF, JPG, or PNG)'}
+                        </span>
+                        {status === 'uploaded' && (
+                          <span className={styles.fileInputCheck} aria-hidden>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                              <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                          </span>
+                        )}
                       </label>
                     </div>
-                  ))}
+                  )})}
 
                   <div className={styles.notice}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -424,7 +497,7 @@ export default function CompliancePage() {
                     Documents are encrypted and stored securely. Review typically takes 24–48 hours.
                   </div>
 
-                  <Button variant="primary" fullWidth type="submit" loading={docsLoading} disabled={!allRequiredDocsUploaded}>
+                  <Button variant="primary" fullWidth type="submit" loading={docsLoading} disabled={!canSubmitForReview}>
                     Submit for review
                   </Button>
                 </form>
