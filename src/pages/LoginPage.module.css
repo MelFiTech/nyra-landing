@@ -129,18 +129,28 @@
 }
 
 .passwordWrapper .input {
-  padding-right: 42px;
+  padding-right: 48px;
 }
 
 .eyeBtn {
   position: absolute;
-  right: 12px;
+  right: 4px;
   top: 50%;
   transform: translateY(-50%);
+  z-index: 1;
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  min-height: 40px !important;
+  margin: 0;
+  padding: 0 !important;
+  flex: none;
   color: #9ca3af;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  padding: 2px;
+  justify-content: center;
+  border-radius: 8px;
 }
 
 .eyeBtn:hover {
@@ -438,7 +448,16 @@
   }
 
   .passwordWrapper .input {
-    padding-right: 40px;
+    padding-right: 52px;
+  }
+
+  .passwordWrapper .eyeBtn {
+    right: 2px;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
+    min-height: 44px !important;
   }
 
   .label {
@@ -468,7 +487,8 @@
     font-size: 11px;
   }
 
-  .form :global(button) {
+  /* Full-width primary actions only — not password toggle inside .passwordWrapper */
+  .form > button {
     width: 100%;
     max-width: 100%;
     min-width: 0;
