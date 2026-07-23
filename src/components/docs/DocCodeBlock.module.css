@@ -1,0 +1,15 @@
+.wrap {
+  position: relative;
+  max-width: 100%;
+}
+
+.copyBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+}
+
+.wrap pre {
+  padding-right: 44px;
+}

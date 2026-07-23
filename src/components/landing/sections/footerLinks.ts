@@ -17,9 +17,9 @@ export const FOOTER_LINKS: Record<string, FooterLink[]> = {
     { label: 'Contact', href: '#' },
   ],
   developers: [
-    { label: 'API docs', href: '#' },
+    { label: 'API docs', href: '/docs?view=guides' },
     { label: 'Dashboard', href: '/app/signup' },
-    { label: 'Webhooks', href: '#' },
+    { label: 'Webhooks', href: '/docs?view=api&e=webhooks-overview' },
     { label: 'Status', href: '#' },
   ],
   legal: [

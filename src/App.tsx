@@ -24,6 +24,7 @@ import TransactionsPage from './pages/TransactionsPage'
 import SettingsPage from './pages/SettingsPage'
 import WebhooksPage from './pages/WebhooksPage'
 import CompliancePage from './pages/CompliancePage'
+import DeveloperDocsPage from './pages/DeveloperDocsPage'
 
 function RequireAuth({ children }: { children: ReactNode }) {
   if (!session.token) return <Navigate to="/app/login" replace />
@@ -40,6 +41,7 @@ function AppRoutes() {
       <Route path="/legal/compliance" element={<LegalCompliancePage />} />
       <Route path="/legal/privacy" element={<PrivacyPolicyPage />} />
       <Route path="/legal/terms" element={<TermsOfServicePage />} />
+      <Route path="/docs" element={<DeveloperDocsPage />} />
       <Route path="/app/login" element={<LoginPage />} />
       <Route path="/app/signup" element={<SignupPage />} />
       <Route

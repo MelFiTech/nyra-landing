@@ -8,6 +8,34 @@ type NavLink = {
   href: string
 }
 
+function isInternalHref(href: string) {
+  return href.startsWith('/') && !href.startsWith('//')
+}
+
+function NavMenuLink({
+  link,
+  className,
+  onNavigate,
+}: {
+  link: NavLink
+  className: string
+  onNavigate?: () => void
+}) {
+  if (isInternalHref(link.href)) {
+    return (
+      <Link to={link.href} className={className} onClick={onNavigate}>
+        {link.label}
+      </Link>
+    )
+  }
+
+  return (
+    <a href={link.href} className={className} onClick={onNavigate}>
+      {link.label}
+    </a>
+  )
+}
+
 const PRODUCTS_LINKS: NavLink[] = [
   { label: 'Joint account', href: '#' },
   { label: 'Cards', href: '#' },
@@ -17,7 +45,7 @@ const PRODUCTS_LINKS: NavLink[] = [
 
 const LEARN_LINKS: NavLink[] = [
   { label: 'Blog', href: '#' },
-  { label: 'Developer docs', href: '#' },
+  { label: 'Developer docs', href: '/docs?view=guides' },
   { label: 'Why Nyra', href: '#' },
 ]
 
@@ -114,9 +142,12 @@ function DesktopDropdown({ label, links }: DropdownProps) {
       <div className={`${styles.dropdown} ${open ? styles.dropdownOpen : ''}`}>
         <div className={styles.dropdownPanel}>
           {links.map((link) => (
-            <a key={link.label} href={link.href} className={styles.dropdownLink}>
-              {link.label}
-            </a>
+            <NavMenuLink
+              key={link.label}
+              link={link}
+              className={styles.dropdownLink}
+              onNavigate={() => setOpen(false)}
+            />
           ))}
         </div>
       </div>
@@ -141,14 +172,12 @@ function MobileAccordion({ label, links, onNavigate }: DropdownProps) {
       {open && (
         <div className={styles.mobileSubmenu}>
           {links.map(link => (
-            <a
+            <NavMenuLink
               key={link.label}
-              href={link.href}
+              link={link}
               className={styles.mobileSubLink}
-              onClick={onNavigate}
-            >
-              {link.label}
-            </a>
+              onNavigate={onNavigate}
+            />
           ))}
         </div>
       )}

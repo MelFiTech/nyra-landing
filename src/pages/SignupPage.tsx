@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import Button from '../components/ui/Button'
 import NyraLogo from '../components/ui/NyraLogo'
 import AuthGoBack from '../components/auth/AuthGoBack'
+import AuthLayout from '../components/auth/AuthLayout'
 import AuthVisualPanel from '../components/auth/AuthVisualPanel'
 import { authApi, businessApi, ApiError } from '../lib/api'
 import { useToast } from '../context/ToastContext'
@@ -145,8 +146,7 @@ export default function SignupPage() {
   const filled = stepIndex(step)
 
   return (
-    <div className={styles.page}>
-      <div className={styles.card}>
+    <AuthLayout sidePanel={<AuthVisualPanel variant="signup" />}>
         <AuthGoBack
           onGoBack={
             step === 'otp'
@@ -158,7 +158,7 @@ export default function SignupPage() {
           }
         />
         <Link to="/" className={styles.logo} aria-label="Go to home">
-          <NyraLogo />
+          <NyraLogo className={styles.logoImg} />
         </Link>
 
         {step !== 'success' && (
@@ -189,7 +189,7 @@ export default function SignupPage() {
             <h1 className={styles.heading}>Create your account</h1>
             <p className={styles.subheading}>Step 1 of 3: Personal details</p>
             <form className={styles.form} onSubmit={handlePersonal}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div className={styles.nameRow}>
                 <div className={styles.field}>
                   <label className={styles.label}>First name</label>
                   <input className={styles.input} type="text" placeholder="John" value={firstname} onChange={e => setFirstname(e.target.value)} required />
@@ -209,7 +209,7 @@ export default function SignupPage() {
                   <input
                     className={styles.input}
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="Min. 8 chars, uppercase, number & symbol"
+                    placeholder="8+ chars, upper, number & symbol"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     required
@@ -314,9 +314,6 @@ export default function SignupPage() {
             </Button>
           </div>
         )}
-      </div>
-
-      <AuthVisualPanel variant="signup" />
-    </div>
+    </AuthLayout>
   )
 }

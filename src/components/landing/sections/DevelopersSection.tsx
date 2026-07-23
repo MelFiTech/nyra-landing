@@ -20,11 +20,15 @@ export default function DevelopersSection() {
               less stress.
             </p>
             <div className={styles.devFeatures}>
-              {DEV_CARDS.map((card) => (
+              {DEV_CARDS.map((card, index) => (
                 <article key={card.title} className={styles.devFeature}>
                   <h3 className={styles.devFeatureTitle}>{card.title}</h3>
                   <p className={styles.devFeatureBody}>{card.body}</p>
-                  <button type="button" className={styles.textLink} onClick={() => navigate('/app/signup')}>
+                  <button
+                    type="button"
+                    className={styles.textLink}
+                    onClick={() => navigate(index === 0 ? '/docs' : '/app/signup')}
+                  >
                     {card.link} →
                   </button>
                 </article>

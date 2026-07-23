@@ -299,11 +299,10 @@ function ApiKeysTab() {
         <div className={styles.usageCard}>
           <div className={styles.usageCardTitle}>How to authenticate</div>
           <p className={styles.usageCardSub}>
-            Exchange your client ID and secret for a short-lived access token, then send it as a Bearer token on API requests.
+            Send your client ID and secret on every Business API request. The secret is shown once when you create credentials.
           </p>
           <code className={styles.usageCode}>
-            POST {apiBaseUrl}/oauth/token{'\n'}
-            {'{'} grant_type: &quot;client_credentials&quot;, client_id, client_secret {'}'}
+            {`GET ${apiBaseUrl}/business/wallets/float\nx-client-id: <client_id>\nAuthorization: Bearer <live_sk_…>`}
           </code>
         </div>
       )}

@@ -46,6 +46,25 @@
     margin: 0;
     padding: 0;
   }
+
+  html {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+    overscroll-behavior-x: none;
+  }
+
+  #root {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
 }
 
 body {

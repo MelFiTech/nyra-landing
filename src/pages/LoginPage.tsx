@@ -3,6 +3,7 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import Button from '../components/ui/Button'
 import NyraLogo from '../components/ui/NyraLogo'
 import AuthGoBack from '../components/auth/AuthGoBack'
+import AuthLayout from '../components/auth/AuthLayout'
 import AuthVisualPanel from '../components/auth/AuthVisualPanel'
 import { authApi, session, ApiError } from '../lib/api'
 import { useToast } from '../context/ToastContext'
@@ -297,11 +298,10 @@ export default function LoginPage() {
   )
 
   return (
-    <div className={styles.page}>
-      <div className={styles.card}>
+    <AuthLayout sidePanel={<AuthVisualPanel variant="login" />}>
         <AuthGoBack />
         <Link to="/" className={styles.logo} aria-label="Go to home">
-          <NyraLogo />
+          <NyraLogo className={styles.logoImg} />
         </Link>
 
         {step === 'email' && (
@@ -476,9 +476,6 @@ export default function LoginPage() {
             </form>
           </>
         )}
-      </div>
-
-      <AuthVisualPanel variant="login" />
-    </div>
+    </AuthLayout>
   )
 }

@@ -48,6 +48,15 @@ const ChevronDown = () => (
   </svg>
 )
 
+const DocsIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+    <line x1="8" y1="7" x2="16" y2="7"/>
+    <line x1="8" y1="11" x2="14" y2="11"/>
+  </svg>
+)
+
 const WebhookIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
@@ -101,8 +110,9 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
   const isTreasuryActive = ['/app/dashboard', '/app/transactions'].includes(location.pathname)
   const isCardsActive = location.pathname === '/app/cards'
   const isCustomersActive = location.pathname.startsWith('/app/customers')
-  const isSettingsActive = location.pathname === '/app/settings'
   const isWebhooksActive = location.pathname === '/app/webhooks'
+  const isDocsActive = location.pathname === '/app/docs'
+  const isSettingsActive = location.pathname === '/app/settings'
 
   const navItemStyle = collapsed
     ? { justifyContent: 'center', padding: '9px 0' }
@@ -228,6 +238,16 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
         >
           <span className={styles.icon}><WebhookIcon /></span>
           {!collapsed && <span>Webhooks</span>}
+        </button>
+
+        <button
+          className={`${styles.navItem} ${isDocsActive ? styles.active : ''}`}
+          style={navItemStyle}
+          onClick={() => window.open('/docs', '_blank', 'noopener,noreferrer')}
+          title={collapsed ? 'API docs' : undefined}
+        >
+          <span className={styles.icon}><DocsIcon /></span>
+          {!collapsed && <span>API docs</span>}
         </button>
 
         <button
