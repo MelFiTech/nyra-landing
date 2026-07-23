@@ -21,6 +21,7 @@ const suggestions = ["What's my balance?", 'Show recent transfers', 'How do I to
 const DESIGN_WIDTH = 1280
 const DESIGN_HEIGHT = 760
 const MAX_SCALE = 1
+const MIN_MOBILE_SCALE = 0.62
 const PEEK_HEIGHT = 520
 
 const TreasuryIcon = () => (
@@ -93,13 +94,22 @@ export default function DashboardPreview() {
 
     const updateScale = () => {
       const width = viewport.clientWidth
-      setScale(Math.min(MAX_SCALE, width / DESIGN_WIDTH))
+      const fit = width / DESIGN_WIDTH
+      // On small screens the full-fit scale becomes illegibly tiny, so hold a
+      // minimum legible scale and let the frame clip horizontally — showing a
+      // readable "peek" of the dashboard (sidebar + wallet card) instead.
+      const minScale = window.innerWidth < 768 ? MIN_MOBILE_SCALE : 0
+      setScale(Math.min(MAX_SCALE, Math.max(fit, minScale)))
     }
 
     updateScale()
     const observer = new ResizeObserver(updateScale)
     observer.observe(viewport)
-    return () => observer.disconnect()
+    window.addEventListener('resize', updateScale)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', updateScale)
+    }
   }, [])
 
   const scaledWidth = DESIGN_WIDTH * scale

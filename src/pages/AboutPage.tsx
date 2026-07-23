@@ -4,6 +4,7 @@ import BackgroundVideo from '../components/landing/BackgroundVideo'
 import LandingNav from '../components/landing/LandingNav'
 import LandingCtaSection from '../components/landing/sections/LandingCtaSection'
 import LandingFooter from '../components/landing/sections/LandingFooter'
+import { usePageMeta } from '../hooks/usePageMeta'
 import styles from './AboutPage.module.css'
 
 const IMAGES = {
@@ -64,6 +65,14 @@ const WHAT_WE_DO = [
 ]
 
 export default function AboutPage() {
+  usePageMeta({
+    title: 'About Nyra — Building the rails for seamless business payments',
+    description:
+      'Nyra makes moving money effortless for businesses, and reimagines how people and teams hold money together.',
+    image: 'og-about.jpg',
+    path: '/company/about',
+  })
+
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])

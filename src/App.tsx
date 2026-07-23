@@ -10,6 +10,7 @@ import AppShell from './components/layout/AppShell'
 import LandingPage from './pages/LandingPage'
 import BusinessLandingPage from './pages/BusinessLandingPage'
 import AboutPage from './pages/AboutPage'
+import PricingPage from './pages/PricingPage'
 import AmlKycPolicyPage from './pages/AmlKycPolicyPage'
 import LegalCompliancePage from './pages/LegalCompliancePage'
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
@@ -37,6 +38,7 @@ function AppRoutes() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/business" element={<BusinessLandingPage />} />
       <Route path="/company/about" element={<AboutPage />} />
+      <Route path="/pricing" element={<PricingPage />} />
       <Route path="/legal/aml-kyc" element={<AmlKycPolicyPage />} />
       <Route path="/legal/compliance" element={<LegalCompliancePage />} />
       <Route path="/legal/privacy" element={<PrivacyPolicyPage />} />

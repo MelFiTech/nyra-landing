@@ -44,6 +44,7 @@ const PRODUCTS_LINKS: NavLink[] = [
 ]
 
 const LEARN_LINKS: NavLink[] = [
+  { label: 'Pricing', href: '/pricing' },
   { label: 'Blog', href: '#' },
   { label: 'Developer docs', href: '/docs?view=guides' },
   { label: 'Why Nyra', href: '#' },
