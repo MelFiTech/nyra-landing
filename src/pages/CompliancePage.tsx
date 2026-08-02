@@ -103,8 +103,6 @@ export default function CompliancePage() {
   const { business, refreshBusinesses } = useBusiness()
 
   const verificationStatus = business?.verification_status ?? 'NOT_STARTED'
-  const alreadySubmitted =
-    verificationStatus === 'PENDING' || verificationStatus === 'VERIFIED'
 
   const [step, setStep] = useState<VerifyStep>('bvn')
   const [done, setDone] = useState<VerifyStep[]>([])
