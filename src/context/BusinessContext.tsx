@@ -29,8 +29,9 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   const { data: businesses = [], isLoading: businessesLoading } = useQuery({
     queryKey: queryKeys.businesses,
     queryFn: () => businessApi.getAll(),
-    initialData: session.businesses.length > 0 ? session.businesses : undefined,
-    staleTime: 5 * 60_000,
+    staleTime: 60_000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   })
 
   useEffect(() => {

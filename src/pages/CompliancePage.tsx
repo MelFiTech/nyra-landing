@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Button from '../components/ui/Button'
 import NyraLogo from '../components/ui/NyraLogo'
-import { getComplianceStatus, setComplianceStatus } from '../lib/complianceStatus'
-import { identityApi, session, ApiError } from '../lib/api'
+import { useBusiness } from '../context/BusinessContext'
+import { identityApi, ApiError } from '../lib/api'
 import { useToast } from '../context/ToastContext'
 import styles from './CompliancePage.module.css'
 
@@ -100,18 +100,25 @@ function StepNav({
 export default function CompliancePage() {
   const navigate = useNavigate()
   const { showToast } = useToast()
-  const business = session.business
+  const { business, refreshBusinesses } = useBusiness()
 
-  // verification is already submitted/complete if the backend says so (or we cached it)
+  const verificationStatus = business?.verification_status ?? 'NOT_STARTED'
   const alreadySubmitted =
-    business?.verification_status === 'PENDING' ||
-    business?.verification_status === 'VERIFIED' ||
-    getComplianceStatus() === 'pending'
+    verificationStatus === 'PENDING' || verificationStatus === 'VERIFIED'
 
-  const [step, setStep] = useState<VerifyStep>(alreadySubmitted ? 'done' : 'bvn')
-  const [done, setDone] = useState<VerifyStep[]>(
-    alreadySubmitted ? ['bvn', 'cac', 'documents'] : []
-  )
+  const [step, setStep] = useState<VerifyStep>('bvn')
+  const [done, setDone] = useState<VerifyStep[]>([])
+
+  useEffect(() => {
+    void refreshBusinesses()
+  }, [refreshBusinesses])
+
+  useEffect(() => {
+    if (verificationStatus === 'PENDING' || verificationStatus === 'VERIFIED') {
+      setStep('done')
+      setDone(['bvn', 'cac', 'documents'])
+    }
+  }, [verificationStatus])
 
   const [bvn, setBvn] = useState('')
   const [nin, setNin] = useState('')
@@ -184,7 +191,7 @@ export default function CompliancePage() {
       await identityApi.submitDocsForReview(business.id)
       setDocsLoading(false)
       setDone(d => (d.includes('documents') ? d : [...d, 'documents']))
-      setComplianceStatus('pending')
+      await refreshBusinesses()
       setStep('done')
     } catch (err) {
       setDocsLoading(false)

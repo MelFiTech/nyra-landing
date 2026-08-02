@@ -5,7 +5,6 @@ import Button from '../components/ui/Button'
 import EmptyState, { UsersEmptyIcon } from '../components/ui/EmptyState'
 import AddWebhookEndpointSheet, { type WebhookConfig } from '../components/webhooks/AddWebhookEndpointSheet'
 import AddTeamMemberSheet from '../components/team/AddTeamMemberSheet'
-import { getComplianceStatus } from '../lib/complianceStatus'
 import { BRAND } from '../lib/brand'
 import {
   session,
@@ -528,13 +527,13 @@ function ProfileTab() {
 // --- Compliance Tab ---
 function ComplianceTab() {
   const navigate = useNavigate()
-  const business = session.business
-  const backendStatus = business?.verification_status
+  const { business } = useBusiness()
+  const backendStatus = business?.verification_status ?? 'NOT_STARTED'
   const status = backendStatus === 'VERIFIED'
     ? 'verified'
     : backendStatus === 'PENDING'
       ? 'pending'
-      : getComplianceStatus()
+      : 'unverified'
 
   const badgeClass = status === 'verified'
     ? styles.complianceBadge

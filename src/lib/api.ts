@@ -33,6 +33,40 @@ export type Business = {
   [key: string]: unknown
 }
 
+const VERIFICATION_STATUSES = new Set<Business['verification_status']>([
+  'NOT_STARTED',
+  'PENDING',
+  'VERIFIED',
+  'REJECTED',
+])
+
+/** Normalize API business payloads (snake/camel, alternate field names). */
+export function normalizeBusiness(raw: Record<string, unknown>): Business {
+  const statusRaw = String(
+    raw.verification_status ?? raw.verificationStatus ?? 'NOT_STARTED',
+  ).toUpperCase()
+  const verification_status = VERIFICATION_STATUSES.has(statusRaw as Business['verification_status'])
+    ? (statusRaw as Business['verification_status'])
+    : 'NOT_STARTED'
+
+  return {
+    ...raw,
+    id: String(raw.id ?? ''),
+    name: String(raw.name ?? raw.business_name ?? ''),
+    alias: String(raw.alias ?? raw.business_alias ?? ''),
+    address: String(raw.address ?? raw.business_address ?? ''),
+    business_type: String(raw.business_type ?? raw.businessType ?? ''),
+    verification_status,
+  }
+}
+
+export function normalizeBusinesses(list: unknown[]): Business[] {
+  return list
+    .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object')
+    .map(normalizeBusiness)
+    .filter(b => b.id)
+}
+
 export const session = {
   get token() {
     return localStorage.getItem(TOKEN_KEY)
@@ -51,17 +85,27 @@ export const session = {
   get businesses(): Business[] {
     const raw = localStorage.getItem(BUSINESSES_KEY)
     if (raw) {
-      try { return JSON.parse(raw) } catch { /* ignore */ }
+      try {
+        const parsed = JSON.parse(raw) as unknown[]
+        return normalizeBusinesses(Array.isArray(parsed) ? parsed : [])
+      } catch { /* ignore */ }
     }
     const legacy = localStorage.getItem(BUSINESS_KEY)
-    return legacy ? [JSON.parse(legacy)] : []
+    if (!legacy) return []
+    try {
+      const parsed = JSON.parse(legacy) as Record<string, unknown>
+      return [normalizeBusiness(parsed)]
+    } catch {
+      return []
+    }
   },
   setBusinesses(list: Business[]) {
-    localStorage.setItem(BUSINESSES_KEY, JSON.stringify(list))
+    const normalized = normalizeBusinesses(list)
+    localStorage.setItem(BUSINESSES_KEY, JSON.stringify(normalized))
     // keep the selected id valid (default to first)
     const selected = localStorage.getItem(SELECTED_BUSINESS_KEY)
-    if (!selected || !list.some(b => b.id === selected)) {
-      if (list[0]) localStorage.setItem(SELECTED_BUSINESS_KEY, list[0].id)
+    if (!selected || !normalized.some(b => b.id === selected)) {
+      if (normalized[0]) localStorage.setItem(SELECTED_BUSINESS_KEY, normalized[0].id)
       else localStorage.removeItem(SELECTED_BUSINESS_KEY)
     }
   },
@@ -83,11 +127,21 @@ export const session = {
   },
   /** Registers/sets a single business (e.g. right after signup). */
   setBusiness(business: Business) {
-    const existing = this.businesses.filter(b => b.id !== business.id)
-    const list = [...existing, business]
+    const normalized = normalizeBusiness(business)
+    const existing = this.businesses.filter(b => b.id !== normalized.id)
+    const list = [...existing, normalized]
     localStorage.setItem(BUSINESSES_KEY, JSON.stringify(list))
-    localStorage.setItem(SELECTED_BUSINESS_KEY, business.id)
+    localStorage.setItem(SELECTED_BUSINESS_KEY, normalized.id)
     localStorage.removeItem(BUSINESS_KEY)
+  },
+  updateBusinessVerification(
+    businessId: string,
+    verification_status: Business['verification_status'],
+  ) {
+    const list = this.businesses.map(b =>
+      b.id === businessId ? { ...b, verification_status } : b,
+    )
+    this.setBusinesses(list)
   },
   clear() {
     localStorage.removeItem(TOKEN_KEY)
@@ -232,7 +286,7 @@ function applyAuthSession(res: RawAuthResponse, businesses?: Business[]) {
   const user = normalizeSessionUser(rawUser)
   session.setToken(token)
   session.setUser(user)
-  if (businesses?.length) session.setBusinesses(businesses)
+  if (businesses?.length) session.setBusinesses(normalizeBusinesses(businesses))
   return { token, user }
 }
 
@@ -415,14 +469,15 @@ export const businessApi = {
       method: 'POST',
       body: data,
     })
-    session.setBusiness(res.data)
-    return res.data
+    session.setBusiness(normalizeBusiness(res.data as Record<string, unknown>))
+    return session.business!
   },
 
   async getAll(): Promise<Business[]> {
-    const res = await request<{ data: Business[] }>('/business/all')
-    if (res.data) session.setBusinesses(res.data)
-    return res.data
+    const res = await request<{ data: unknown[] }>('/business/all')
+    const list = normalizeBusinesses(res.data ?? [])
+    session.setBusinesses(list)
+    return list
   },
 
   async getNotificationPreferences(businessId: string): Promise<BusinessNotificationPreferences> {
@@ -562,11 +617,12 @@ export const identityApi = {
   },
 
   /** Marks uploaded documents as pending admin review (all required docs must already be on server). */
-  submitDocsForReview(businessId: string) {
-    return request('/business/identities/docs/submit', {
+  async submitDocsForReview(businessId: string) {
+    await request('/business/identities/docs/submit', {
       method: 'POST',
       body: { business_id: businessId },
     })
+    session.updateBusinessVerification(businessId, 'PENDING')
   },
 
   /**

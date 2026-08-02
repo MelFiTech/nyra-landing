@@ -5,7 +5,7 @@ import NyraLogo from '../components/ui/NyraLogo'
 import AuthGoBack from '../components/auth/AuthGoBack'
 import AuthLayout from '../components/auth/AuthLayout'
 import AuthVisualPanel from '../components/auth/AuthVisualPanel'
-import { authApi, session, ApiError } from '../lib/api'
+import { authApi, businessApi, session, ApiError } from '../lib/api'
 import { useToast } from '../context/ToastContext'
 import styles from './LoginPage.module.css'
 
@@ -223,6 +223,7 @@ export default function LoginPage() {
     setLoading(true)
     try {
       await authApi.businessSigninOtp(email.trim().toLowerCase(), otpToken, code)
+      await businessApi.getAll()
       navigate('/app/dashboard', { replace: true })
     } catch (err) {
       if (isExpiredOtpError(err)) {

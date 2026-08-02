@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { BalanceProvider } from './context/BalanceContext'
@@ -50,20 +50,22 @@ function AppRoutes() {
         element={
           <RequireAuth>
             <BusinessProvider>
-              <AppShell />
+              <Outlet />
             </BusinessProvider>
           </RequireAuth>
         }
       >
-        <Route path="/app/dashboard" element={<DashboardPage />} />
-        <Route path="/app/customers" element={<CustomersPage />} />
-        <Route path="/app/customers/:id" element={<CustomerDetailPage />} />
-        <Route path="/app/cards" element={<CardsPage />} />
-        <Route path="/app/transactions" element={<TransactionsPage />} />
-        <Route path="/app/settings" element={<SettingsPage />} />
-        <Route path="/app/webhooks" element={<WebhooksPage />} />
+        <Route element={<AppShell />}>
+          <Route path="/app/dashboard" element={<DashboardPage />} />
+          <Route path="/app/customers" element={<CustomersPage />} />
+          <Route path="/app/customers/:id" element={<CustomerDetailPage />} />
+          <Route path="/app/cards" element={<CardsPage />} />
+          <Route path="/app/transactions" element={<TransactionsPage />} />
+          <Route path="/app/settings" element={<SettingsPage />} />
+          <Route path="/app/webhooks" element={<WebhooksPage />} />
+        </Route>
+        <Route path="/app/compliance" element={<CompliancePage />} />
       </Route>
-      <Route path="/app/compliance" element={<RequireAuth><CompliancePage /></RequireAuth>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
