@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import Button from '../ui/Button'
+import NumericKeypad from '../ui/NumericKeypad'
 import styles from './PinModal.module.css'
 
 type Props = {
@@ -8,27 +9,49 @@ type Props = {
   onConfirm: (pin: string) => void
   loading?: boolean
   title?: string
+  length?: number
 }
 
-export default function PinModal({ open, onClose, onConfirm, loading, title = 'Enter Transaction PIN' }: Props) {
+export default function PinModal({
+  open,
+  onClose,
+  onConfirm,
+  loading,
+  title = 'Enter Transaction PIN',
+  length = 6,
+}: Props) {
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (open) { setPin(''); setError(''); setTimeout(() => inputRef.current?.focus(), 100) }
+    if (open) {
+      setPin('')
+      setError('')
+      window.setTimeout(() => inputRef.current?.focus(), 100)
+    }
   }, [open])
+
+  function appendDigit(digit: string) {
+    if (loading || pin.length >= length) return
+    const next = pin + digit
+    setPin(next)
+    setError('')
+    if (next.length === length) onConfirm(next)
+  }
+
+  function removeDigit() {
+    if (loading) return
+    setPin(p => p.slice(0, -1))
+    setError('')
+  }
 
   function handleKey(e: React.KeyboardEvent) {
     if (loading) return
-    if (e.key >= '0' && e.key <= '9' && pin.length < 6) {
-      const next = pin + e.key
-      setPin(next)
-      setError('')
-      if (next.length === 6) onConfirm(next)
+    if (e.key >= '0' && e.key <= '9') {
+      appendDigit(e.key)
     } else if (e.key === 'Backspace') {
-      setPin(p => p.slice(0, -1))
-      setError('')
+      removeDigit()
     }
   }
 
@@ -47,27 +70,34 @@ export default function PinModal({ open, onClose, onConfirm, loading, title = 'E
         </div>
 
         <div className={styles.body}>
-          <p className={styles.sub}>Enter your 6-digit transaction PIN to confirm</p>
-          <div
-            className={styles.dotsWrap}
-            tabIndex={0}
-            onKeyDown={handleKey}
-            ref={inputRef as any}
-          >
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className={`${styles.dot} ${i < pin.length ? styles.dotFilled : ''} ${loading ? styles.dotLoading : ''}`} />
-            ))}
-          </div>
-
-          {error && <p className={styles.error}>{error}</p>}
-
-          {loading && (
-            <div className={styles.spinner}>
-              <div className={styles.spinnerInner} />
+          <div className={styles.pinArea}>
+            <p className={styles.sub}>Enter your {length}-digit transaction PIN to confirm</p>
+            <div
+              className={styles.dotsWrap}
+              tabIndex={0}
+              onKeyDown={handleKey}
+              ref={inputRef}
+            >
+              {Array.from({ length }).map((_, i) => (
+                <div key={i} className={`${styles.dot} ${i < pin.length ? styles.dotFilled : ''} ${loading ? styles.dotLoading : ''}`} />
+              ))}
             </div>
-          )}
 
-          <Button variant="text" type="button">Forgot PIN?</Button>
+            {error && <p className={styles.error}>{error}</p>}
+
+            {loading && (
+              <div className={styles.spinner}>
+                <div className={styles.spinnerInner} />
+              </div>
+            )}
+
+            <NumericKeypad
+              className={styles.keypad}
+              disabled={loading}
+              onDigit={appendDigit}
+              onBackspace={removeDigit}
+            />
+          </div>
         </div>
       </div>
     </div>

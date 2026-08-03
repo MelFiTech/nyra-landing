@@ -1,58 +1,155 @@
 .overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
-  backdrop-filter: blur(2px); display: flex; align-items: center;
-  justify-content: center; z-index: 1200;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
   animation: fadeIn 0.15s ease;
 }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 
 .modal {
-  background: var(--surface); border-radius: 16px; width: 360px;
-  max-width: calc(100vw - 32px); box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  background: var(--surface);
+  border-radius: 16px;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  min-height: min(520px, 90dvh);
+  max-height: 90dvh;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
   animation: slideUp 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
-@keyframes slideUp { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+@keyframes slideUp {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
 
 .header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 20px 22px 16px; border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 22px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
-.title { font-size: 15px; font-weight: 700; color: var(--text-1); }
+
+.title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-1);
+}
+
 .closeBtn {
-  width: 32px; height: 32px; border-radius: 8px; display: flex;
-  align-items: center; justify-content: center; color: var(--text-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
   transition: background 0.12s, color 0.12s;
 }
-.closeBtn:hover { background: var(--hover-bg); color: var(--text-2); }
+
+.closeBtn:hover {
+  background: var(--hover-bg);
+  color: var(--text-2);
+}
 
 .body {
-  padding: 28px 24px 24px;
-  display: flex; flex-direction: column; align-items: center; gap: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 0;
+  padding: 12px 24px 20px;
 }
-.sub { font-size: 13px; color: var(--text-3); text-align: center; }
+
+.pinArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 18px;
+  padding: 8px 0 12px;
+}
+
+.sub {
+  font-size: 13px;
+  color: var(--text-3);
+  text-align: center;
+  margin: 0;
+  max-width: 260px;
+}
 
 .dotsWrap {
-  display: flex; gap: 12px; outline: none; cursor: default;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  outline: none;
+  cursor: default;
 }
 
 .dot {
-  width: 36px; height: 36px; border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   border: 2px solid var(--border-mid);
   background: var(--surface-2);
   transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
 }
-.dotFilled { background: var(--brand); border-color: var(--brand); }
-.dotLoading { opacity: 0.6; }
 
-.error { font-size: 13px; color: #dc2626; text-align: center; }
+.dotFilled {
+  background: var(--brand);
+  border-color: var(--brand);
+}
 
-.spinner { display: flex; align-items: center; justify-content: center; }
+.dotLoading {
+  opacity: 0.6;
+}
+
+.error {
+  font-size: 13px;
+  color: #dc2626;
+  text-align: center;
+  margin: -8px 0 0;
+}
+
+.spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .spinnerInner {
-  width: 24px; height: 24px; border-radius: 50%;
-  border: 2px solid var(--border-mid); border-top-color: var(--brand);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--border-mid);
+  border-top-color: var(--brand);
   animation: spin 0.7s linear infinite;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
 
-.forgotBtn { font-size: 13px; color: var(--brand); font-weight: 500; }
-.forgotBtn:hover { text-decoration: underline; }
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.keypad {
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto;
+}

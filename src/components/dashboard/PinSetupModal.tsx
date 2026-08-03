@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import Button from '../ui/Button'
+import NumericKeypad from '../ui/NumericKeypad'
 import { walletApi, ApiError } from '../../lib/api'
 import styles from './PinSetupModal.module.css'
 
@@ -48,37 +49,48 @@ export default function PinSetupModal({ open, businessId, onComplete }: Props) {
     }
   }
 
-  function handleKey(e: React.KeyboardEvent) {
+  function appendDigit(digit: string) {
     if (loading) return
-    if (e.key === 'Backspace') {
-      setError('')
-      if (stage === 'enter') setPin(p => p.slice(0, -1))
-      else setConfirmPin(p => p.slice(0, -1))
-      return
-    }
-    if (!/^\d$/.test(e.key)) return
     setError('')
 
     if (stage === 'enter') {
-      const next = pin + e.key
-      if (next.length > PIN_LENGTH) return
+      if (pin.length >= PIN_LENGTH) return
+      const next = pin + digit
       setPin(next)
       if (next.length === PIN_LENGTH) setStage('confirm')
-    } else {
-      const next = confirmPin + e.key
-      if (next.length > PIN_LENGTH) return
-      setConfirmPin(next)
-      if (next.length === PIN_LENGTH) {
-        if (next === pin) {
-          submit(next)
-        } else {
-          setError('PINs do not match. Try again.')
-          setPin('')
-          setConfirmPin('')
-          setStage('enter')
-        }
+      return
+    }
+
+    if (confirmPin.length >= PIN_LENGTH) return
+    const next = confirmPin + digit
+    setConfirmPin(next)
+    if (next.length === PIN_LENGTH) {
+      if (next === pin) {
+        submit(next)
+      } else {
+        setError('PINs do not match. Try again.')
+        setPin('')
+        setConfirmPin('')
+        setStage('enter')
       }
     }
+  }
+
+  function removeDigit() {
+    if (loading) return
+    setError('')
+    if (stage === 'enter') setPin(p => p.slice(0, -1))
+    else setConfirmPin(p => p.slice(0, -1))
+  }
+
+  function handleKey(e: React.KeyboardEvent) {
+    if (loading) return
+    if (e.key === 'Backspace') {
+      removeDigit()
+      return
+    }
+    if (!/^\d$/.test(e.key)) return
+    appendDigit(e.key)
   }
 
   return (
@@ -96,35 +108,45 @@ export default function PinSetupModal({ open, businessId, onComplete }: Props) {
         aria-modal="true"
         aria-label="Set your transaction PIN"
       >
-        <div className={styles.iconCircle}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-          </svg>
-        </div>
-        <h2 className={styles.title}>Set your transaction PIN</h2>
-        <p className={styles.sub}>
-          Before you continue, create a {PIN_LENGTH}-digit PIN.
-          You'll use it to authorise transfers and payments.
-        </p>
-
-        <p className={styles.stage}>
-          {stage === 'enter' ? 'Enter a new PIN' : 'Confirm your PIN'}
-        </p>
-
-        <div className={styles.pinRow}>
-          {Array.from({ length: PIN_LENGTH }).map((_, i) => (
-            <div
-              key={i}
-              className={`${styles.pinCircle} ${i < current.length ? styles.pinCircleFilled : ''}`}
-            />
-          ))}
+        <div className={styles.intro}>
+          <div className={styles.iconCircle}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
+          <h2 className={styles.title}>Set your transaction PIN</h2>
+          <p className={styles.sub}>
+            Before you continue, create a {PIN_LENGTH}-digit PIN.
+            You'll use it to authorise transfers and payments.
+          </p>
         </div>
 
-        {error && <p className={styles.error}>{error}</p>}
-        <p className={styles.hint}>Use your keyboard to enter your PIN</p>
+        <div className={styles.pinArea}>
+          <p className={styles.stage}>
+            {stage === 'enter' ? 'Enter a new PIN' : 'Confirm your PIN'}
+          </p>
 
-        {loading && <Button variant="primary" fullWidth loading disabled />}
+          <div className={styles.pinRow}>
+            {Array.from({ length: PIN_LENGTH }).map((_, i) => (
+              <div
+                key={i}
+                className={`${styles.pinCircle} ${i < current.length ? styles.pinCircleFilled : ''}`}
+              />
+            ))}
+          </div>
+
+          {error && <p className={styles.error}>{error}</p>}
+
+          <NumericKeypad
+            className={styles.keypad}
+            disabled={loading}
+            onDigit={appendDigit}
+            onBackspace={removeDigit}
+          />
+        </div>
+
+        {loading && <Button variant="primary" fullWidth loading disabled className={styles.loadingBtn} />}
       </div>
     </div>
   )

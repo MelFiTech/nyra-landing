@@ -19,20 +19,30 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 16px;
-  padding: 36px 32px;
+  padding: 32px 32px 28px;
   width: 100%;
   max-width: 420px;
+  min-height: min(560px, 90dvh);
+  max-height: 90dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
   text-align: center;
   animation: slideUp 0.22s ease;
+  overflow: hidden;
 }
 
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(14px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+.intro {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
 }
 
 .iconCircle {
@@ -58,14 +68,25 @@
   font-size: 13.5px;
   color: var(--text-3);
   line-height: 1.6;
-  margin: 0 0 10px;
+  margin: 0 0 4px;
+}
+
+.pinArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 18px;
+  padding: 16px 0 8px;
 }
 
 .pinRow {
   display: flex;
   gap: 14px;
   justify-content: center;
-  margin: 10px 0 4px;
+  width: 100%;
 }
 
 .pinCircle {
@@ -74,6 +95,7 @@
   border-radius: 50%;
   border: 2px solid var(--border-mid);
   transition: background 0.12s, border-color 0.12s;
+  flex-shrink: 0;
 }
 
 .pinCircleFilled {
@@ -81,21 +103,27 @@
   border-color: var(--active-color);
 }
 
-.hint {
-  font-size: 12.5px;
-  color: var(--text-muted);
-  margin: 0 0 12px;
-}
-
 .error {
   font-size: 12.5px;
   color: #dc2626;
-  margin: 0 0 6px;
+  margin: -8px 0 0;
+}
+
+.keypad {
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+.loadingBtn {
+  flex-shrink: 0;
+  width: 100%;
+  margin-top: 12px;
 }
 
 .stage {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-2);
-  margin: 4px 0 0;
+  margin: 0;
 }

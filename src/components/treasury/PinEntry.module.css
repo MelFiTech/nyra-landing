@@ -2,8 +2,19 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  min-height: 420px;
   padding: 8px 0 4px;
+}
+
+.pinArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 18px;
+  padding: 12px 0;
 }
 
 .sub {
@@ -11,11 +22,16 @@
   color: var(--text-3);
   text-align: center;
   line-height: 1.5;
+  margin: 0;
+  max-width: 260px;
 }
 
 .dotsWrap {
   display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 12px;
+  width: 100%;
   outline: none;
   cursor: default;
 }
@@ -27,6 +43,7 @@
   border: 2px solid var(--border-mid);
   background: var(--surface-2);
   transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
 }
 
 .dotFilled {
@@ -42,6 +59,7 @@
   font-size: 13px;
   color: #dc2626;
   text-align: center;
+  margin: -8px 0 0;
 }
 
 .spinner {
@@ -63,12 +81,8 @@
   to { transform: rotate(360deg); }
 }
 
-.forgotBtn {
-  font-size: 13px;
-  color: var(--brand);
-  font-weight: 500;
-}
-
-.forgotBtn:hover {
-  text-decoration: underline;
+.keypad {
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto;
 }
