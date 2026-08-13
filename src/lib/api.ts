@@ -156,9 +156,11 @@ export const session = {
 
 export class ApiError extends Error {
   status: number
-  constructor(message: string, status: number) {
+  missing?: string[]
+  constructor(message: string, status: number, missing?: string[]) {
     super(message)
     this.status = status
+    this.missing = missing
   }
 }
 
@@ -173,6 +175,32 @@ type RequestOptions = {
 }
 
 const DEFAULT_TIMEOUT_MS = 25_000
+
+function looksLikeInternalErrorMessage(message: string) {
+  const trimmed = message.trim()
+  if (!trimmed) return true
+  return (
+    /internal server error/i.test(trimmed) ||
+    /(?:Service|Controller)\.[a-zA-Z]+/i.test(trimmed) ||
+    /getExchangeRate|ConversionService|TypeORM|ECONNREFUSED|AxiosError/i.test(trimmed) ||
+    /^Request failed \(\d+\)$/.test(trimmed)
+  )
+}
+
+function toUserFacingApiMessage(rawMessage: string, status: number) {
+  const trimmed = rawMessage.trim()
+  if (!looksLikeInternalErrorMessage(trimmed)) return trimmed
+
+  if (/rate|exchange|convert/i.test(trimmed)) {
+    return 'We could not fetch the exchange rate right now. Please try again shortly.'
+  }
+
+  if (status >= 500 || !trimmed) {
+    return 'Something went wrong. Please try again.'
+  }
+
+  return trimmed
+}
 
 async function request<T = unknown>(path: string, opts: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, formData, auth = true, timeoutMs = DEFAULT_TIMEOUT_MS } = opts
@@ -219,16 +247,20 @@ async function request<T = unknown>(path: string, opts: RequestOptions = {}): Pr
       session.clear()
       window.location.href = '/app/login'
     }
-    const message =
-      (Array.isArray(json?.message) ? json.message[0] : json?.message) ||
-      (typeof json?.message === 'object' && json?.message?.message
-        ? Array.isArray(json.message.message)
-          ? json.message.message[0]
-          : json.message.message
-        : undefined) ||
+    const messagePayload =
+      Array.isArray(json?.message) ? json.message[0] : json?.message
+    const rawMessage =
+      (typeof messagePayload === 'string' ? messagePayload : messagePayload?.message) ||
       json?.error ||
       `Request failed (${res.status})`
-    throw new ApiError(message, res.status)
+    const message = toUserFacingApiMessage(String(rawMessage ?? ''), res.status)
+    const missingSource =
+      json?.missing ||
+      (typeof messagePayload === 'object' ? messagePayload?.missing : undefined)
+    const missing = Array.isArray(missingSource)
+      ? missingSource.map(String)
+      : undefined
+    throw new ApiError(message, res.status, missing)
   }
 
   return json as T
@@ -667,10 +699,88 @@ export type BusinessWallet = {
   [key: string]: unknown
 }
 
+export type UsdCryptoDeposit = {
+  asset: string
+  network: string
+  deposit_address: string
+  min_deposit?: string
+}
+
+export type UsdConvertQuote = {
+  amount_usd: number
+  amount_ngn: number
+  ngn_balance_available: number
+  exchange_rate: {
+    usd_per_naira: number
+    naira_per_usd: number
+    markup_percentage: number
+  }
+}
+
+export type UsdConvertResult = {
+  amount_usd: number
+  amount_ngn: number
+  usd_balance: number
+  ngn_balance: number
+  exchange_rate: UsdConvertQuote['exchange_rate']
+}
+
+function readDepositField(record: Record<string, unknown>, ...keys: string[]) {
+  for (const key of keys) {
+    const value = record[key]
+    if (value !== undefined && value !== null && String(value).trim() !== '') {
+      return String(value)
+    }
+  }
+  return ''
+}
+
+export function normalizeUsdCryptoDeposit(raw: unknown): UsdCryptoDeposit | null {
+  if (!raw || typeof raw !== 'object') return null
+  const record = raw as Record<string, unknown>
+  const depositAddress = readDepositField(record, 'deposit_address', 'depositAddress', 'address')
+  if (!depositAddress) return null
+
+  return {
+    asset: readDepositField(record, 'asset', 'currency'),
+    network: readDepositField(record, 'network', 'chain'),
+    deposit_address: depositAddress,
+    min_deposit: readDepositField(record, 'min_deposit', 'minDeposit', 'minimum_deposit') || undefined,
+  }
+}
+
 export const walletApi = {
   async getBusinessWallet(businessId: string): Promise<BusinessWallet | null> {
     const res = await request<{ data: BusinessWallet | null }>(`/business/${businessId}/wallet`)
     return res.data ?? null
+  },
+
+  async getUsdCryptoDeposit(businessId: string): Promise<UsdCryptoDeposit | null> {
+    const res = await request<{ data: unknown }>(`/business/${businessId}/usd-wallet/crypto-deposit`)
+    return normalizeUsdCryptoDeposit(res.data)
+  },
+
+  async getUsdConvertQuote(
+    businessId: string,
+    params: { amount_usd?: number; amount_ngn?: number },
+  ): Promise<UsdConvertQuote> {
+    const search = new URLSearchParams()
+    if (params.amount_usd != null) search.set('amount_usd', String(params.amount_usd))
+    if (params.amount_ngn != null) search.set('amount_ngn', String(params.amount_ngn))
+    const res = await request<{ data: UsdConvertQuote }>(
+      `/business/${businessId}/usd-wallet/convert-quote?${search.toString()}`,
+    )
+    return res.data
+  },
+
+  convertNgnToUsd(
+    businessId: string,
+    body: { amount_usd?: number; amount_ngn?: number },
+  ) {
+    return request<{ data: UsdConvertResult }>(
+      `/business/${businessId}/usd-wallet/convert-from-ngn`,
+      { method: 'POST', body },
+    )
   },
 
   createPin(businessId: string, newPin: string) {
@@ -685,6 +795,300 @@ export const walletApi = {
       method: 'POST',
       body: { old_pin: oldPin, new_pin: newPin },
     })
+  },
+}
+
+// ── Virtual cards ───────────────────────────────────────────────────────
+
+export type CardProgramSummary = {
+  usd_balance: number | string
+  total_cards: number
+  total_card_balance: number | string
+}
+
+export type VirtualCard = {
+  card_id: string
+  cardholder_name: string
+  last_four: string
+  balance: number | string
+  currency: string
+  status: 'ACTIVE' | 'FROZEN' | 'TERMINATED'
+  network?: string
+  created_at: string
+  [key: string]: unknown
+}
+
+export type CardCustomer = {
+  id: string
+  customer_reference: string
+  first_name: string
+  last_name: string
+  email: string
+  phone_country_code?: string
+  phone_number?: string
+  managed_wallet_id?: string
+  is_active?: boolean
+  created_at?: string
+  [key: string]: unknown
+}
+
+export type CreateCardCustomerPayload = {
+  customer_reference: string
+  first_name: string
+  last_name: string
+  email: string
+  phone_country_code?: string
+  phone_number: string
+  date_of_birth: string
+  id_type: 'bvn' | 'nin'
+  id_number: string
+  address: {
+    line1: string
+    city: string
+    state: string
+    postal_code?: string
+    country?: string
+  }
+  managed_wallet_id?: string
+}
+
+export type CardSensitiveDetails = {
+  card_number: string
+  cvv: string
+  expiry: string
+  balance: string
+}
+
+export type CardSpendTransaction = {
+  transaction_id?: string
+  transaction_reference?: string
+  transaction_reference_provider?: string
+  transaction_type?: string
+  transaction_status?: string
+  transaction_category?: string
+  description?: string
+  amount?: number | string
+  currency?: string
+  created_at?: string
+  [key: string]: unknown
+}
+
+function normalizeVirtualCard(raw: unknown): VirtualCard | null {
+  if (!raw || typeof raw !== 'object') return null
+  const record = raw as Record<string, unknown>
+  const cardId = String(record.card_id ?? record.id ?? '').trim()
+  if (!cardId) return null
+
+  const masked = String(record.masked_number ?? '')
+  const digits = masked.replace(/\D/g, '')
+  const lastFour = String(record.last_four ?? digits.slice(-4) ?? '').slice(-4)
+
+  return {
+    card_id: cardId,
+    cardholder_name: String(record.cardholder_name ?? record.owners_fullname ?? ''),
+    last_four: lastFour,
+    balance: String(record.balance ?? '0'),
+    currency: String(record.currency ?? 'USD'),
+    status: (record.status as VirtualCard['status'])
+      ?? (record.is_frozen ? 'FROZEN' : 'ACTIVE'),
+    network: record.network ? String(record.network) : undefined,
+    created_at: String(record.created_at ?? new Date().toISOString()),
+  }
+}
+
+function normalizeCardCustomer(raw: unknown): CardCustomer | null {
+  if (!raw || typeof raw !== 'object') return null
+  const record = raw as Record<string, unknown>
+  const id = String(record.id ?? '').trim()
+  if (!id) return null
+  return {
+    id,
+    customer_reference: String(record.customer_reference ?? ''),
+    first_name: String(record.first_name ?? ''),
+    last_name: String(record.last_name ?? ''),
+    email: String(record.email ?? ''),
+    phone_country_code: record.phone_country_code ? String(record.phone_country_code) : undefined,
+    phone_number: record.phone_number ? String(record.phone_number) : undefined,
+    managed_wallet_id: record.managed_wallet_id ? String(record.managed_wallet_id) : undefined,
+    is_active: record.is_active as boolean | undefined,
+    created_at: record.created_at ? String(record.created_at) : undefined,
+  }
+}
+
+export type CardReadiness = {
+  ready: boolean
+  missing: Array<'id_number' | 'state'>
+  has_card_customer: boolean
+}
+
+export type IssuePlatformCardPayload = {
+  currency: 'USD'
+  amount: number
+  type: 'VISA' | 'MASTERCARD'
+  description: string
+  state?: string
+  id_type?: 'bvn' | 'nin'
+  id_number?: string
+}
+
+export const cardsApi = {
+  async getSummary(businessId: string): Promise<CardProgramSummary> {
+    const res = await request<{ data: CardProgramSummary }>(`/business/${businessId}/cards/summary`)
+    return res.data ?? { usd_balance: 0, total_cards: 0, total_card_balance: 0 }
+  },
+
+  async list(businessId: string): Promise<VirtualCard[]> {
+    const res = await request<{ data: unknown[] }>(`/business/${businessId}/cards`)
+    return (res.data ?? [])
+      .map(normalizeVirtualCard)
+      .filter((card): card is VirtualCard => card != null)
+  },
+
+  async listCustomers(businessId: string): Promise<CardCustomer[]> {
+    const res = await request<{ data: { customers?: unknown[] } }>(
+      `/business/${businessId}/cards/customers`,
+    )
+    return (res.data?.customers ?? [])
+      .map(normalizeCardCustomer)
+      .filter((customer): customer is CardCustomer => customer != null)
+  },
+
+  async createCustomer(
+    businessId: string,
+    payload: CreateCardCustomerPayload,
+  ): Promise<CardCustomer> {
+    const res = await request<{ data: unknown }>(
+      `/business/${businessId}/cards/customers`,
+      { method: 'POST', body: payload },
+    )
+    const customer = normalizeCardCustomer(res.data)
+    if (!customer) throw new ApiError('Could not parse card customer response', 500)
+    return customer
+  },
+
+  async getPlatformCustomerCardReadiness(
+    businessId: string,
+    walletId: string,
+  ): Promise<CardReadiness> {
+    const res = await request<{ data: CardReadiness }>(
+      `/business/${businessId}/cards/platform-customers/${encodeURIComponent(walletId)}/readiness`,
+    )
+    return res.data ?? { ready: false, missing: ['id_number', 'state'], has_card_customer: false }
+  },
+
+  async issueCardForPlatformCustomer(
+    businessId: string,
+    walletId: string,
+    payload: IssuePlatformCardPayload,
+  ): Promise<VirtualCard> {
+    const res = await request<{ data: unknown }>(
+      `/business/${businessId}/cards/platform-customers/${encodeURIComponent(walletId)}/cards`,
+      { method: 'POST', body: payload },
+    )
+    const card = normalizeVirtualCard(res.data)
+    if (!card) throw new ApiError('Could not parse issued card response', 500)
+    return card
+  },
+
+  async issueCard(
+    businessId: string,
+    customerId: string,
+    payload: {
+      currency: 'USD'
+      amount: number
+      type: 'VISA' | 'MASTERCARD'
+      description: string
+    },
+  ): Promise<VirtualCard> {
+    const res = await request<{ data: unknown }>(
+      `/business/${businessId}/cards/customers/${encodeURIComponent(customerId)}/cards`,
+      { method: 'POST', body: payload },
+    )
+    const card = normalizeVirtualCard(res.data)
+    if (!card) throw new ApiError('Could not parse issued card response', 500)
+    return card
+  },
+
+  async getDetails(
+    businessId: string,
+    cardId: string,
+    walletPin: string,
+  ): Promise<CardSensitiveDetails> {
+    const res = await request<{ data: CardSensitiveDetails }>(
+      `/business/${businessId}/cards/details`,
+      { method: 'POST', body: { card_id: cardId, wallet_pin: walletPin } },
+    )
+    return res.data
+  },
+
+  async topup(
+    businessId: string,
+    payload: { card_id: string; amount: number; wallet_pin: string },
+  ) {
+    return request(`/business/${businessId}/cards/topup`, {
+      method: 'POST',
+      body: payload,
+    })
+  },
+
+  async freeze(
+    businessId: string,
+    payload: { card_id: string; wallet_pin: string },
+  ) {
+    return request(`/business/${businessId}/cards/freeze`, {
+      method: 'POST',
+      body: payload,
+    })
+  },
+
+  async unfreeze(
+    businessId: string,
+    payload: { card_id: string; wallet_pin: string },
+  ) {
+    return request(`/business/${businessId}/cards/unfreeze`, {
+      method: 'POST',
+      body: payload,
+    })
+  },
+
+  async withdraw(
+    businessId: string,
+    payload: { card_id: string; amount: number; wallet_pin: string },
+  ) {
+    return request(`/business/${businessId}/cards/withdraw`, {
+      method: 'POST',
+      body: payload,
+    })
+  },
+
+  async terminate(
+    businessId: string,
+    payload: { card_id: string; wallet_pin: string },
+  ) {
+    return request(`/business/${businessId}/cards/terminate`, {
+      method: 'POST',
+      body: payload,
+    })
+  },
+
+  async listTransactions(
+    businessId: string,
+    params: { card_id: string; page: number; monthYear: string; page_size?: number },
+  ): Promise<{ list: CardSpendTransaction[]; page: number; page_size: number; total: number }> {
+    const qs = new URLSearchParams()
+    qs.set('card_id', params.card_id)
+    qs.set('page', String(params.page))
+    qs.set('monthYear', params.monthYear)
+    if (params.page_size != null) qs.set('page_size', String(params.page_size))
+    const res = await request<{
+      data: { list?: CardSpendTransaction[]; page?: number; page_size?: number; total?: number }
+    }>(`/business/${businessId}/cards/transactions?${qs.toString()}`)
+    return {
+      list: res.data?.list ?? [],
+      page: res.data?.page ?? params.page,
+      page_size: res.data?.page_size ?? params.page_size ?? 20,
+      total: res.data?.total ?? 0,
+    }
   },
 }
 
@@ -717,6 +1121,7 @@ export type TransactionListParams = {
   to?: string
   type?: 'INFLOW' | 'OUTFLOW' | 'INTERNAL'
   method?: 'API' | 'DASHBOARD'
+  currency?: string
 }
 
 export const transactionsApi = {
@@ -730,6 +1135,7 @@ export const transactionsApi = {
     if (params.to) qs.set('to', params.to)
     if (params.type) qs.set('type', params.type)
     if (params.method) qs.set('method', params.method)
+    if (params.currency) qs.set('currency', params.currency)
     const query = qs.toString()
     const res = await request<{ data: Transaction[] }>(
       `/business/${id}/transactions${query ? `?${query}` : ''}`
@@ -835,6 +1241,14 @@ export const transferApi = {
 
 // ── Customers (managed wallets) ─────────────────────────────────────────
 
+export type CustomerFundingAccount = {
+  provider?: string
+  account_number?: string
+  virtual_account_id?: string
+  account_name?: string
+  primary?: boolean
+}
+
 export type CustomerWallet = {
   wallet_id: string
   account_number: string
@@ -844,6 +1258,7 @@ export type CustomerWallet = {
   business_id?: string
   isFloat?: boolean
   is_dva_polaris?: boolean
+  is_dva_9psb?: boolean
   /** Snapshot of details the business submitted at creation (only on single fetch). */
   customer_details?: CustomerDetails | null
   created_at?: string
@@ -862,9 +1277,13 @@ export type CustomerDetails = {
   address_line_1?: string
   address_line_2?: string | null
   city?: string
+  state?: string
   country?: string
   /** Stored masked (e.g. *******1234). */
   bvn?: string | null
+  external_reference?: string | null
+  name_on_account?: string
+  funding_accounts?: CustomerFundingAccount[]
 }
 
 export type CreateCustomerPayload = {
@@ -877,10 +1296,38 @@ export type CreateCustomerPayload = {
   address_line_1: string
   address_line_2?: string
   city: string
+  state: string
   country: string
   phone_number: string
   email: string
   bvn: string
+}
+
+export type CustomerCryptoWallet = {
+  wallet_id: string
+  customer_id: string
+  asset: string
+  network: string
+  deposit_address: string
+  balance: string
+  locked_balance: string
+  offramp?: boolean
+  is_active: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+export type CryptoAsset = {
+  asset: string
+  network: string
+  label: string
+  networks?: string[]
+  default_network?: string
+}
+
+export type CreateCustomerCryptoWalletPayload = {
+  asset: string
+  chain?: string
 }
 
 function activeBusinessId(): string {
@@ -892,21 +1339,21 @@ function activeBusinessId(): string {
 export const customersApi = {
   async list(businessId?: string): Promise<CustomerWallet[]> {
     const id = businessId ?? activeBusinessId()
-    const res = await request<{ data: CustomerWallet[] }>(`/business/${id}/customers`)
+    const res = await request<{ data: CustomerWallet[] }>(`/business/${id}/wallet-customers`)
     return res.data ?? []
   },
 
   async get(walletId: string, businessId?: string): Promise<CustomerWallet | null> {
     const id = businessId ?? activeBusinessId()
     const res = await request<{ data: CustomerWallet | null }>(
-      `/business/${id}/customers/${walletId}`
+      `/business/${id}/wallet-customers/${walletId}`
     )
     return res.data ?? null
   },
 
   create(payload: CreateCustomerPayload, businessId?: string) {
     const id = businessId ?? activeBusinessId()
-    return request<{ data: CustomerWallet }>(`/business/${id}/customers`, {
+    return request<{ data: CustomerWallet }>(`/business/${id}/wallet-customers`, {
       method: 'POST',
       body: payload,
     })
@@ -923,9 +1370,38 @@ export const customersApi = {
     if (params.status) qs.set('status', params.status)
     const query = qs.toString()
     const res = await request<{ data: Transaction[] }>(
-      `/business/${id}/customers/${walletId}/transactions${query ? `?${query}` : ''}`
+      `/business/${id}/wallet-customers/${walletId}/transactions${query ? `?${query}` : ''}`
     )
     return res.data ?? []
+  },
+
+  async cryptoWallets(walletId: string, businessId?: string): Promise<CustomerCryptoWallet[]> {
+    const id = businessId ?? activeBusinessId()
+    const res = await request<{ data: CustomerCryptoWallet[] }>(
+      `/business/${id}/wallet-customers/${walletId}/crypto-wallets`,
+    )
+    return res.data ?? []
+  },
+
+  async listCryptoAssets(businessId?: string): Promise<CryptoAsset[]> {
+    const id = businessId ?? activeBusinessId()
+    const res = await request<{ data: CryptoAsset[] }>(`/business/${id}/crypto/assets`)
+    return res.data ?? []
+  },
+
+  createCryptoWallet(
+    walletId: string,
+    payload: CreateCustomerCryptoWalletPayload,
+    businessId?: string,
+  ) {
+    const id = businessId ?? activeBusinessId()
+    return request<{ data: CustomerCryptoWallet }>(
+      `/business/${id}/wallet-customers/${walletId}/crypto-wallets`,
+      {
+        method: 'POST',
+        body: payload,
+      },
+    )
   },
 }
 

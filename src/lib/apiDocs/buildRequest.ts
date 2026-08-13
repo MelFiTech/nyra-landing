@@ -7,7 +7,7 @@ export function getDocsApiBaseUrl(): string {
   return DOCS_API_BASE_URL
 }
 
-/** @alias getDocsApiBaseUrl — docs samples always use production base URL. */
+/** @alias getDocsApiBaseUrl. Docs samples always use production base URL. */
 export function getApiBaseUrl(): string {
   return getDocsApiBaseUrl()
 }

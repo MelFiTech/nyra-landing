@@ -40,7 +40,7 @@
 /* Variants */
 .primary {
   background: var(--brand);
-  color: #111;
+  color: #111827;
 }
 
 .primary:hover:not(:disabled) {

@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect, useState } from 'react'
+import { useRef, useCallback, useEffect, useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import Button from '../components/ui/Button'
 import DepositModal from '../components/treasury/DepositModal'
@@ -10,6 +10,7 @@ import { useBalance } from '../context/BalanceContext'
 import { useBusiness, usePermissions } from '../context/BusinessContext'
 import { useBusinessWallet, useTransactions } from '../hooks/useAppData'
 import { mapApiTransaction } from '../lib/mapTransaction'
+import type { Transaction as ApiTransaction } from '../lib/api'
 import TrendSparkline from '../components/dashboard/TrendSparkline'
 import styles from './DashboardPage.module.css'
 
@@ -34,6 +35,16 @@ function compactNaira(value: number | string | undefined | null) {
     return `${prefix}${formatted.replace(/\.0+$/, '').replace(/(\.\d)0$/, '$1')}K`
   }
   return naira(n)
+}
+
+function txCurrency(tx: ApiTransaction) {
+  return (tx.currency ?? 'NGN').toUpperCase()
+}
+
+function formatTxAmount(tx: ApiTransaction) {
+  const prefix = tx.transaction_type === 'CREDIT' ? '+' : '-'
+  const amount = Math.abs(Number(tx.amount ?? 0))
+  return `${prefix}${naira(amount)}`
 }
 
 const METRIC_CHART = { width: 48, height: 20 }
@@ -74,6 +85,13 @@ const EyeOffIcon = () => (
   </svg>
 )
 
+const GlobeIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+  </svg>
+)
+
 const SearchIllustration = () => (
   <svg width="120" height="80" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg" className={styles.emptyIllustration}>
     <rect x="10" y="20" width="70" height="8" rx="4" className={styles.illuBar1}/>
@@ -99,7 +117,12 @@ export default function DashboardPage() {
   const [pinModalOpen, setPinModalOpen] = useState(false)
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null)
   const { data: wallet } = useBusinessWallet()
-  const { data: transactions = [] } = useTransactions({ page_size: 10 })
+  const { data: transactions = [] } = useTransactions({ page_size: 50 })
+
+  const walletTransactions = useMemo(
+    () => transactions.filter(tx => txCurrency(tx) === 'NGN'),
+    [transactions],
+  )
 
   useEffect(() => {
     if (wallet && !wallet.wallet_pin_changed) setPinModalOpen(true)
@@ -114,9 +137,9 @@ export default function DashboardPage() {
   const total = available + unsettled
 
   const metrics = [
-    { label: 'Total Inflow', trend: 'up' as const, value: compactNaira(wallet?.total_credit), data: [3, 5, 4, 7, 6, 9, 11] },
-    { label: 'Total Outflow', trend: 'down' as const, value: compactNaira(wallet?.total_debit), data: [9, 8, 10, 7, 6, 5, 4] },
-    { label: 'Transactions', trend: 'up' as const, value: String(transactions.length), data: [0, 0, 0, 0, 0, 0, 0] },
+    { label: 'Total Inflow', trend: 'up' as const, value: compactNaira(wallet?.total_credit), data: [3, 5, 4, 7, 6, 9, 11], masked: true },
+    { label: 'Total Outflow', trend: 'down' as const, value: compactNaira(wallet?.total_debit), data: [9, 8, 10, 7, 6, 5, 4], masked: true },
+    { label: 'Transactions', trend: 'up' as const, value: String(walletTransactions.length), data: [0, 0, 0, 0, 0, 0, 0], masked: false },
   ]
 
   const [leftPct, setLeftPct] = useState(62)
@@ -164,16 +187,9 @@ export default function DashboardPage() {
             <div className={styles.walletCard}>
               <div className={styles.walletTop}>
                 <div className={styles.currencyBadge}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
-                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                  </svg>
+                  <GlobeIcon />
                   <span>NGN</span>
                 </div>
-                <Button variant="text" className={styles.addWalletBtn}>
-                  <span className={styles.addIcon}>+</span>
-                  Add Wallet
-                </Button>
               </div>
 
               <div className={styles.walletBody}>
@@ -195,11 +211,15 @@ export default function DashboardPage() {
                   <div className={styles.balanceRow}>
                     <div>
                       <div className={styles.subLabel}>Total Balance</div>
-                      <div className={styles.subAmount}>{balanceVisible ? naira(total) : '₦ ••••'}</div>
+                      <div className={styles.subAmount}>
+                        {balanceVisible ? naira(total) : '₦ ••••'}
+                      </div>
                     </div>
                     <div>
                       <div className={styles.subLabel}>Unsettled Balance</div>
-                      <div className={styles.subAmount}>{balanceVisible ? naira(unsettled) : '₦ ••••'}</div>
+                      <div className={styles.subAmount}>
+                        {balanceVisible ? naira(unsettled) : '₦ ••••'}
+                      </div>
                     </div>
                   </div>
                   <div className={styles.walletActions}>
@@ -263,9 +283,7 @@ export default function DashboardPage() {
                   </div>
                   <div className={styles.metricBody}>
                     <span className={styles.metricValue}>
-                      {metric.label === 'Transactions'
-                        ? metric.value
-                        : balanceVisible ? metric.value : '₦ ••••'}
+                      {metric.masked && !balanceVisible ? '₦ ••••' : metric.value}
                     </span>
                     <span className={styles.metricChart}>
                       <TrendSparkline
@@ -283,7 +301,7 @@ export default function DashboardPage() {
             {/* Recent transactions — same width as wallet */}
             <section className={styles.txSection}>
               <h2 className={styles.txTitle}>Recent transactions</h2>
-              {transactions.length === 0 ? (
+              {walletTransactions.length === 0 ? (
                 <div className={styles.emptyState}>
                   <SearchIllustration />
                   <p className={styles.emptyTitle}>No transactions</p>
@@ -291,7 +309,7 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <ul className={styles.txList}>
-                  {transactions.map(tx => (
+                  {walletTransactions.map(tx => (
                     <li
                       key={tx.transaction_id}
                       className={styles.txRow}
@@ -329,7 +347,7 @@ export default function DashboardPage() {
                           className={styles.txAmount}
                           data-credit={tx.transaction_type === 'CREDIT' || undefined}
                         >
-                          {tx.transaction_type === 'CREDIT' ? '+' : '-'}{naira(tx.amount)}
+                          {balanceVisible ? formatTxAmount(tx) : '₦ ••••'}
                         </span>
                         <span className={styles.txStatus} data-status={tx.transaction_status?.toLowerCase()}>
                           {tx.transaction_status?.toLowerCase()}

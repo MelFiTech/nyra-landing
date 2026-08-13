@@ -73,9 +73,11 @@ function exportTransactions(rows: Transaction[]) {
 
 
 type StatusFilter = 'all' | 'successful' | 'failed'
+type TxCurrency = 'NGN' | 'USD'
 type TypeFilter = 'all' | 'credit' | 'debit'
 
 type TxFilters = {
+  currencies: TxCurrency[]
   methods: string[]
   type: TypeFilter
   startDate: string
@@ -83,6 +85,7 @@ type TxFilters = {
 }
 
 const EMPTY_FILTERS: TxFilters = {
+  currencies: [],
   methods: [],
   type: 'all',
   startDate: '',
@@ -97,6 +100,7 @@ function parseTxDate(date: string) {
 
 function countActiveFilters(filters: TxFilters) {
   let count = 0
+  if (filters.currencies.length > 0) count++
   if (filters.methods.length > 0) count++
   if (filters.type !== 'all') count++
   if (filters.startDate) count++
@@ -119,8 +123,9 @@ export default function TransactionsPage() {
     () => ({
       ...(filters.startDate ? { from: filters.startDate } : {}),
       ...(filters.endDate ? { to: filters.endDate } : {}),
+      ...(filters.currencies.length === 1 ? { currency: filters.currencies[0] } : {}),
     }),
-    [filters.startDate, filters.endDate],
+    [filters.startDate, filters.endDate, filters.currencies],
   )
 
   const {
@@ -144,30 +149,35 @@ export default function TransactionsPage() {
     [apiTransactions]
   )
 
+  const currencyScoped = useMemo(() => {
+    if (filters.currencies.length === 0) return transactions
+    return transactions.filter(tx => filters.currencies.includes(tx.currency))
+  }, [transactions, filters.currencies])
+
   const statusCounts = useMemo(() => {
     let successful = 0
     let failed = 0
-    for (const tx of transactions) {
+    for (const tx of currencyScoped) {
       if (tx.status === 'successful') successful += 1
       else if (tx.status === 'failed') failed += 1
     }
     return {
-      all: transactions.length,
+      all: currencyScoped.length,
       successful,
       failed,
     }
-  }, [transactions])
+  }, [currencyScoped])
 
   const txMethods = useMemo(
-    () => [...new Set(transactions.map(tx => tx.method))].filter(m => m !== '—'),
-    [transactions]
+    () => [...new Set(currencyScoped.map(tx => tx.method))].filter(m => m !== '—'),
+    [currencyScoped]
   )
 
   const activeFilterCount = countActiveFilters(filters)
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return transactions.filter(tx => {
+    return currencyScoped.filter(tx => {
       if (statusFilter !== 'all' && tx.status !== statusFilter) return false
       if (filters.methods.length > 0 && !filters.methods.includes(tx.method)) return false
       if (filters.type !== 'all' && tx.amountType !== filters.type) return false
@@ -186,7 +196,7 @@ export default function TransactionsPage() {
       }
       return true
     })
-  }, [transactions, search, statusFilter, filters])
+  }, [currencyScoped, search, statusFilter, filters])
 
   function toggleFilters() {
     if (filterOpen) {
@@ -206,6 +216,15 @@ export default function TransactionsPage() {
     setDraftFilters(EMPTY_FILTERS)
     setFilters(EMPTY_FILTERS)
     setPage(1)
+  }
+
+  function toggleCurrency(currency: TxCurrency, checked: boolean) {
+    setDraftFilters(prev => ({
+      ...prev,
+      currencies: checked
+        ? [...prev.currencies, currency]
+        : prev.currencies.filter(c => c !== currency),
+    }))
   }
 
   function toggleMethod(method: string, checked: boolean) {
@@ -230,7 +249,7 @@ export default function TransactionsPage() {
     ? 'Loading transactions…'
     : isError
       ? 'Could not load transactions'
-      : transactions.length === 0
+      : currencyScoped.length === 0 && transactions.length === 0
         ? 'No transactions yet'
         : 'No matching transactions'
 
@@ -299,6 +318,17 @@ export default function TransactionsPage() {
                 </Button>
               }
             >
+              <FilterSection title="Currency">
+                {(['NGN', 'USD'] as const).map(currency => (
+                  <FilterCheckboxOption
+                    key={currency}
+                    label={currency}
+                    checked={draftFilters.currencies.includes(currency)}
+                    onChange={checked => toggleCurrency(currency, checked)}
+                  />
+                ))}
+              </FilterSection>
+
               <FilterSection title="Date range" stacked={false}>
                 <FilterDateFields
                   startDate={draftFilters.startDate}
@@ -377,6 +407,7 @@ export default function TransactionsPage() {
                 <th style={{ width: 28 }}></th>
                 <th>From / To</th>
                 <th>Method</th>
+                <th>Currency</th>
                 <th>Amount</th>
                 <th>Date</th>
                 <th>Status</th>
@@ -390,6 +421,7 @@ export default function TransactionsPage() {
                   </td>
                   <td className={styles.fromTo}>{tx.fromTo}</td>
                   <td className={styles.method}>{tx.method}</td>
+                  <td className={styles.currency}>{tx.currency}</td>
                   <td className={`${styles.amount} ${tx.amountType === 'credit' ? styles.amountCredit : styles.amountDebit}`}>
                     {maskAmt(tx.amount)}
                   </td>

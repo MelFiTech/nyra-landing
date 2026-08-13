@@ -108,7 +108,9 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
   }, [theme])
 
   const isTreasuryActive = ['/app/dashboard', '/app/transactions'].includes(location.pathname)
-  const isCardsActive = location.pathname === '/app/cards'
+  const isSpendActive = ['/app/cards', '/app/cards/physical'].includes(location.pathname)
+  const isVirtualCardsActive = location.pathname === '/app/cards'
+  const isPhysicalCardsActive = location.pathname === '/app/cards/physical'
   const isCustomersActive = location.pathname.startsWith('/app/customers')
   const isWebhooksActive = location.pathname === '/app/webhooks'
   const isDocsActive = location.pathname === '/app/docs'
@@ -193,9 +195,13 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
         {/* Spend group */}
         <div className={styles.navGroup}>
           <button
-            className={`${styles.navItem} ${isCardsActive ? styles.active : ''}`}
+            className={`${styles.navItem} ${isSpendActive ? styles.active : ''}`}
             style={navItemStyle}
             onClick={() => { if (!collapsed) setSpendOpen(v => !v) }}
+            onMouseEnter={() => {
+              prefetchRoute('/app/cards')
+              prefetchRoute('/app/cards/physical')
+            }}
             title={collapsed ? 'Spend' : undefined}
           >
             <span className={styles.icon}><SpendIcon /></span>
@@ -209,10 +215,18 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
           {spendOpen && !collapsed && (
             <div className={styles.subNav}>
               <button
-                className={`${styles.subItem} ${isCardsActive ? styles.subActive : ''}`}
+                className={`${styles.subItem} ${isVirtualCardsActive ? styles.subActive : ''}`}
                 onClick={() => navigate('/app/cards')}
+                onMouseEnter={() => prefetchRoute('/app/cards')}
               >
-                Cards
+                Virtual card
+              </button>
+              <button
+                className={`${styles.subItem} ${isPhysicalCardsActive ? styles.subActive : ''}`}
+                onClick={() => navigate('/app/cards/physical')}
+                onMouseEnter={() => prefetchRoute('/app/cards/physical')}
+              >
+                Physical card
               </button>
             </div>
           )}

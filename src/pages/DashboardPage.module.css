@@ -41,6 +41,39 @@
   padding: 18px 20px 0;
 }
 
+.walletTabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.walletTab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 58px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1.5px solid color-mix(in srgb, var(--border-mid) 35%, transparent);
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+
+.walletTab:hover {
+  color: var(--text-1);
+  border-color: color-mix(in srgb, var(--border-mid) 65%, transparent);
+}
+
+.walletTabActive {
+  border-color: var(--border-mid);
+  color: var(--text-1);
+  background: var(--surface);
+}
+
 .walletTop {
   display: flex;
   align-items: center;

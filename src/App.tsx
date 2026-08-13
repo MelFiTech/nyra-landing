@@ -21,6 +21,7 @@ import DashboardPage from './pages/DashboardPage'
 import CustomersPage from './pages/CustomersPage'
 import CustomerDetailPage from './pages/CustomerDetailPage'
 import CardsPage from './pages/CardsPage'
+import PhysicalCardsPage from './pages/PhysicalCardsPage'
 import TransactionsPage from './pages/TransactionsPage'
 import SettingsPage from './pages/SettingsPage'
 import WebhooksPage from './pages/WebhooksPage'
@@ -60,6 +61,7 @@ function AppRoutes() {
           <Route path="/app/customers" element={<CustomersPage />} />
           <Route path="/app/customers/:id" element={<CustomerDetailPage />} />
           <Route path="/app/cards" element={<CardsPage />} />
+          <Route path="/app/cards/physical" element={<PhysicalCardsPage />} />
           <Route path="/app/transactions" element={<TransactionsPage />} />
           <Route path="/app/settings" element={<SettingsPage />} />
           <Route path="/app/webhooks" element={<WebhooksPage />} />

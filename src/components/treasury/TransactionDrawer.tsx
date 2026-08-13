@@ -96,6 +96,7 @@ export type Transaction = {
   amount: string
   amountRaw: string
   amountType: 'credit' | 'debit'
+  currency: 'NGN' | 'USD'
   date: string
   processedAt: string
   status: 'successful' | 'failed' | 'pending'

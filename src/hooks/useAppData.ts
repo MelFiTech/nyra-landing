@@ -1,6 +1,7 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import {
   apiClientApi,
+  cardsApi,
   customersApi,
   notificationsApi,
   transactionsApi,
@@ -89,6 +90,26 @@ export function useCustomerTransactions(walletId: string | undefined) {
   })
 }
 
+export function useCustomerCryptoWallets(walletId: string | undefined) {
+  const { businessId, business } = useBusiness()
+  const approved = business?.verification_status === 'VERIFIED'
+  return useQuery({
+    queryKey: queryKeys.customerCryptoWallets(businessId ?? '', walletId ?? ''),
+    queryFn: () => customersApi.cryptoWallets(walletId!, businessId!),
+    enabled: !!businessId && !!walletId && approved,
+  })
+}
+
+export function useCryptoAssets(enabled = true) {
+  const { businessId, business } = useBusiness()
+  const approved = business?.verification_status === 'VERIFIED'
+  return useQuery({
+    queryKey: queryKeys.cryptoAssets(businessId ?? ''),
+    queryFn: () => customersApi.listCryptoAssets(businessId!),
+    enabled: !!businessId && approved && enabled,
+  })
+}
+
 export function useApiClient() {
   const { businessId, business } = useBusiness()
   return useQuery({
@@ -126,5 +147,51 @@ export function useNotifications() {
     queryFn: () => notificationsApi.list(businessId!),
     enabled: !!businessId,
     staleTime: 30_000,
+  })
+}
+
+export function useCardSummary() {
+  const { businessId, business } = useBusiness()
+  const approved = business?.verification_status === 'VERIFIED'
+  return useQuery({
+    queryKey: queryKeys.cardSummary(businessId ?? ''),
+    queryFn: () => cardsApi.getSummary(businessId!),
+    enabled: !!businessId && approved,
+  })
+}
+
+export function useCards() {
+  const { businessId, business } = useBusiness()
+  const approved = business?.verification_status === 'VERIFIED'
+  return useQuery({
+    queryKey: queryKeys.cards(businessId ?? ''),
+    queryFn: () => cardsApi.list(businessId!),
+    enabled: !!businessId && approved,
+  })
+}
+
+export function useCardCustomers() {
+  const { businessId, business } = useBusiness()
+  const approved = business?.verification_status === 'VERIFIED'
+  return useQuery({
+    queryKey: queryKeys.cardCustomers(businessId ?? ''),
+    queryFn: () => cardsApi.listCustomers(businessId!),
+    enabled: !!businessId && approved,
+  })
+}
+
+export function useUsdCryptoDeposit() {
+  const { businessId, business } = useBusiness()
+  const approved = business?.verification_status === 'VERIFIED'
+  return useQuery({
+    queryKey: queryKeys.usdCryptoDeposit(businessId ?? ''),
+    queryFn: async () => {
+      try {
+        return await walletApi.getUsdCryptoDeposit(businessId!)
+      } catch {
+        return null
+      }
+    },
+    enabled: !!businessId && approved,
   })
 }

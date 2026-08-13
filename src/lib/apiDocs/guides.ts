@@ -49,7 +49,7 @@ export const DOC_GUIDES: DocGuide[] = [
     sections: [
       {
         paragraphs: [
-          'The Nyra Business API is a REST API with JSON request and response bodies. Use it to onboard customers, collect NGN, send payouts, and automate treasury from your own product.',
+          'The Nyra Business API is a REST API with JSON request and response bodies. Use it to onboard customers, collect NGN, issue USD virtual cards, send payouts, and automate treasury from your own product.',
           'Create API credentials in the dashboard under Settings → Developer. Complete KYB and go live before processing real money.',
         ],
       },
@@ -76,6 +76,7 @@ export const DOC_GUIDES: DocGuide[] = [
         heading: 'What you can build',
         bullets: [
           'Wallets and virtual accounts for your end users',
+          'USD virtual cards for global spend (separate from NGN treasury)',
           'Outbound NGN transfers from your business float',
           'Static and Dynamic collection accounts for pay-ins',
           'Real-time webhook notifications for credits and transfers',
@@ -101,9 +102,15 @@ export const DOC_GUIDES: DocGuide[] = [
         ],
       },
       {
+        heading: 'Virtual cards',
+        paragraphs: [
+          'Issue USD virtual cards to your end customers via API using the same wallet_id from POST /business/wallets. Fund cards from a dedicated USD card-program balance (NGN convert or stablecoin deposit from the dashboard). Manage day-to-day operations from the Nyra dashboard.',
+        ],
+      },
+      {
         heading: 'Crypto on-ramps',
         paragraphs: [
-          'Stablecoin collections are coming soon. Contact support@nyrawallet.com for early access.',
+          'Issue stablecoin deposit addresses for your end customers when crypto collections are enabled for your business. Use the Business API or issue wallets from the dashboard on each customer\'s Wallets tab.',
         ],
       },
     ],
@@ -182,14 +189,18 @@ export const DOC_GUIDES: DocGuide[] = [
               ],
             },
           },
-          /*
           {
-            heading: 'Crypto',
+            heading: 'Virtual cards (USD)',
             paragraphs: [
-              'Crypto wallets and payouts are available only after crypto is enabled for your business. Email support@nyrawallet.com before launch for current Nyra crypto rates.',
+              'Virtual card issuance, funding, and withdrawals debit a separate USD card-program balance, not your NGN treasury float. Fund the program from the dashboard by converting NGN from your business float at Nyra\'s exchange rate (includes markup), or via stablecoin deposit when enabled.',
             ],
           },
-          */
+          {
+            heading: 'Crypto collections',
+            paragraphs: [
+              'Customer crypto deposit addresses and business treasury withdrawals are available when crypto is enabled for your business. USD virtual card program funding uses a separate dashboard flow (NGN convert or stablecoin deposit to your program balance).',
+            ],
+          },
           {
             heading: 'Custom commercial terms',
             paragraphs: [
@@ -529,6 +540,100 @@ export const DOC_GUIDES: DocGuide[] = [
     ],
   },
   {
+    id: 'virtual-cards-guide',
+    group: 'integration',
+    title: 'Virtual cards',
+    subtitle: 'Issue USD cards via API; manage from the dashboard or continue programmatically.',
+    sections: [
+      {
+        paragraphs: [
+          'Virtual cards use a dedicated USD card-program balance. This is separate from your NGN business float used for bank transfers, collections, and bill payments.',
+          'Issue cards through the Business API. Your team can fund the program, view cards, freeze cards, and review spend from the Nyra dashboard without extra integration work.',
+        ],
+      },
+      {
+        heading: 'Balances',
+        table: {
+          headers: ['Balance', 'Currency', 'Used for'],
+          rows: [
+            ['Business float (NGN)', 'NGN', 'Transfers, collections, VAS, identity checks'],
+            ['Card-program balance (USD)', 'USD', 'Virtual card issuance, top-ups, and Nyra fees'],
+            ['Individual card balance (USD)', 'USD', 'Customer spend on the issued card'],
+          ],
+        },
+      },
+      {
+        heading: 'Recommended API flow',
+        bullets: [
+          'POST /business/wallets: create or reuse your NGN wallet customer (include state for card KYC; full profile collected once)',
+          'GET /business/cards/wallet-customers/{walletId}/readiness: optional check for missing profile fields (informational; issue requests still require state, id_type, and id_number)',
+          'Fund your USD card-program balance from the dashboard (see Fund card-program balance below)',
+          'GET /business/cards/cost-preview: confirm total USD debit before issuing',
+          'POST /business/cards/wallet-customers/{walletId}/cards: issue a VISA or MASTERCARD with initial USD load 0-10 (always include state, id_type, and id_number)',
+          'POST /business/cards/topup: add USD to an existing card from program balance',
+          'GET /business/cards/transactions: reconcile monthly card activity',
+        ],
+      },
+      {
+        heading: 'Customer identifiers',
+        paragraphs: [
+          'Use wallet_id from POST /business/wallets as the single customer key for NGN wallet operations and virtual cards. Card API responses return this as wallet_customer_id.',
+        ],
+      },
+      {
+        heading: 'Fund card-program balance (dashboard)',
+        paragraphs: [
+          'Card-program funding is not yet exposed on the Business API client. Operators fund USD balance from the Nyra dashboard under Virtual card → Add funds.',
+          'NGN conversion debits your business float and credits the USD card-program balance at Nyra\'s marked-up exchange rate (minimum $1 USD). Stablecoin deposit returns a USDT TRC20 address when crypto float is enabled for your business (minimum deposit shown in the response). Incoming stablecoin deposits credit the card-program balance automatically.',
+        ],
+        bullets: [
+          'GET /business/{businessId}/usd-wallet/crypto-deposit: USDT TRC20 deposit address (dashboard JWT; requires crypto float enabled)',
+          'GET /business/{businessId}/usd-wallet/convert-quote?amount_usd=… or amount_ngn=…: preview NGN to USD conversion (exactly one amount parameter)',
+          'POST /business/{businessId}/usd-wallet/convert-from-ngn: execute conversion from NGN float to USD card-program balance',
+        ],
+      },
+      {
+        heading: 'Sample API payloads',
+        paragraphs: [
+          'See Issue virtual card (wallet customer) in the API reference for the full parameter list and response fields.',
+        ],
+        bullets: [
+          'Step 1: POST /business/wallets with customer profile and KYC including state (same customer record used for NGN wallet and cards)',
+          'Step 2: GET /business/cards/wallet-customers/{walletId}/readiness (optional)',
+          'Step 3: POST /business/cards/wallet-customers/{walletId}/cards with currency USD, amount (0-10), network (VISA or MASTERCARD), description, state, id_type, and id_number',
+          'Use wallet_id from step 1 as walletId in steps 2 and 3',
+        ],
+      },
+      {
+        heading: 'Dashboard flow',
+        paragraphs: [
+          'On the dashboard, choose an existing platform customer when creating a card. Nyra prefills details you already collected and only asks for any card-specific fields still missing (for example state or full BVN when stored masked). Card registration happens automatically as part of create card.',
+          'Via the Business API, always send state, id_type, and id_number on every issue request. Nyra prefers values already stored from POST /business/wallets and may ignore duplicates in your payload.',
+        ],
+      },
+      {
+        heading: 'Managing cards',
+        paragraphs: [
+          'After issuance via API, cards appear in the dashboard under Virtual card. Operators can fund cards, freeze or unfreeze, reveal PAN/CVV with wallet PIN, withdraw back to program balance, or terminate cards without additional API work.',
+          'Sensitive card details (full PAN, CVV) require POST /business/cards/details with wallet_pin. Never expose this endpoint or PIN handling to client-side code.',
+        ],
+      },
+      {
+        heading: 'Wallet PIN',
+        paragraphs: [
+          'Freeze, unfreeze, card detail retrieval, and card withdrawal require your 4-digit business wallet PIN in the request body. Set the PIN in the dashboard before calling these routes.',
+          'Card top-up via API does not require wallet_pin; protect top-up endpoints on your backend with your own authorization.',
+        ],
+      },
+      {
+        heading: 'Physical cards',
+        paragraphs: [
+          'NGN physical cards attached to customer wallets are coming soon and are not covered by these endpoints.',
+        ],
+      },
+    ],
+  },
+  {
     id: 'webhooks-guide',
     group: 'integration',
     title: 'Webhooks',
@@ -549,14 +654,12 @@ export const DOC_GUIDES: DocGuide[] = [
             ['managed_wallet.debited', 'Wallet or float debited'],
             ['vas.electricity.completed', 'Electricity token ready after async vending'],
             ['vas.payment.failed', 'VAS bill failed (always subscribed; refunds when applicable)'],
-            /*
-            ['crypto.wallet.funded', 'Crypto deposit credited'],
+            ['crypto.wallet.funded', 'Stablecoin deposit credited to a customer or treasury crypto wallet'],
             ['crypto.wallet.debited', 'Crypto wallet debited'],
             ['crypto.swap.completed', 'Crypto swap succeeded'],
             ['crypto.swap.failed', 'Crypto swap failed'],
             ['crypto.payout.completed', 'On-chain withdrawal confirmed'],
             ['crypto.payout.failed', 'On-chain withdrawal failed'],
-            */
           ],
         },
       },
@@ -581,7 +684,6 @@ export const DOC_GUIDES: DocGuide[] = [
       },
     ],
   },
-  /*
   {
     id: 'crypto-guide',
     group: 'integration',
@@ -589,13 +691,45 @@ export const DOC_GUIDES: DocGuide[] = [
     sections: [
       {
         paragraphs: [
-          'Crypto must be enabled for your business. Flow: list supported assets → create a crypto customer → generate a deposit address per asset and chain.',
-          'See API Reference for request fields and response shapes.',
+          'Crypto collections must be enabled for your business before you can issue deposit addresses or receive on-chain payments.',
+        ],
+      },
+      {
+        heading: 'Recommended API flow',
+        bullets: [
+          'GET /business/crypto/assets: list assets and networks available for your business',
+          'POST /business/wallets: create the NGN wallet customer (optional but recommended; reuse wallet_id for cards and crypto)',
+          'POST /business/crypto/customers: register a crypto customer, or pass managed_wallet_id to link an existing wallet customer',
+          'POST /business/crypto/customers/{customerId}/wallets: issue a deposit address (asset and optional chain)',
+          'GET /business/crypto/customers/{customerId}/wallets: list deposit addresses for reconciliation',
+          'POST /business/crypto/transfers: withdraw from business treasury to an on-chain address',
+        ],
+      },
+      {
+        heading: 'Customer keys',
+        paragraphs: [
+          'For issue and list wallet routes, customerId accepts crypto customer_id, your customer_reference, or managed wallet_id from POST /business/wallets. Prefer wallet_id when you already collect KYC through Nyra wallet onboarding.',
+        ],
+      },
+      {
+        heading: 'Dashboard flow',
+        paragraphs: [
+          'On the Nyra dashboard, open a customer and use the Wallets tab to issue and view on-chain deposit addresses without API client credentials.',
+        ],
+        bullets: [
+          'GET /business/{businessId}/crypto/assets: supported assets (dashboard JWT)',
+          'GET /business/{businessId}/wallet-customers/{walletId}/crypto-wallets: list deposit addresses for the customer',
+          'POST /business/{businessId}/wallet-customers/{walletId}/crypto-wallets: issue a new deposit address (asset and optional chain)',
+        ],
+      },
+      {
+        heading: 'Webhooks',
+        paragraphs: [
+          'Subscribe to crypto.wallet.funded, crypto.wallet.debited, crypto.swap.completed, crypto.swap.failed, crypto.payout.completed, and crypto.payout.failed for treasury and customer balance updates. Webhook payloads use the same field names as the API responses.',
         ],
       },
     ],
   },
-  */
 ]
 
 export function getGuideById(id: string): DocGuide | undefined {

@@ -1,0 +1,145 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--text-3);
+  line-height: 1.5;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.amountInputWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 14px;
+  border: 1.5px solid var(--border-mid);
+  border-radius: 8px;
+  background: var(--input-bg);
+  transition: border-color 0.12s;
+}
+
+.amountInputWrap:focus-within {
+  border-color: var(--text-2);
+}
+
+.amountPrefix {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.amountInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-1);
+  background: transparent;
+  font-family: inherit;
+  letter-spacing: -0.3px;
+  min-width: 0;
+}
+
+.amountInput::placeholder {
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.amountHint {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.cardTarget {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.cardTargetLabel {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.cardTargetValue {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.morphContent {
+  animation: morphIn 0.22s ease;
+}
+
+@keyframes morphIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 40px 0 8px;
+}
+
+.successIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.successTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+.successSub {
+  font-size: 13.5px;
+  color: var(--text-3);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.successAmount {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-1);
+  letter-spacing: -0.4px;
+}

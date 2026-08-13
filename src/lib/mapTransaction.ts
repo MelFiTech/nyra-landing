@@ -19,8 +19,12 @@ function titleCase(value: string | undefined) {
   return value.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
 }
 
-function formatNgn(value: number | string | undefined | null) {
-  return `NGN ${Number(value ?? 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+function formatMoney(value: number | string | undefined | null, currency = 'NGN') {
+  const n = Number(value ?? 0)
+  if (currency.toUpperCase() === 'USD') {
+    return `USD ${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  }
+  return `NGN ${n.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
 /** Date + time in 12-hour format for business-facing views. */
@@ -336,7 +340,8 @@ function buildTimeline(t: ApiTransaction, status: Transaction['status']): Transa
 export function mapApiTransaction(t: ApiTransaction): Transaction {
   const status = normalizeStatus(t.transaction_status)
   const credit = t.transaction_type === 'CREDIT'
-  const amountRaw = formatNgn(Math.abs(Number(t.amount)))
+  const currency = (t.currency ?? 'NGN').toUpperCase()
+  const amountRaw = formatMoney(Math.abs(Number(t.amount)), currency)
   const processedAt = formatTxDateTime(t.created_at)
   const date = formatTxDateShort(t.created_at)
   const party = extractParty(t)
@@ -362,14 +367,15 @@ export function mapApiTransaction(t: ApiTransaction): Transaction {
     amount: `${credit ? '+' : '-'} ${amountRaw}`,
     amountRaw,
     amountType: credit ? 'credit' : 'debit',
+    currency: currency === 'USD' ? 'USD' : 'NGN',
     date,
     processedAt,
     status,
     reference: t.transaction_reference || t.transaction_id,
     counterparty,
-    fee: formatNgn(t.charge),
+    fee: formatMoney(t.charge, currency),
     summary: t.description || t.transaction_reference || t.transaction_id,
-    wallet: `${t.currency ?? 'NGN'} Wallet`,
+    wallet: `${currency} Wallet`,
     category: titleCase(t.transaction_category as string),
     channel: typeof t.channel === 'string' ? titleCase(t.channel) : undefined,
     transactionType: credit ? 'credit' : 'debit',
@@ -377,7 +383,7 @@ export function mapApiTransaction(t: ApiTransaction): Transaction {
     detailFields: paymentFields,
     customerName,
     timeline: buildTimeline(t, status),
-    prevBalance: formatNgn(t.balance_before),
-    currBalance: formatNgn(t.balance_after),
+    prevBalance: formatMoney(t.balance_before, currency),
+    currBalance: formatMoney(t.balance_after, currency),
   }
 }

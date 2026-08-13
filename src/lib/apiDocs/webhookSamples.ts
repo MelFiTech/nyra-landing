@@ -191,25 +191,22 @@ export const DOC_WEBHOOK_EVENT_SAMPLES: DocWebhookSample[] = [
   }
 }`,
   },
-  /*
   {
     event: 'crypto.wallet.funded',
     label: 'Crypto deposit',
-    description: 'On-chain deposit credited to a business crypto wallet.',
+    description: 'On-chain deposit credited to a business or customer crypto wallet.',
     body: `{
   "event": "crypto.wallet.funded",
   "data": {
     "business_id": "biz_4k2m9p1q7r3s",
-    "customer_id": "cry_cust_001",
-    "wallet_id": "cry_wal_usdt_trc20",
+    "customer_id": "BCC-…",
+    "wallet_id": "BCW-…",
     "asset": "USDT",
-    "network": "TRC20",
+    "network": "trc20",
     "amount": "150.25",
     "balance": "1150.25",
-    "reference": "dep_maplerad_abc123",
-    "timestamp": "2026-07-22T18:22:01.000Z",
-    "provider": "Maplerad",
-    "verified": true
+    "reference": "dep_abc123",
+    "timestamp": "2026-07-22T18:22:01.000Z"
   }
 }`,
   },
@@ -221,13 +218,13 @@ export const DOC_WEBHOOK_EVENT_SAMPLES: DocWebhookSample[] = [
   "event": "crypto.wallet.debited",
   "data": {
     "business_id": "biz_4k2m9p1q7r3s",
-    "customer_id": "cry_cust_001",
-    "wallet_id": "cry_wal_usdt_trc20",
+    "customer_id": "BCC-…",
+    "wallet_id": "BCW-…",
     "asset": "USDT",
-    "network": "TRC20",
+    "network": "trc20",
     "amount": "50.00",
     "balance": "1100.25",
-    "reference": "dep_maplerad_abc123",
+    "reference": "dep_abc123",
     "timestamp": "2026-07-22T18:25:00.000Z"
   }
 }`,
@@ -276,14 +273,14 @@ export const DOC_WEBHOOK_EVENT_SAMPLES: DocWebhookSample[] = [
     body: `{
   "event": "crypto.payout.completed",
   "data": {
-    "provider": "Obiex",
-    "currency": "USDT",
+    "business_id": "biz_4k2m9p1q7r3s",
+    "asset": "USDT",
+    "network": "trc20",
     "amount": "75.5",
     "status": "successful",
-    "reference": "wd_ref_obiex_7788",
-    "transaction_id": "tx_obiex_998877",
+    "reference": "CRY-TXN-7788",
+    "transaction_id": "tx_998877",
     "hash": "0xabc123def4567890abcdef1234567890abcdef12",
-    "network": "TRC20",
     "address": "TXyz9k2ExampleTronAddressForDocsOnly"
   }
 }`,
@@ -291,20 +288,19 @@ export const DOC_WEBHOOK_EVENT_SAMPLES: DocWebhookSample[] = [
   {
     event: 'crypto.payout.failed',
     label: 'Crypto payout failed',
-    description: 'Withdrawal rejected or failed on the provider.',
+    description: 'Withdrawal rejected or could not be completed.',
     body: `{
   "event": "crypto.payout.failed",
   "data": {
-    "provider": "Obiex",
-    "currency": "USDT",
+    "business_id": "biz_4k2m9p1q7r3s",
+    "asset": "USDT",
+    "network": "trc20",
     "amount": "75.5",
     "status": "failed",
-    "reference": "wd_ref_obiex_7788",
-    "transaction_id": "tx_obiex_998877",
-    "network": "TRC20",
+    "reference": "CRY-TXN-7788",
+    "transaction_id": "tx_998877",
     "address": "TXyz9k2ExampleTronAddressForDocsOnly"
   }
 }`,
   },
-  */
 ]

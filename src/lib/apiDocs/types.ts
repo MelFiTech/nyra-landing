@@ -44,7 +44,7 @@ export type DocEndpoint = {
   responses: DocResponse[]
   webhookSamples?: DocWebhookSample[]
   showcase?: DocEndpointShowcase
-  /** Placeholder page — no paths or samples shown. */
+  /** Placeholder page. No paths or samples shown. */
   comingSoon?: boolean
 }
 

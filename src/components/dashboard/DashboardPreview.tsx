@@ -156,7 +156,8 @@ export default function DashboardPreview() {
                 <span className={`${sidebarStyles.chevron} ${sidebarStyles.open}`}><ChevronDown /></span>
               </div>
               <div className={sidebarStyles.subNav}>
-                <div className={sidebarStyles.subItem}>Cards</div>
+                <div className={sidebarStyles.subItem}>Virtual card</div>
+                <div className={sidebarStyles.subItem}>Physical card</div>
               </div>
             </div>
 

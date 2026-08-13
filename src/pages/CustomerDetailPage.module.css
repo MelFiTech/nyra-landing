@@ -28,7 +28,7 @@
 
 .body {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 340px 1fr;
   gap: 16px;
   flex: 1;
   overflow: hidden;
@@ -269,6 +269,13 @@
   flex-direction: column;
 }
 
+.tabToolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 16px 0;
+  flex-shrink: 0;
+}
+
 .tableWrap { overflow-x: auto; }
 
 .table { width: 100%; border-collapse: collapse; }
@@ -322,4 +329,29 @@
   font-size: 12.5px;
   color: var(--text-3);
   white-space: nowrap;
+}
+
+.walletSections {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.walletSubSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.walletSubHeading {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.cryptoAddress {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-1);
 }

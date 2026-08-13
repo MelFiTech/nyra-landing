@@ -6,7 +6,8 @@ export const DOC_GROUPS: DocGroup[] = [
   { id: 'transfers', label: 'Transfers' },
   { id: 'verification', label: 'Verification' },
   { id: 'bills', label: 'Bill payments' },
-  { id: 'crypto', label: 'Crypto', badge: 'COMING SOON' },
+  { id: 'virtual-cards', label: 'Virtual cards' },
+  { id: 'crypto', label: 'Crypto' },
   { id: 'webhooks', label: 'Webhooks' },
 ]
 
@@ -18,7 +19,7 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
     method: 'POST',
     path: '/business/wallets',
     description:
-      'Provision a managed NGN wallet and virtual account for an end customer. Use this to collect payments into your business float.',
+      'Provision a managed NGN wallet and virtual account for an end customer. Collect payments into your business float and reuse the same customer record for virtual cards. Pass the returned wallet_id when issuing cards.',
     params: [
       { name: 'first_name', location: 'body', type: 'string', required: true, description: 'Customer first name.' },
       { name: 'last_name', location: 'body', type: 'string', required: true, description: 'Customer last name.' },
@@ -30,6 +31,7 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
       { name: 'title', location: 'body', type: 'string', required: true, description: 'Mr, Mrs, Ms, etc.' },
       { name: 'address_line_1', location: 'body', type: 'string', required: true, description: 'Street address.' },
       { name: 'city', location: 'body', type: 'string', required: true, description: 'City.' },
+      { name: 'state', location: 'body', type: 'string', required: true, description: 'State (required for virtual card issuance).', example: 'Lagos' },
       { name: 'country', location: 'body', type: 'string', required: true, description: 'Country code.', defaultValue: 'NG' },
     ],
     responses: [
@@ -921,25 +923,523 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
     ],
   },
   {
-    id: 'crypto-coming-soon',
-    group: 'crypto',
-    title: 'Crypto',
+    id: 'virtual-cards-fees',
+    group: 'virtual-cards',
+    title: 'Card fees',
     method: 'GET',
-    path: '',
-    comingSoon: true,
+    path: '/business/cards/fees',
     description:
-      'Crypto wallets, on-chain deposits, and payouts are coming soon. Email support@nyrawallet.com if you want early access.',
-    responses: [],
+      'Returns issuance, funding, and withdrawal fee settings for your business virtual card program. card_creation is a flat USD fee. card_funding_cost_percentage uses below100 and above100 tiers based on the card balance after the operation. Amounts are in USD unless noted.',
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Business card fees retrieved",
+  "data": {
+    "card_creation": 1.2,
+    "card_funding_cost_percentage": {
+      "below100": 0.015,
+      "above100": 0.01
+    },
+    "card_funds_withdrawal_cost_percentage": 0.05
+  }
+}`,
+      },
+    ],
   },
-  /*
+  {
+    id: 'virtual-cards-cost-preview',
+    group: 'virtual-cards',
+    title: 'Cost preview',
+    method: 'GET',
+    path: '/business/cards/cost-preview',
+    description:
+      'Estimate total USD debited from your card-program balance before issuing or funding a card. Supported types: card_creation and card_funding. Pass type and amount as query parameters.',
+    params: [
+      {
+        name: 'type',
+        location: 'query',
+        type: 'string',
+        required: true,
+        description: 'Operation type.',
+        enum: ['card_creation', 'card_funding'],
+      },
+      {
+        name: 'amount',
+        location: 'query',
+        type: 'number',
+        required: true,
+        description: 'USD amount for the card load preview (integer 0-10 for issuance initial load).',
+        example: '5',
+      },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Business card cost preview retrieved",
+  "data": {
+    "usd_total": 6.2,
+    "naira_total": 9850.0,
+    "breakdown": {
+      "usd_funding_amount": 5,
+      "usd_card_issuance_fee": 1.2,
+      "naira_funding_amount": 7935.48,
+      "naira_card_issuance_fee": 1914.52,
+      "exchange_rate": {
+        "usd_per_naira": 0.000629,
+        "naira_per_usd": 1589.83
+      }
+    }
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'virtual-cards-wallet-readiness',
+    group: 'virtual-cards',
+    title: 'Check customer card readiness',
+    method: 'GET',
+    path: '/business/cards/wallet-customers/{walletId}/readiness',
+    description:
+      'Check whether an existing NGN wallet customer (from POST /business/wallets) has enough stored profile data on file. Use this to preview what Nyra already has; you still send state, id_type, and id_number on every issue request.',
+    params: [
+      {
+        name: 'walletId',
+        location: 'path',
+        type: 'string',
+        required: true,
+        description: 'Wallet customer ID from POST /business/wallets (wallet_id in the response).',
+      },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Customer card readiness retrieved",
+  "data": {
+    "ready": false,
+    "missing": ["state", "id_number"],
+    "has_card_customer": false
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'virtual-cards-issue-wallet',
+    group: 'virtual-cards',
+    title: 'Issue virtual card (wallet customer)',
+    method: 'POST',
+    path: '/business/cards/wallet-customers/{walletId}/cards',
+    description:
+      'Recommended issuance flow. Pass the wallet customer ID from POST /business/wallets. Always include state, id_type, and id_number in the request body. Nyra uses stored KYC when already on file and may ignore duplicate values you send.',
+    params: [
+      {
+        name: 'walletId',
+        location: 'path',
+        type: 'string',
+        required: true,
+        description: 'Wallet customer ID from POST /business/wallets.',
+      },
+      { name: 'currency', location: 'body', type: 'string', required: true, description: 'Must be USD.', enum: ['USD'], defaultValue: 'USD' },
+      { name: 'amount', location: 'body', type: 'number', required: true, description: 'Initial USD load for the card (integer 0-10).', example: '5' },
+      { name: 'type', location: 'body', type: 'string', required: true, description: 'Card network.', enum: ['VISA', 'MASTERCARD'], example: 'VISA' },
+      { name: 'description', location: 'body', type: 'string', required: true, description: 'Internal note for the issuance.', example: 'Virtual card for Ada Okonkwo' },
+      { name: 'discount', location: 'body', type: 'number', required: false, description: 'Optional issuance fee discount (0-1).' },
+      { name: 'state', location: 'body', type: 'string', required: true, description: 'Customer state. Nyra prefers stored value when already on file.' },
+      { name: 'id_type', location: 'body', type: 'string', required: true, description: 'Identity type (bvn or nin). Nyra prefers stored value when already on file.', enum: ['bvn', 'nin'] },
+      { name: 'id_number', location: 'body', type: 'string', required: true, description: '11-digit BVN or NIN. Nyra prefers stored value when already on file.' },
+    ],
+    responses: [
+      {
+        status: 201,
+        label: 'Created',
+        body: `{
+  "success": true,
+  "message": "Card issued to customer successfully",
+  "data": {
+    "id": "VC-01ABC…",
+    "masked_number": "411111 **** **** 4242",
+    "owners_fullname": "Ada Okonkwo",
+    "network": "VISA",
+    "is_frozen": false,
+    "wallet_customer_id": "MW-…"
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'virtual-cards-create-customer',
+    group: 'virtual-cards',
+    title: 'Register card customer (standalone)',
+    method: 'POST',
+    path: '/business/cards/customers',
+    description:
+      'Legacy or standalone registration when you do not have an NGN wallet customer. Prefer POST /business/wallets plus POST /business/cards/wallet-customers/{walletId}/cards so Nyra reuses stored customer data instead of maintaining a separate card-only profile.',
+    params: [
+      { name: 'customer_reference', location: 'body', type: 'string', required: true, description: 'Your stable ID for this customer.', example: 'cust_001' },
+      { name: 'first_name', location: 'body', type: 'string', required: true, description: 'Customer first name.', example: 'Ada' },
+      { name: 'last_name', location: 'body', type: 'string', required: true, description: 'Customer last name.', example: 'Okonkwo' },
+      { name: 'email', location: 'body', type: 'string', required: true, description: 'Customer email.', example: 'ada@example.com' },
+      { name: 'phone_country_code', location: 'body', type: 'string', required: false, description: 'E.164 country code.', defaultValue: '+234' },
+      { name: 'phone_number', location: 'body', type: 'string', required: true, description: 'Phone number without country code.', example: '8012345678' },
+      { name: 'date_of_birth', location: 'body', type: 'string', required: true, description: 'Date of birth (YYYY-MM-DD).', example: '1990-05-15' },
+      { name: 'id_type', location: 'body', type: 'string', required: true, description: 'Identity type.', enum: ['bvn', 'nin'], example: 'bvn' },
+      { name: 'id_number', location: 'body', type: 'string', required: true, description: 'BVN or NIN value matching id_type.', example: '22222222222' },
+      { name: 'address.line1', location: 'body', type: 'string', required: true, description: 'Street address.', example: '12 Admiralty Way' },
+      { name: 'address.city', location: 'body', type: 'string', required: true, description: 'City.', example: 'Lagos' },
+      { name: 'address.state', location: 'body', type: 'string', required: true, description: 'State.', example: 'Lagos' },
+      { name: 'address.postal_code', location: 'body', type: 'string', required: false, description: 'Postal code.', defaultValue: '100001' },
+      { name: 'address.country', location: 'body', type: 'string', required: false, description: 'Country code.', defaultValue: 'NGA' },
+      { name: 'managed_wallet_id', location: 'body', type: 'string', required: false, description: 'Optional link to an existing NGN customer wallet.' },
+    ],
+    responses: [
+      {
+        status: 201,
+        label: 'Created',
+        body: `{
+  "success": true,
+  "message": "Card customer registered successfully",
+  "data": {
+    "wallet_customer_id": "MW-…",
+    "customer_reference": "cust_001",
+    "first_name": "Ada",
+    "last_name": "Okonkwo",
+    "email": "ada@example.com"
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'virtual-cards-list-customers',
+    group: 'virtual-cards',
+    title: 'List card customers',
+    method: 'GET',
+    path: '/business/cards/customers',
+    description:
+      'Returns card customers enrolled for your business. Each record includes wallet_customer_id, which matches wallet_id from POST /business/wallets when the records are linked.',
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Card customers retrieved",
+  "data": {
+    "customers": [
+      {
+        "wallet_customer_id": "MW-…",
+        "customer_reference": "cust_001",
+        "first_name": "Ada",
+        "last_name": "Okonkwo",
+        "email": "ada@example.com"
+      }
+    ]
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'virtual-cards-get-customer',
+    group: 'virtual-cards',
+    title: 'Get card customer',
+    method: 'GET',
+    path: '/business/cards/customers/{customerId}',
+    description: 'Fetch a single card customer by wallet customer ID (from POST /business/wallets) or customer reference.',
+    params: [
+      { name: 'customerId', location: 'path', type: 'string', required: true, description: 'Wallet customer ID or your customer reference.' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Card customer retrieved",
+  "data": {
+    "wallet_customer_id": "MW-…",
+    "customer_reference": "cust_001",
+    "first_name": "Ada",
+    "last_name": "Okonkwo"
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'virtual-cards-issue',
+    group: 'virtual-cards',
+    title: 'Issue virtual card (by customer key)',
+    method: 'POST',
+    path: '/business/cards/customers/{customerId}/cards',
+    description:
+      'Alternate issuance path using wallet_customer_id (wallet_id), customer reference, or legacy card customer key. Always include state, id_type, and id_number. Prefer POST /business/cards/wallet-customers/{walletId}/cards when you already have the wallet_id from POST /business/wallets.',
+    params: [
+      { name: 'customerId', location: 'path', type: 'string', required: true, description: 'Wallet customer ID (wallet_id) or customer reference.' },
+      { name: 'currency', location: 'body', type: 'string', required: true, description: 'Must be USD.', enum: ['USD'], defaultValue: 'USD' },
+      { name: 'amount', location: 'body', type: 'number', required: true, description: 'Initial USD load for the card (integer 0-10).', example: '5' },
+      { name: 'type', location: 'body', type: 'string', required: true, description: 'Card network.', enum: ['VISA', 'MASTERCARD'], example: 'VISA' },
+      { name: 'description', location: 'body', type: 'string', required: true, description: 'Internal note for the issuance.', example: 'Virtual card for Ada Okonkwo' },
+      { name: 'discount', location: 'body', type: 'number', required: false, description: 'Optional issuance fee discount (0-1).' },
+      { name: 'state', location: 'body', type: 'string', required: true, description: 'Customer state. Nyra prefers stored value when already on file.' },
+      { name: 'id_type', location: 'body', type: 'string', required: true, description: 'Identity type (bvn or nin). Nyra prefers stored value when already on file.', enum: ['bvn', 'nin'] },
+      { name: 'id_number', location: 'body', type: 'string', required: true, description: '11-digit BVN or NIN. Nyra prefers stored value when already on file.' },
+    ],
+    responses: [
+      {
+        status: 201,
+        label: 'Created',
+        body: `{
+  "success": true,
+  "message": "Card issued to customer successfully",
+  "data": {
+    "id": "VC-01ABC…",
+    "masked_number": "411111 **** **** 4242",
+    "owners_fullname": "Ada Okonkwo",
+    "network": "VISA",
+    "is_frozen": false,
+    "wallet_customer_id": "MW-…"
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'virtual-cards-list',
+    group: 'virtual-cards',
+    title: 'List virtual cards',
+    method: 'GET',
+    path: '/business/cards',
+    description: 'Returns all virtual cards issued under your business.',
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Business customer cards retrieved",
+  "data": {
+    "cards": [
+      {
+        "id": "VC-01ABC…",
+        "masked_number": "411111 **** **** 4242",
+        "owners_fullname": "Ada Okonkwo",
+        "network": "VISA",
+        "is_frozen": false,
+        "wallet_customer_id": "MW-…"
+      }
+    ]
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'virtual-cards-list-customer-cards',
+    group: 'virtual-cards',
+    title: 'List customer cards',
+    method: 'GET',
+    path: '/business/cards/customers/{customerId}/cards',
+    description: 'Returns virtual cards issued to a specific wallet customer.',
+    params: [
+      { name: 'customerId', location: 'path', type: 'string', required: true, description: 'Wallet customer ID or customer reference.' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Customer cards retrieved",
+  "data": {
+    "cards": [{ "id": "VC-01ABC…", "masked_number": "411111 **** **** 4242", "network": "VISA" }]
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'virtual-cards-details',
+    group: 'virtual-cards',
+    title: 'Get card details',
+    method: 'POST',
+    path: '/business/cards/details',
+    description:
+      'Returns full PAN, CVV, expiry, and live balance for a card. Requires your business wallet PIN (wallet_pin). Use only from your backend.',
+    params: [
+      { name: 'card_id', location: 'body', type: 'string', required: true, description: 'Virtual card ID from issue or list.' },
+      { name: 'wallet_pin', location: 'body', type: 'string', required: true, description: '4-digit business wallet PIN.', example: '1234' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Card details retrieved",
+  "data": {
+    "card_number": "4111111111114242",
+    "cvv": "123",
+    "expiry": "09/28",
+    "balance": "25.00"
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'virtual-cards-transactions',
+    group: 'virtual-cards',
+    title: 'List card transactions',
+    method: 'GET',
+    path: '/business/cards/transactions',
+    description: 'Paginated spend and funding activity for a card in a given calendar month.',
+    params: [
+      { name: 'card_id', location: 'query', type: 'string', required: true, description: 'Virtual card ID.' },
+      { name: 'page', location: 'query', type: 'number', required: true, description: 'Page number (1-based).', example: '1' },
+      { name: 'monthYear', location: 'query', type: 'string', required: true, description: 'Month in YYYY-MM format.', example: '2026-08' },
+      { name: 'page_size', location: 'query', type: 'number', required: false, description: 'Results per page.', defaultValue: '20' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Card transactions retrieved",
+  "data": {
+    "list": [
+      {
+        "transaction_type": "DEBIT",
+        "transaction_status": "successful",
+        "amount": 8.0,
+        "currency": "USD",
+        "description": "Authorization at MERCHANT",
+        "transaction_reference": "TXN-01HXYZ…"
+      }
+    ],
+    "page": 1,
+    "page_size": 20,
+    "total": 1
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'virtual-cards-topup',
+    group: 'virtual-cards',
+    title: 'Fund virtual card',
+    method: 'POST',
+    path: '/business/cards/topup',
+    description:
+      'Move USD from your card-program balance onto a virtual card. Debits program balance plus funding fees.',
+    params: [
+      { name: 'card_id', location: 'body', type: 'string', required: true, description: 'Virtual card ID.' },
+      { name: 'amount', location: 'body', type: 'number', required: true, description: 'USD amount to load (1-300).', example: '50' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Card funded successfully",
+  "data": { "success": true }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'virtual-cards-freeze',
+    group: 'virtual-cards',
+    title: 'Freeze card',
+    method: 'POST',
+    path: '/business/cards/freeze',
+    description: 'Temporarily block new authorizations on a virtual card.',
+    params: [
+      { name: 'card_id', location: 'body', type: 'string', required: true, description: 'Virtual card ID.' },
+      { name: 'wallet_pin', location: 'body', type: 'string', required: true, description: '4-digit business wallet PIN.' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Card frozen successfully",
+  "data": { "success": true }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'virtual-cards-unfreeze',
+    group: 'virtual-cards',
+    title: 'Unfreeze card',
+    method: 'POST',
+    path: '/business/cards/unfreeze',
+    description: 'Re-enable a previously frozen virtual card.',
+    params: [
+      { name: 'card_id', location: 'body', type: 'string', required: true, description: 'Virtual card ID.' },
+      { name: 'wallet_pin', location: 'body', type: 'string', required: true, description: '4-digit business wallet PIN.' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Card unfrozen successfully",
+  "data": { "success": true }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'virtual-cards-withdraw',
+    group: 'virtual-cards',
+    title: 'Withdraw from card',
+    method: 'POST',
+    path: '/business/cards/withdraw',
+    description:
+      'Move USD from a virtual card back to your card-program balance (minus withdrawal fees). Requires wallet_pin.',
+    params: [
+      { name: 'card_id', location: 'body', type: 'string', required: true, description: 'Virtual card ID.' },
+      { name: 'amount', location: 'body', type: 'number', required: true, description: 'USD amount to withdraw from the card.', example: '20' },
+      { name: 'wallet_pin', location: 'body', type: 'string', required: true, description: '4-digit business wallet PIN.' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Card withdrawal successful",
+  "data": { "success": true }
+}`,
+      },
+    ],
+  },
   {
     id: 'crypto-list-assets',
     group: 'crypto',
-    groupBadge: 'NEW',
     title: 'List supported assets',
     method: 'GET',
     path: '/business/crypto/assets',
-    description: 'Supported coins, chains, and capabilities for your business.',
+    description:
+      'Supported stablecoin assets and networks available for your business.',
     responses: [
       {
         status: 200,
@@ -947,7 +1447,15 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
         body: `{
   "success": true,
   "message": "Supported crypto assets fetched successfully",
-  "data": [{ "asset": "USDT", "chains": ["TRON", "BSC"] }]
+  "data": [
+    {
+      "asset": "USDT",
+      "network": "TRC20",
+      "label": "Tether USD",
+      "networks": ["trc20", "erc20"],
+      "default_network": "trc20"
+    }
+  ]
 }`,
       },
     ],
@@ -959,7 +1467,7 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
     method: 'POST',
     path: '/business/crypto/customers',
     description:
-      'Register an end-user for crypto wallets. Link to an existing managed wallet with managed_wallet_id or use customer_reference for grouping.',
+      'Register an end-user for crypto deposit addresses. Link to an existing NGN wallet customer with managed_wallet_id, or use customer_reference for grouping.',
     params: [
       {
         name: 'customer_reference',
@@ -968,37 +1476,29 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
         required: true,
         description: 'Your stable ID for this end-user.',
       },
-      {
-        name: 'first_name',
-        location: 'body',
-        type: 'string',
-        required: true,
-        description: 'First name.',
-      },
-      {
-        name: 'last_name',
-        location: 'body',
-        type: 'string',
-        required: true,
-        description: 'Last name.',
-      },
+      { name: 'first_name', location: 'body', type: 'string', required: true, description: 'First name.' },
+      { name: 'last_name', location: 'body', type: 'string', required: true, description: 'Last name.' },
       { name: 'email', location: 'body', type: 'string', required: true, description: 'Email.' },
       {
         name: 'managed_wallet_id',
         location: 'body',
         type: 'string',
         required: false,
-        description: 'Optional link to an existing NGN managed wallet.',
+        description: 'Optional link to wallet_id from POST /business/wallets.',
       },
     ],
     responses: [
       {
-        status: 200,
-        label: 'Success',
+        status: 201,
+        label: 'Created',
         body: `{
   "success": true,
   "message": "Crypto customer created successfully",
-  "data": { "id": "BCC-…", "customer_reference": "user_123" }
+  "data": {
+    "customer_id": "BCC-…",
+    "customer_reference": "user_123",
+    "managed_wallet_id": "M-WAL-…"
+  }
 }`,
       },
     ],
@@ -1006,35 +1506,34 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
   {
     id: 'crypto-create-wallet',
     group: 'crypto',
-    title: 'Generate deposit address',
+    title: 'Issue crypto wallet',
     method: 'POST',
     path: '/business/crypto/customers/{customerId}/wallets',
-    description: 'Creates a unique stablecoin deposit address for your customer.',
+    description:
+      'Issue a unique on-chain deposit address for a crypto customer. Pass wallet_id from POST /business/wallets, customer_id, or customer_reference as customerId. Nyra may auto-provision the crypto customer from stored wallet KYC when linked.',
     params: [
       {
         name: 'customerId',
         location: 'path',
         type: 'string',
         required: true,
-        description: 'Crypto customer ID from create customer.',
+        description: 'Crypto customer_id, managed wallet_id, or customer_reference.',
       },
       {
         name: 'asset',
         location: 'body',
         type: 'string',
         required: true,
-        description: 'Asset code.',
-        enum: ['USDT', 'USDC', 'BTC', 'ETH'],
-        defaultValue: 'USDT',
+        description: 'Asset code from GET /business/crypto/assets.',
+        example: 'USDT',
       },
       {
         name: 'chain',
         location: 'body',
         type: 'string',
         required: false,
-        description: 'Network for multi-chain assets.',
-        enum: ['TRON', 'BSC', 'ERC20', 'SOL'],
-        defaultValue: 'TRON',
+        description: 'Network slug when the asset supports multiple networks (for example trc20, erc20).',
+        example: 'trc20',
       },
       {
         name: 'offramp',
@@ -1042,21 +1541,24 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
         type: 'boolean',
         required: false,
         description: 'Enable off-ramp where supported.',
-        defaultValue: 'false',
       },
     ],
     responses: [
       {
-        status: 200,
-        label: 'Success',
+        status: 201,
+        label: 'Created',
         body: `{
   "success": true,
   "message": "Crypto wallet created successfully",
   "data": {
-    "id": "BCW-…",
+    "wallet_id": "BCW-…",
+    "customer_id": "BCC-…",
     "asset": "USDT",
-    "network": "TRON",
-    "deposit_address": "T…"
+    "network": "trc20",
+    "deposit_address": "T…",
+    "balance": "0",
+    "locked_balance": "0",
+    "is_active": true
   }
 }`,
       },
@@ -1068,14 +1570,15 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
     title: 'List customer crypto wallets',
     method: 'GET',
     path: '/business/crypto/customers/{customerId}/wallets',
-    description: 'All deposit addresses issued for a crypto customer.',
+    description:
+      'All on-chain deposit addresses issued for a crypto customer. Use the same customerId key as issue wallet.',
     params: [
       {
         name: 'customerId',
         location: 'path',
         type: 'string',
         required: true,
-        description: 'Crypto customer ID.',
+        description: 'Crypto customer_id, managed wallet_id, or customer_reference.',
       },
     ],
     responses: [
@@ -1085,7 +1588,18 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
         body: `{
   "success": true,
   "message": "Crypto wallets fetched successfully",
-  "data": [{ "deposit_address": "…", "asset": "USDT" }]
+  "data": [
+    {
+      "wallet_id": "BCW-…",
+      "customer_id": "BCC-…",
+      "asset": "USDT",
+      "network": "trc20",
+      "deposit_address": "T…",
+      "balance": "150.25",
+      "locked_balance": "0",
+      "is_active": true
+    }
+  ]
 }`,
       },
     ],
@@ -1099,7 +1613,7 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
     description: 'Withdraw crypto from your business treasury to an on-chain address.',
     params: [
       { name: 'asset', location: 'body', type: 'string', required: true, description: 'Asset to send.' },
-      { name: 'chain', location: 'body', type: 'string', required: true, description: 'Blockchain network.' },
+      { name: 'chain', location: 'body', type: 'string', required: true, description: 'Blockchain network slug.' },
       { name: 'amount', location: 'body', type: 'string', required: true, description: 'Amount to withdraw.' },
       { name: 'address', location: 'body', type: 'string', required: true, description: 'Destination address.' },
       { name: 'reference', location: 'body', type: 'string', required: false, description: 'Optional idempotency reference.' },
@@ -1111,12 +1625,17 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
         body: `{
   "success": true,
   "message": "Crypto transfer initiated successfully",
-  "data": { "id": "…", "status": "pending", "reference": "…" }
+  "data": {
+    "reference": "CRY-TXN-…",
+    "status": "pending",
+    "asset": "USDT",
+    "network": "trc20",
+    "amount": "75.5"
+  }
 }`,
       },
     ],
   },
-  */
   {
     id: 'webhooks-overview',
     group: 'webhooks',

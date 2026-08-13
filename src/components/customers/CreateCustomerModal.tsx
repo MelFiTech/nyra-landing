@@ -28,6 +28,7 @@ export default function CreateCustomerModal({ onClose, onCreated }: Props) {
     address_line_1: '',
     address_line_2: '',
     city: '',
+    state: '',
     country: 'NG',
     phone_number: '',
     email: '',
@@ -42,7 +43,7 @@ export default function CreateCustomerModal({ onClose, onCreated }: Props) {
 
   const valid =
     form.first_name && form.last_name && form.dob && form.gender && form.title &&
-    form.address_line_1 && form.city && form.country &&
+    form.address_line_1 && form.city && form.state && form.country &&
     form.phone_number && form.email && /^\d{11}$/.test(form.bvn)
 
   async function handleSubmit(e: React.FormEvent) {
@@ -61,6 +62,7 @@ export default function CreateCustomerModal({ onClose, onCreated }: Props) {
         address_line_1: form.address_line_1.trim(),
         address_line_2: form.address_line_2.trim() || undefined,
         city: form.city.trim(),
+        state: form.state.trim(),
         country: form.country,
         phone_number: form.phone_number.trim(),
         email: form.email.trim(),
@@ -136,14 +138,19 @@ export default function CreateCustomerModal({ onClose, onCreated }: Props) {
         <input className={styles.input} placeholder="Street address" value={form.address_line_1} onChange={e => set('address_line_1', e.target.value)} required />
       </div>
 
+      <div className={styles.field}>
+        <label className={styles.label}>Address line 2 (optional)</label>
+        <input className={styles.input} placeholder="Apartment, suite" value={form.address_line_2} onChange={e => set('address_line_2', e.target.value)} />
+      </div>
+
       <div className={styles.row}>
-        <div className={styles.field}>
-          <label className={styles.label}>Address line 2 (optional)</label>
-          <input className={styles.input} placeholder="Apartment, suite" value={form.address_line_2} onChange={e => set('address_line_2', e.target.value)} />
-        </div>
         <div className={styles.field}>
           <label className={styles.label}>City</label>
           <input className={styles.input} placeholder="City" value={form.city} onChange={e => set('city', e.target.value)} required />
+        </div>
+        <div className={styles.field}>
+          <label className={styles.label}>State</label>
+          <input className={styles.input} placeholder="Lagos" value={form.state} onChange={e => set('state', e.target.value)} required />
         </div>
       </div>
 

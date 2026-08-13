@@ -5,17 +5,32 @@ type Props = {
   icon: ReactNode
   title: string
   description?: string
+  badge?: string
   action?: ReactNode
   className?: string
-  variant?: 'default' | 'panel'
+  variant?: 'default' | 'panel' | 'sheet'
 }
 
-export default function EmptyState({ icon, title, description, action, className, variant = 'default' }: Props) {
+export default function EmptyState({
+  icon,
+  title,
+  description,
+  badge,
+  action,
+  className,
+  variant = 'default',
+}: Props) {
+  const variantClass =
+    variant === 'panel' ? styles.panel
+    : variant === 'sheet' ? styles.sheet
+    : ''
+
   return (
     <div
-      className={`${styles.root} ${variant === 'panel' ? styles.panel : ''}${className ? ` ${className}` : ''}`}
+      className={`${styles.root} ${variantClass}${className ? ` ${className}` : ''}`}
       role="status"
     >
+      {badge ? <span className={styles.badge}>{badge}</span> : null}
       <div className={styles.icon} aria-hidden>
         {icon}
       </div>

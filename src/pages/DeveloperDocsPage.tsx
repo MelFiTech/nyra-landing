@@ -589,12 +589,6 @@ export default function DeveloperDocsPage() {
       setSearchParams(next, { replace: true })
       return
     }
-    if (endpointId.startsWith('crypto-') && endpointId !== 'crypto-coming-soon') {
-      const next = new URLSearchParams(searchParams)
-      next.set('view', 'api')
-      next.set('e', 'crypto-coming-soon')
-      setSearchParams(next, { replace: true })
-    }
   }, [view, endpointId, searchParams, setSearchParams])
 
   useEffect(() => {

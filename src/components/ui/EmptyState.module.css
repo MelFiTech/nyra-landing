@@ -12,6 +12,22 @@
   box-sizing: border-box;
 }
 
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  margin-bottom: 4px;
+}
+
 .icon {
   width: 56px;
   height: 56px;
@@ -38,7 +54,7 @@
   font-size: 13px;
   color: var(--text-2);
   max-width: 280px;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 .action {
@@ -63,4 +79,26 @@
 .panel .description {
   font-size: 12px;
   max-width: 240px;
+}
+
+.sheet {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  padding: 32px 20px;
+  justify-content: center;
+}
+
+.sheet .icon {
+  width: 60px;
+  height: 60px;
+  margin-bottom: 10px;
+}
+
+.sheet .title {
+  font-size: 16px;
+}
+
+.sheet .description {
+  max-width: 300px;
 }
