@@ -2,6 +2,7 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import {
   apiClientApi,
   cardsApi,
+  cryptoApi,
   customersApi,
   notificationsApi,
   transactionsApi,
@@ -107,6 +108,17 @@ export function useCryptoAssets(enabled = true) {
     queryKey: queryKeys.cryptoAssets(businessId ?? ''),
     queryFn: () => customersApi.listCryptoAssets(businessId!),
     enabled: !!businessId && approved && enabled,
+  })
+}
+
+export function useCryptoMasterWallets(enabled = true) {
+  const { businessId, business } = useBusiness()
+  const approved = business?.verification_status === 'VERIFIED'
+  const cryptoFloatEnabled = business?.crypto_float_enabled === true
+  return useQuery({
+    queryKey: queryKeys.cryptoMasterWallets(businessId ?? ''),
+    queryFn: () => cryptoApi.listMasterWallets(businessId!),
+    enabled: !!businessId && approved && cryptoFloatEnabled && enabled,
   })
 }
 

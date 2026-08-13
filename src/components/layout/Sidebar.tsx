@@ -107,7 +107,7 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
     }
   }, [theme])
 
-  const isTreasuryActive = ['/app/dashboard', '/app/transactions'].includes(location.pathname)
+  const isTreasuryActive = ['/app/dashboard', '/app/assets', '/app/transactions'].includes(location.pathname)
   const isSpendActive = ['/app/cards', '/app/cards/physical'].includes(location.pathname)
   const isVirtualCardsActive = location.pathname === '/app/cards'
   const isPhysicalCardsActive = location.pathname === '/app/cards/physical'
@@ -160,6 +160,7 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
             onClick={() => { if (!collapsed) setTreasuryOpen(v => !v) }}
             onMouseEnter={() => {
               prefetchRoute('/app/dashboard')
+              prefetchRoute('/app/assets')
               prefetchRoute('/app/transactions')
             }}
             title={collapsed ? 'Treasury' : undefined}
@@ -180,6 +181,13 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
                 onMouseEnter={() => prefetchRoute('/app/dashboard')}
               >
                 Accounts
+              </button>
+              <button
+                className={`${styles.subItem} ${location.pathname === '/app/assets' ? styles.subActive : ''}`}
+                onClick={() => navigate('/app/assets')}
+                onMouseEnter={() => prefetchRoute('/app/assets')}
+              >
+                Assets
               </button>
               <button
                 className={`${styles.subItem} ${location.pathname === '/app/transactions' ? styles.subActive : ''}`}

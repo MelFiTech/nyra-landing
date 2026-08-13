@@ -51,3 +51,11 @@
 .menuItemDanger:hover {
   background: #fef2f2;
 }
+
+.menuItemDisabled,
+.menuItemDisabled:hover {
+  color: var(--text-muted);
+  cursor: default;
+  background: transparent;
+  opacity: 0.55;
+}

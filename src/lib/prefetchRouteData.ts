@@ -1,6 +1,8 @@
 import type { QueryClient } from '@tanstack/react-query'
 import {
   apiClientApi,
+  cardsApi,
+  cryptoApi,
   customersApi,
   transactionsApi,
   walletApi,
@@ -37,6 +39,17 @@ export function prefetchRouteData(
     case '/app/transactions':
       void prefetch(queryClient, queryKeys.transactions(businessId, { page_size: 200 }), () =>
         transactionsApi.list({ page_size: 200 }, businessId),
+      )
+      break
+    case '/app/assets':
+      void prefetch(queryClient, queryKeys.cryptoMasterWallets(businessId), () =>
+        cryptoApi.listMasterWallets(businessId),
+      )
+      void prefetch(queryClient, queryKeys.cryptoAssets(businessId), () =>
+        customersApi.listCryptoAssets(businessId),
+      )
+      void prefetch(queryClient, queryKeys.cardSummary(businessId), () =>
+        cardsApi.getSummary(businessId),
       )
       break
     case '/app/customers':

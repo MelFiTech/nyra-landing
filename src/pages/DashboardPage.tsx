@@ -200,6 +200,14 @@ export default function DashboardPage() {
     document.documentElement.style.userSelect = 'none'
   }, [])
 
+  function refreshUsdFunding() {
+    if (!businessId) return
+    void queryClient.invalidateQueries({ queryKey: queryKeys.cardSummary(businessId) })
+    void queryClient.invalidateQueries({ queryKey: queryKeys.wallet(businessId) })
+    void queryClient.invalidateQueries({ queryKey: queryKeys.usdCryptoDeposit(businessId) })
+    void queryClient.invalidateQueries({ queryKey: ['transactions', businessId] })
+  }
+
   useEffect(() => {
     function onMove(e: MouseEvent) {
       if (!dragging.current || !gridRef.current) return
@@ -511,9 +519,7 @@ export default function DashboardPage() {
         cryptoDeposit={usdCryptoDeposit}
         loading={usdCryptoLoading}
         onFunded={() => {
-          if (!businessId) return
-          void queryClient.invalidateQueries({ queryKey: queryKeys.cardSummary(businessId) })
-          void queryClient.invalidateQueries({ queryKey: queryKeys.wallet(businessId) })
+          refreshUsdFunding()
         }}
       />
       <UsdTransferSheet
@@ -523,9 +529,7 @@ export default function DashboardPage() {
         pinReady={Boolean(wallet?.wallet_pin_changed)}
         canAct={canAct}
         onTransferred={() => {
-          if (!businessId) return
-          void queryClient.invalidateQueries({ queryKey: queryKeys.cardSummary(businessId) })
-          void queryClient.invalidateQueries({ queryKey: ['transactions', businessId] })
+          refreshUsdFunding()
         }}
       />
       <TransferModal

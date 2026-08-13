@@ -16,6 +16,8 @@ type Props = {
   onClose: () => void
   cryptoDeposit: UsdCryptoDeposit | null
   loading?: boolean
+  cryptoFloatEnabled?: boolean
+  mode?: 'default' | 'crypto-only'
   onFunded?: () => void
 }
 
@@ -50,8 +52,11 @@ export default function UsdDepositSheet({
   onClose,
   cryptoDeposit,
   loading,
+  cryptoFloatEnabled = false,
+  mode = 'default',
   onFunded,
 }: Props) {
+  const cryptoOnly = mode === 'crypto-only'
   const { businessId } = useBusiness()
   const { showToast } = useToast()
   const { data: wallet } = useBusinessWallet()
@@ -87,8 +92,12 @@ export default function UsdDepositSheet({
       setConvertedUsd(null)
       setConverting(false)
       setQrDataUrl('')
+      return
     }
-  }, [open])
+    if (cryptoOnly) {
+      setSelectedMethod('crypto')
+    }
+  }, [open, cryptoOnly])
 
   useEffect(() => {
     const address = cryptoDeposit?.deposit_address?.trim()
@@ -169,7 +178,11 @@ export default function UsdDepositSheet({
     if (selectedMethod === 'ngn') {
       return step === 'success' ? 'Funds added' : 'Convert from NGN'
     }
-    if (selectedMethod === 'crypto') return 'Crypto deposit'
+    if (selectedMethod === 'crypto') {
+      return cryptoOnly && cryptoDeposit
+        ? `Deposit ${cryptoDeposit.asset}`
+        : 'Crypto deposit'
+    }
     if (selectedMethod === 'bank') return 'Bank transfer'
     return 'Add funds to virtual cards'
   }
@@ -222,7 +235,8 @@ export default function UsdDepositSheet({
   const methodOptions = (
     <>
       <p className={styles.hint}>
-        Choose how you want to fund your USD virtual card balance.
+        Choose how you want to fund your USD balance
+        {cryptoFloatEnabled ? ' and crypto float wallets' : ''}.
       </p>
       <div className={styles.optionList}>
         <button
@@ -374,8 +388,9 @@ export default function UsdDepositSheet({
   ) : (
     <div className={styles.cryptoDetail}>
       <p className={styles.hint}>
-        Scan the QR code or copy the address below. Deposits are credited to your virtual card
-        balance after on-chain confirmation.
+        {cryptoOnly
+          ? 'Scan the QR code or copy the address below. Deposits are credited to your float wallet after on-chain confirmation.'
+          : 'Scan the QR code or copy the address below. Deposits are credited to your virtual card balance after on-chain confirmation.'}
       </p>
 
       <div className={styles.qrWrap}>
@@ -446,7 +461,11 @@ export default function UsdDepositSheet({
     {
       key: `${selectedMethod ?? 'methods'}-${step}`,
       title: sheetTitle(),
-      showBack: Boolean(selectedMethod && !(selectedMethod === 'ngn' && step === 'success')),
+      showBack: Boolean(
+        selectedMethod &&
+          !cryptoOnly &&
+          !(selectedMethod === 'ngn' && step === 'success'),
+      ),
       onBack: handleBack,
       children: sheetContent(),
     },

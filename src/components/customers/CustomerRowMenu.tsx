@@ -14,13 +14,15 @@ type MenuItem = {
   label: string
   onClick: () => void
   danger?: boolean
+  disabled?: boolean
 }
 
 type Props = {
   items: MenuItem[]
+  ariaLabel?: string
 }
 
-export default function CustomerRowMenu({ items }: Props) {
+export default function CustomerRowMenu({ items, ariaLabel = 'Actions' }: Props) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -48,7 +50,7 @@ export default function CustomerRowMenu({ items }: Props) {
         variant="icon"
         iconSm
         type="button"
-        aria-label="Customer actions"
+        aria-label={ariaLabel}
         aria-expanded={open}
         onClick={() => setOpen(v => !v)}
       >
@@ -61,8 +63,10 @@ export default function CustomerRowMenu({ items }: Props) {
               key={item.label}
               type="button"
               role="menuitem"
-              className={`${styles.menuItem} ${item.danger ? styles.menuItemDanger : ''}`}
+              disabled={item.disabled}
+              className={`${styles.menuItem} ${item.danger ? styles.menuItemDanger : ''} ${item.disabled ? styles.menuItemDisabled : ''}`}
               onClick={() => {
+                if (item.disabled) return
                 item.onClick()
                 setOpen(false)
               }}

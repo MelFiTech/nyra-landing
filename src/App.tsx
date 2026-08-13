@@ -17,6 +17,7 @@ import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 import TermsOfServicePage from './pages/TermsOfServicePage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
+import AssetsPage from './pages/AssetsPage'
 import DashboardPage from './pages/DashboardPage'
 import CustomersPage from './pages/CustomersPage'
 import CustomerDetailPage from './pages/CustomerDetailPage'
@@ -58,6 +59,7 @@ function AppRoutes() {
       >
         <Route element={<AppShell />}>
           <Route path="/app/dashboard" element={<DashboardPage />} />
+          <Route path="/app/assets" element={<AssetsPage />} />
           <Route path="/app/customers" element={<CustomersPage />} />
           <Route path="/app/customers/:id" element={<CustomerDetailPage />} />
           <Route path="/app/cards" element={<CardsPage />} />

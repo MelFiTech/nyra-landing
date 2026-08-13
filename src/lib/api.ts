@@ -1269,6 +1269,25 @@ export const transferApi = {
   },
 }
 
+export const cryptoApi = {
+  async listMasterWallets(businessId: string): Promise<CryptoMasterWallet[]> {
+    const res = await request<{ data: CryptoMasterWallet[] }>(
+      `/business/${businessId}/crypto/master-wallets`,
+    )
+    return res.data ?? []
+  },
+
+  createMasterWallet(
+    businessId: string,
+    payload: { asset: string; chain?: string; offramp?: boolean },
+  ) {
+    return request<{ data: CryptoMasterWallet }>(
+      `/business/${businessId}/crypto/master-wallets`,
+      { method: 'POST', body: payload },
+    )
+  },
+}
+
 // ── Customers (managed wallets) ─────────────────────────────────────────
 
 export type CustomerFundingAccount = {
@@ -1353,6 +1372,18 @@ export type CryptoAsset = {
   label: string
   networks?: string[]
   default_network?: string
+}
+
+export type CryptoMasterWallet = {
+  master_wallet_id: string
+  asset: string
+  network: string
+  deposit_address: string
+  balance: string
+  offramp: boolean
+  is_active: boolean
+  created_at?: string
+  updated_at?: string
 }
 
 export type CreateCustomerCryptoWalletPayload = {
