@@ -3,13 +3,16 @@ import { useQueryClient } from '@tanstack/react-query'
 import Button from '../components/ui/Button'
 import DepositModal from '../components/treasury/DepositModal'
 import TransferModal from '../components/treasury/TransferModal'
+import UsdDepositSheet from '../components/treasury/UsdDepositSheet'
+import UsdTransferSheet from '../components/treasury/UsdTransferSheet'
 import ChatPanel from '../components/dashboard/ChatPanel'
 import PinSetupModal from '../components/dashboard/PinSetupModal'
 import TransactionDrawer, { type Transaction } from '../components/treasury/TransactionDrawer'
 import { useBalance } from '../context/BalanceContext'
 import { useBusiness, usePermissions } from '../context/BusinessContext'
-import { useBusinessWallet, useTransactions } from '../hooks/useAppData'
+import { useBusinessWallet, useCardSummary, useTransactions, useUsdCryptoDeposit } from '../hooks/useAppData'
 import { mapApiTransaction } from '../lib/mapTransaction'
+import { queryKeys } from '../lib/queryKeys'
 import type { Transaction as ApiTransaction } from '../lib/api'
 import TrendSparkline from '../components/dashboard/TrendSparkline'
 import styles from './DashboardPage.module.css'
@@ -37,14 +40,44 @@ function compactNaira(value: number | string | undefined | null) {
   return naira(n)
 }
 
+function usd(value: number | string | undefined | null) {
+  const n = Number(value ?? 0)
+  return `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+function compactUsd(value: number | string | undefined | null) {
+  const n = Number(value ?? 0)
+  const abs = Math.abs(n)
+  const prefix = n < 0 ? '-$' : '$'
+
+  if (abs >= 1_000_000) {
+    return `${prefix}${(abs / 1_000_000).toLocaleString('en-US', { maximumFractionDigits: 1 })}M`
+  }
+  if (abs >= 1_000) {
+    return `${prefix}${(abs / 1_000).toLocaleString('en-US', { maximumFractionDigits: 1 })}K`
+  }
+  return usd(n)
+}
+
+type WalletTab = 'NGN' | 'USD'
+
 function txCurrency(tx: ApiTransaction) {
   return (tx.currency ?? 'NGN').toUpperCase()
+}
+
+function sumTxAmount(txs: ApiTransaction[], type: ApiTransaction['transaction_type']) {
+  return txs
+    .filter(tx => tx.transaction_type === type)
+    .reduce((sum, tx) => sum + Math.abs(Number(tx.amount ?? 0)), 0)
 }
 
 function formatTxAmount(tx: ApiTransaction) {
   const prefix = tx.transaction_type === 'CREDIT' ? '+' : '-'
   const amount = Math.abs(Number(tx.amount ?? 0))
-  return `${prefix}${naira(amount)}`
+  if (txCurrency(tx) === 'USD') {
+    return `${prefix}${usd(amount)}`
+  }
+  return `${prefix}${naira(amount).replace('₦ ', '₦')}`
 }
 
 const METRIC_CHART = { width: 48, height: 20 }
@@ -85,13 +118,6 @@ const EyeOffIcon = () => (
   </svg>
 )
 
-const GlobeIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
-    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-  </svg>
-)
-
 const SearchIllustration = () => (
   <svg width="120" height="80" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg" className={styles.emptyIllustration}>
     <rect x="10" y="20" width="70" height="8" rx="4" className={styles.illuBar1}/>
@@ -106,23 +132,35 @@ const SearchIllustration = () => (
 
 export default function DashboardPage() {
   const queryClient = useQueryClient()
-  const { business } = useBusiness()
+  const { business, businessId } = useBusiness()
   const { canAct } = usePermissions()
   const { visible: balanceVisible, toggle: toggleBalance } = useBalance()
   // const verificationStatus = business?.verification_status
   // const showVerificationBanner =
   //   verificationStatus === 'NOT_STARTED' || verificationStatus === 'REJECTED'
   const [depositOpen, setDepositOpen] = useState(false)
+  const [usdDepositOpen, setUsdDepositOpen] = useState(false)
+  const [usdTransferOpen, setUsdTransferOpen] = useState(false)
   const [transferOpen, setTransferOpen] = useState(false)
   const [pinModalOpen, setPinModalOpen] = useState(false)
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null)
+  const [walletTab, setWalletTab] = useState<WalletTab>('NGN')
   const { data: wallet } = useBusinessWallet()
+  const { data: cardSummary, isLoading: cardSummaryLoading } = useCardSummary()
+  const { data: usdCryptoDeposit = null, isLoading: usdCryptoLoading } = useUsdCryptoDeposit()
   const { data: transactions = [] } = useTransactions({ page_size: 50 })
 
-  const walletTransactions = useMemo(
+  const ngnTransactions = useMemo(
     () => transactions.filter(tx => txCurrency(tx) === 'NGN'),
     [transactions],
   )
+  const usdTransactions = useMemo(
+    () => transactions.filter(tx => txCurrency(tx) === 'USD'),
+    [transactions],
+  )
+  const walletTransactions = walletTab === 'NGN' ? ngnTransactions : usdTransactions
+  const usdInflow = useMemo(() => sumTxAmount(usdTransactions, 'CREDIT'), [usdTransactions])
+  const usdOutflow = useMemo(() => sumTxAmount(usdTransactions, 'DEBIT'), [usdTransactions])
 
   useEffect(() => {
     if (wallet && !wallet.wallet_pin_changed) setPinModalOpen(true)
@@ -132,15 +170,26 @@ export default function DashboardPage() {
   const sourceAccountNumber = floatAccounts[0]?.account_number ?? ''
   const canTransfer = canAct && Boolean(sourceAccountNumber) && Boolean(wallet?.wallet_pin_changed) && !wallet?.frozen
   const canDeposit = canAct
+  const canUsdTransfer = canAct && Boolean(wallet?.wallet_pin_changed) && !wallet?.frozen
   const unsettled = floatAccounts.reduce((sum, sw) => sum + Number(sw.staged_balance ?? 0), 0)
   const available = Number(wallet?.balance ?? 0)
   const total = available + unsettled
+  const usdAvailable = Number(cardSummary?.usd_balance ?? 0)
+  const usdUnsettled = 0
+  const usdTotal = usdAvailable + usdUnsettled
+  const isNgnWallet = walletTab === 'NGN'
 
-  const metrics = [
-    { label: 'Total Inflow', trend: 'up' as const, value: compactNaira(wallet?.total_credit), data: [3, 5, 4, 7, 6, 9, 11], masked: true },
-    { label: 'Total Outflow', trend: 'down' as const, value: compactNaira(wallet?.total_debit), data: [9, 8, 10, 7, 6, 5, 4], masked: true },
-    { label: 'Transactions', trend: 'up' as const, value: String(walletTransactions.length), data: [0, 0, 0, 0, 0, 0, 0], masked: false },
-  ]
+  const metrics = isNgnWallet
+    ? [
+        { label: 'Total Inflow', trend: 'up' as const, value: compactNaira(wallet?.total_credit), data: [3, 5, 4, 7, 6, 9, 11], masked: true },
+        { label: 'Total Outflow', trend: 'down' as const, value: compactNaira(wallet?.total_debit), data: [9, 8, 10, 7, 6, 5, 4], masked: true },
+        { label: 'Transactions', trend: 'up' as const, value: String(ngnTransactions.length), data: [0, 0, 0, 0, 0, 0, 0], masked: false },
+      ]
+    : [
+        { label: 'Total Inflow', trend: 'up' as const, value: compactUsd(usdInflow), data: [2, 4, 3, 6, 5, 7, 8], masked: true },
+        { label: 'Total Outflow', trend: 'down' as const, value: compactUsd(usdOutflow), data: [9, 8, 10, 7, 6, 5, 4], masked: true },
+        { label: 'Transactions', trend: 'up' as const, value: String(usdTransactions.length), data: [0, 0, 0, 0, 0, 0, 0], masked: false },
+      ]
 
   const [leftPct, setLeftPct] = useState(62)
   const gridRef = useRef<HTMLDivElement>(null)
@@ -186,9 +235,21 @@ export default function DashboardPage() {
           <div className={styles.leftCol} style={{ width: `${leftPct}%`, flexShrink: 0 }}>
             <div className={styles.walletCard}>
               <div className={styles.walletTop}>
-                <div className={styles.currencyBadge}>
-                  <GlobeIcon />
-                  <span>NGN</span>
+                <div className={styles.walletTabs}>
+                  <button
+                    type="button"
+                    className={`${styles.walletTab} ${walletTab === 'NGN' ? styles.walletTabActive : ''}`}
+                    onClick={() => setWalletTab('NGN')}
+                  >
+                    NGN
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.walletTab} ${walletTab === 'USD' ? styles.walletTabActive : ''}`}
+                    onClick={() => setWalletTab('USD')}
+                  >
+                    USD
+                  </button>
                 </div>
               </div>
 
@@ -200,7 +261,13 @@ export default function DashboardPage() {
                     <span className={styles.infoIcon}><InfoIcon /></span>
                   </div>
                   <div className={styles.balanceAmount}>
-                    {balanceVisible ? naira(available) : '₦ ••••'}
+                    {isNgnWallet
+                      ? (balanceVisible ? naira(available) : '₦ ••••')
+                      : (cardSummaryLoading
+                        ? '—'
+                        : balanceVisible
+                          ? usd(usdAvailable)
+                          : '$ ••••')}
                     <Button variant="icon" className={styles.eyeBtn} onClick={toggleBalance}>
                       <EyeOffIcon />
                     </Button>
@@ -212,51 +279,102 @@ export default function DashboardPage() {
                     <div>
                       <div className={styles.subLabel}>Total Balance</div>
                       <div className={styles.subAmount}>
-                        {balanceVisible ? naira(total) : '₦ ••••'}
+                        {isNgnWallet
+                          ? (balanceVisible ? naira(total) : '₦ ••••')
+                          : (cardSummaryLoading
+                            ? '—'
+                            : balanceVisible
+                              ? usd(usdTotal)
+                              : '$ ••••')}
                       </div>
                     </div>
                     <div>
                       <div className={styles.subLabel}>Unsettled Balance</div>
                       <div className={styles.subAmount}>
-                        {balanceVisible ? naira(unsettled) : '₦ ••••'}
+                        {isNgnWallet
+                          ? (balanceVisible ? naira(unsettled) : '₦ ••••')
+                          : (cardSummaryLoading
+                            ? '—'
+                            : balanceVisible
+                              ? usd(usdUnsettled)
+                              : '$ ••••')}
                       </div>
                     </div>
                   </div>
                   <div className={styles.walletActions}>
-                    <Button
-                      variant="ghost"
-                      className={styles.walletActionBtn}
-                      onClick={() => setDepositOpen(true)}
-                      disabled={!canDeposit}
-                      title={!canDeposit ? 'Only the business owner can deposit' : undefined}
-                    >
-                      <div className={styles.actionIcon} style={{ background: '#eff6ff', color: '#3b82f6' }}>
-                        <DepositIcon />
-                      </div>
-                      <span className={styles.walletActionLabel}>Deposit</span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className={styles.walletActionBtn}
-                      onClick={() => setTransferOpen(true)}
-                      disabled={!canTransfer}
-                      title={
-                        !canAct
-                          ? 'Only the business owner can transfer'
-                          : !sourceAccountNumber
-                          ? 'Deposit account not ready'
-                          : wallet?.frozen
-                            ? 'Wallet is frozen'
-                            : !wallet?.wallet_pin_changed
-                              ? 'Set your transaction PIN first'
-                              : undefined
-                      }
-                    >
-                      <div className={styles.actionIcon} style={{ background: '#f5f3ff', color: '#8b5cf6' }}>
-                        <TransferIcon />
-                      </div>
-                      <span className={styles.walletActionLabel}>Transfer</span>
-                    </Button>
+                    {isNgnWallet ? (
+                      <>
+                        <Button
+                          variant="ghost"
+                          className={styles.walletActionBtn}
+                          onClick={() => setDepositOpen(true)}
+                          disabled={!canDeposit}
+                          title={!canDeposit ? 'Only the business owner can deposit' : undefined}
+                        >
+                          <div className={styles.actionIcon} style={{ background: '#eff6ff', color: '#3b82f6' }}>
+                            <DepositIcon />
+                          </div>
+                          <span className={styles.walletActionLabel}>Deposit</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          className={styles.walletActionBtn}
+                          onClick={() => setTransferOpen(true)}
+                          disabled={!canTransfer}
+                          title={
+                            !canAct
+                              ? 'Only the business owner can transfer'
+                              : !sourceAccountNumber
+                              ? 'Deposit account not ready'
+                              : wallet?.frozen
+                                ? 'Wallet is frozen'
+                                : !wallet?.wallet_pin_changed
+                                  ? 'Set your transaction PIN first'
+                                  : undefined
+                          }
+                        >
+                          <div className={styles.actionIcon} style={{ background: '#f5f3ff', color: '#8b5cf6' }}>
+                            <TransferIcon />
+                          </div>
+                          <span className={styles.walletActionLabel}>Transfer</span>
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          variant="ghost"
+                          className={styles.walletActionBtn}
+                          onClick={() => setUsdDepositOpen(true)}
+                          disabled={!canDeposit}
+                          title={!canDeposit ? 'Only the business owner can deposit' : undefined}
+                        >
+                          <div className={styles.actionIcon} style={{ background: '#eff6ff', color: '#3b82f6' }}>
+                            <DepositIcon />
+                          </div>
+                          <span className={styles.walletActionLabel}>Deposit</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          className={styles.walletActionBtn}
+                          onClick={() => setUsdTransferOpen(true)}
+                          disabled={!canUsdTransfer}
+                          title={
+                            !canAct
+                              ? 'Only the business owner can transfer'
+                              : wallet?.frozen
+                                ? 'Wallet is frozen'
+                                : !wallet?.wallet_pin_changed
+                                  ? 'Set your transaction PIN first'
+                                  : undefined
+                          }
+                        >
+                          <div className={styles.actionIcon} style={{ background: '#f5f3ff', color: '#8b5cf6' }}>
+                            <TransferIcon />
+                          </div>
+                          <span className={styles.walletActionLabel}>Transfer</span>
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -283,7 +401,9 @@ export default function DashboardPage() {
                   </div>
                   <div className={styles.metricBody}>
                     <span className={styles.metricValue}>
-                      {metric.masked && !balanceVisible ? '₦ ••••' : metric.value}
+                      {metric.masked && !balanceVisible
+                        ? (isNgnWallet ? '₦ ••••' : '$ ••••')
+                        : metric.value}
                     </span>
                     <span className={styles.metricChart}>
                       <TrendSparkline
@@ -305,7 +425,11 @@ export default function DashboardPage() {
                 <div className={styles.emptyState}>
                   <SearchIllustration />
                   <p className={styles.emptyTitle}>No transactions</p>
-                  <p className={styles.emptySub}>No transactions yet.</p>
+                  <p className={styles.emptySub}>
+                    {isNgnWallet
+                      ? 'No NGN wallet transactions yet.'
+                      : 'No USD wallet transactions yet.'}
+                  </p>
                 </div>
               ) : (
                 <ul className={styles.txList}>
@@ -347,7 +471,9 @@ export default function DashboardPage() {
                           className={styles.txAmount}
                           data-credit={tx.transaction_type === 'CREDIT' || undefined}
                         >
-                          {balanceVisible ? formatTxAmount(tx) : '₦ ••••'}
+                          {balanceVisible
+                            ? formatTxAmount(tx)
+                            : (txCurrency(tx) === 'USD' ? '$ ••••' : '₦ ••••')}
                         </span>
                         <span className={styles.txStatus} data-status={tx.transaction_status?.toLowerCase()}>
                           {tx.transaction_status?.toLowerCase()}
@@ -378,6 +504,29 @@ export default function DashboardPage() {
           account_number: a.account_number,
           account_name: a.owners_fullname,
         }))}
+      />
+      <UsdDepositSheet
+        open={usdDepositOpen}
+        onClose={() => setUsdDepositOpen(false)}
+        cryptoDeposit={usdCryptoDeposit}
+        loading={usdCryptoLoading}
+        onFunded={() => {
+          if (!businessId) return
+          void queryClient.invalidateQueries({ queryKey: queryKeys.cardSummary(businessId) })
+          void queryClient.invalidateQueries({ queryKey: queryKeys.wallet(businessId) })
+        }}
+      />
+      <UsdTransferSheet
+        open={usdTransferOpen}
+        onClose={() => setUsdTransferOpen(false)}
+        availableUsd={usdAvailable}
+        pinReady={Boolean(wallet?.wallet_pin_changed)}
+        canAct={canAct}
+        onTransferred={() => {
+          if (!businessId) return
+          void queryClient.invalidateQueries({ queryKey: queryKeys.cardSummary(businessId) })
+          void queryClient.invalidateQueries({ queryKey: ['transactions', businessId] })
+        }}
       />
       <TransferModal
         open={transferOpen}

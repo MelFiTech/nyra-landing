@@ -725,6 +725,29 @@ export type UsdConvertResult = {
   exchange_rate: UsdConvertQuote['exchange_rate']
 }
 
+export type UsdWalletTransferPayload = {
+  address: string
+  asset: string
+  chain: string
+  amount: string
+  wallet_pin: string
+  memo?: string
+  reason?: string
+  reference?: string
+}
+
+export type UsdWalletTransferResult = {
+  reference: string
+  transfer_id?: string
+  amount: string
+  asset: string
+  address: string
+  chain?: string
+  network?: string
+  status?: string
+  usd_balance?: number
+}
+
 function readDepositField(record: Record<string, unknown>, ...keys: string[]) {
   for (const key of keys) {
     const value = record[key]
@@ -779,6 +802,13 @@ export const walletApi = {
   ) {
     return request<{ data: UsdConvertResult }>(
       `/business/${businessId}/usd-wallet/convert-from-ngn`,
+      { method: 'POST', body },
+    )
+  },
+
+  transferUsd(businessId: string, body: UsdWalletTransferPayload) {
+    return request<{ data: UsdWalletTransferResult }>(
+      `/business/${businessId}/usd-wallet/transfer`,
       { method: 'POST', body },
     )
   },
