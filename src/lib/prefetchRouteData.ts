@@ -67,6 +67,9 @@ export function prefetchRouteData(
       void prefetch(queryClient, queryKeys.apiClient(businessId), () =>
         apiClientApi.get(businessId),
       )
+      void prefetch(queryClient, queryKeys.apiEnvironment(businessId), () =>
+        apiClientApi.getEnvironment(businessId),
+      )
       void prefetch(queryClient, queryKeys.webhookConfigs(businessId), () =>
         webhooksApi.listConfigs(businessId),
       )

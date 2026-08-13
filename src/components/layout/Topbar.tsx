@@ -1,25 +1,61 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import Button from '../ui/Button'
 import NotificationBell from './NotificationBell'
 import BusinessSwitcher from './BusinessSwitcher'
+import { useBusiness, usePermissions } from '../../context/BusinessContext'
+import { useToast } from '../../context/ToastContext'
+import { useApiEnvironment } from '../../hooks/useAppData'
+import { ApiError, apiClientApi } from '../../lib/api'
+import { queryKeys } from '../../lib/queryKeys'
 import styles from './Topbar.module.css'
 
-// const ChevronDown = () => (
-//   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-//     <polyline points="6 9 12 15 18 9"/>
-//   </svg>
-// )
-
-// const GlobeIcon = () => (
-//   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-//     <circle cx="12" cy="12" r="10"/>
-//     <line x1="2" y1="12" x2="22" y2="12"/>
-//     <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-//   </svg>
-// )
-
 export default function Topbar() {
-  const [liveMode, setLiveMode] = useState(false)
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const { businessId, business } = useBusiness()
+  const { canManageApiKeys } = usePermissions()
+  const { showToast } = useToast()
+  const { data: apiEnvironment, isLoading: envLoading } = useApiEnvironment()
+  const [switching, setSwitching] = useState(false)
+
+  const liveMode = apiEnvironment?.environment === 'LIVE'
+  const toggleDisabled = !canManageApiKeys || envLoading || switching || !businessId
+
+  async function handleToggle() {
+    if (!businessId || toggleDisabled) return
+
+    const nextLive = !liveMode
+
+    if (nextLive && !apiEnvironment?.can_go_live) {
+      if (business?.verification_status === 'PENDING') {
+        showToast('Business verification is still in progress', 'error')
+      } else if (business?.verification_status === 'REJECTED') {
+        showToast('Complete compliance review before going live', 'error')
+        navigate('/app/compliance')
+      } else {
+        showToast('Complete business verification before going live', 'error')
+        navigate('/app/compliance')
+      }
+      return
+    }
+
+    setSwitching(true)
+    try {
+      await apiClientApi.setEnvironment(businessId, nextLive ? 'LIVE' : 'TEST')
+      await queryClient.invalidateQueries({ queryKey: queryKeys.apiEnvironment(businessId) })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.apiClient(businessId) })
+      showToast(nextLive ? 'You are now live' : 'Switched to test mode', 'success')
+    } catch (err) {
+      showToast(
+        err instanceof ApiError ? err.message : 'Could not update environment. Try again.',
+        'error',
+      )
+    } finally {
+      setSwitching(false)
+    }
+  }
 
   return (
     <header className={styles.topbar}>
@@ -33,21 +69,18 @@ export default function Topbar() {
             {liveMode ? 'You are live' : 'Go live'}
           </span>
           <button
+            type="button"
             className={`${styles.toggle} ${liveMode ? styles.toggleOn : ''}`}
-            onClick={() => setLiveMode(v => !v)}
+            onClick={() => void handleToggle()}
+            disabled={toggleDisabled}
             aria-label="Toggle live mode"
+            aria-pressed={liveMode}
           >
             <span className={styles.toggleKnob} />
           </button>
         </div>
 
         <NotificationBell />
-
-        {/* <Button variant="outline" size="sm" className={styles.langBtn}>
-          <GlobeIcon />
-          <span>EN</span>
-          <ChevronDown />
-        </Button> */}
 
         <Button variant="icon" className={styles.settingsBtn} aria-label="Settings">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

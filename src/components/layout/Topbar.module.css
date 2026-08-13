@@ -72,6 +72,11 @@
   transform: translateX(18px);
 }
 
+.toggle:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .langBtn {
   display: flex;
   align-items: center;

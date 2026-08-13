@@ -1468,22 +1468,33 @@ export const customersApi = {
 
 // ── API clients (developer keys) ────────────────────────────────────────
 
+export type ApiClientEnvironment = 'LIVE' | 'TEST'
+
 export type ApiClient = {
   client_id: string
   app_name: string
   is_active: boolean
-  environment: 'LIVE' | 'TEST'
+  environment: ApiClientEnvironment
   last_used_at: string | null
   created_at?: string
+}
+
+export type ApiEnvironmentStatus = {
+  environment: ApiClientEnvironment
+  can_go_live: boolean
 }
 
 type RawApiClient = {
   clientId: string
   appName: string
   isActive: boolean
-  environment: 'LIVE' | 'TEST'
+  environment: string
   lastUsedAt: string | null
   createdAt?: string
+}
+
+function normalizeApiEnvironment(value: string | undefined | null): ApiClientEnvironment {
+  return String(value ?? '').toLowerCase() === 'live' ? 'LIVE' : 'TEST'
 }
 
 export const apiClientApi = {
@@ -1497,7 +1508,7 @@ export const apiClientApi = {
         client_id: c.clientId,
         app_name: c.appName,
         is_active: c.isActive,
-        environment: c.environment,
+        environment: normalizeApiEnvironment(c.environment),
         last_used_at: c.lastUsedAt,
         created_at: c.createdAt,
       }
@@ -1519,6 +1530,33 @@ export const apiClientApi = {
       { method: 'POST', body: { app_name: appName } }
     )
     return { ...res.data, message: res.message }
+  },
+
+  async getEnvironment(businessId: string): Promise<ApiEnvironmentStatus> {
+    const res = await request<{
+      data: { environment: string; can_go_live: boolean }
+    }>(`/business/${businessId}/api-clients/environment`)
+    return {
+      environment: normalizeApiEnvironment(res.data?.environment),
+      can_go_live: res.data?.can_go_live === true,
+    }
+  },
+
+  async setEnvironment(
+    businessId: string,
+    environment: ApiClientEnvironment,
+  ): Promise<ApiEnvironmentStatus> {
+    const res = await request<{
+      message?: string
+      data: { environment: string; can_go_live: boolean }
+    }>(`/business/${businessId}/api-clients/environment`, {
+      method: 'PUT',
+      body: { environment: environment.toLowerCase() },
+    })
+    return {
+      environment: normalizeApiEnvironment(res.data?.environment),
+      can_go_live: res.data?.can_go_live === true,
+    }
   },
 }
 

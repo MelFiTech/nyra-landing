@@ -365,7 +365,7 @@ export default function UsdDepositSheet({
           loading={converting}
           onClick={() => void handleConvert()}
         >
-          Convert to USD balance
+          Convert
         </Button>
       </div>
     )

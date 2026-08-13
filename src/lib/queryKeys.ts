@@ -15,6 +15,7 @@ export const queryKeys = {
   webhookConfigs: (businessId: string) => ['webhook-configs', businessId] as const,
   webhookDeliveries: (businessId: string) => ['webhook-deliveries', businessId] as const,
   apiClient: (businessId: string) => ['api-client', businessId] as const,
+  apiEnvironment: (businessId: string) => ['api-environment', businessId] as const,
   team: (businessId: string) => ['team', businessId] as const,
   teamRole: (businessId: string) => ['team-role', businessId] as const,
   notifications: (businessId: string) => ['notifications', businessId] as const,

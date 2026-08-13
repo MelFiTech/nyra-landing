@@ -131,6 +131,16 @@ export function useApiClient() {
   })
 }
 
+export function useApiEnvironment() {
+  const { businessId } = useBusiness()
+  return useQuery({
+    queryKey: queryKeys.apiEnvironment(businessId ?? ''),
+    queryFn: () => apiClientApi.getEnvironment(businessId!),
+    enabled: !!businessId,
+    staleTime: 30_000,
+  })
+}
+
 export function useWebhookConfigs() {
   const { businessId } = useBusiness()
   return useQuery({
