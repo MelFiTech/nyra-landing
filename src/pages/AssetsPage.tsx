@@ -100,10 +100,10 @@ function mapCryptoRow(tx: CryptoTransaction, masked: boolean) {
     amount: masked
       ? `${credit ? '+' : '−'} ••••`
       : `${credit ? '+' : '−'} ${formatted}`,
-    amountType: (credit ? 'credit' : 'debit') as const,
+    amountType: credit ? 'credit' as const : 'debit' as const,
     date,
     status,
-    dot: (status === 'successful' ? 'green' : 'red') as const,
+    dot: status === 'successful' ? 'green' as const : 'red' as const,
   }
 }
 

@@ -118,7 +118,9 @@ export function uniqueNetworks(networks: string[]) {
 }
 
 export function listWalletDepositOptions(
-  wallet: Pick<CryptoMasterWallet | CustomerCryptoWallet, 'network' | 'deposit_address' | 'deposit_addresses' | 'networks'>,
+  wallet: Pick<CryptoMasterWallet | CustomerCryptoWallet, 'network' | 'deposit_addresses' | 'networks'> & {
+    deposit_address?: string
+  },
 ): CryptoDepositOption[] {
   const fromMap = Object.values(wallet.deposit_addresses ?? {})
     .filter((entry): entry is CryptoDepositAddressEntry => Boolean(entry?.address))
@@ -189,7 +191,7 @@ export function transferNetworksForWallet(
 ) {
   if (isStablecoinAsset(wallet.asset) || isUnifiedCryptoNetwork(wallet.network)) {
     const catalog = assets.find(item => item.asset.toUpperCase() === wallet.asset.toUpperCase())
-    const fromCatalog = networkOptions(catalog)
+    const fromCatalog = networkOptions(catalog ?? null)
     const fromWallet = uniqueNetworks([
       ...(wallet.networks ?? []),
       ...listWalletDepositOptions(wallet).map(option => option.network),
