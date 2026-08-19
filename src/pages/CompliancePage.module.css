@@ -568,3 +568,30 @@
     max-width: none;
   }
 }
+
+.skForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.skLine {
+  height: 18px;
+  width: 55%;
+  border-radius: 8px;
+  background: var(--surface-2);
+  animation: skPulse 1.2s ease-in-out infinite;
+}
+
+.skField {
+  height: 44px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  animation: skPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes skPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}

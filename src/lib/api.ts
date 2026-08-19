@@ -266,6 +266,22 @@ async function request<T = unknown>(path: string, opts: RequestOptions = {}): Pr
   return json as T
 }
 
+function unwrapList<T>(payload: unknown): T[] {
+  if (Array.isArray(payload)) return payload as T[]
+  if (!payload || typeof payload !== 'object') return []
+  const record = payload as Record<string, unknown>
+  if (Array.isArray(record.data)) return record.data as T[]
+  if (Array.isArray(record.items)) return record.items as T[]
+  if (Array.isArray(record.transactions)) return record.transactions as T[]
+  if (record.data && typeof record.data === 'object' && !Array.isArray(record.data)) {
+    const nested = record.data as Record<string, unknown>
+    if (Array.isArray(nested.data)) return nested.data as T[]
+    if (Array.isArray(nested.items)) return nested.items as T[]
+    if (Array.isArray(nested.transactions)) return nested.transactions as T[]
+  }
+  return []
+}
+
 // ── Auth ────────────────────────────────────────────────────────────────
 
 type RawAuthResponse = {
@@ -699,11 +715,19 @@ export type BusinessWallet = {
   [key: string]: unknown
 }
 
+export type CryptoDepositAddressEntry = {
+  address: string
+  provider_wallet_id?: string
+  network: string
+}
+
 export type UsdCryptoDeposit = {
   asset: string
   network: string
   deposit_address: string
   min_deposit?: string
+  deposit_addresses?: Record<string, CryptoDepositAddressEntry>
+  networks?: string[]
 }
 
 export type UsdConvertQuote = {
@@ -762,13 +786,25 @@ export function normalizeUsdCryptoDeposit(raw: unknown): UsdCryptoDeposit | null
   if (!raw || typeof raw !== 'object') return null
   const record = raw as Record<string, unknown>
   const depositAddress = readDepositField(record, 'deposit_address', 'depositAddress', 'address')
-  if (!depositAddress) return null
+  const depositAddresses = record.deposit_addresses && typeof record.deposit_addresses === 'object'
+    ? record.deposit_addresses as UsdCryptoDeposit['deposit_addresses']
+    : undefined
+  const networks = Array.isArray(record.networks)
+    ? record.networks.map(item => String(item)).filter(Boolean)
+    : undefined
+  if (!depositAddress && !depositAddresses && !readDepositField(record, 'asset', 'currency')) return null
+
+  const firstMappedAddress = depositAddresses
+    ? Object.values(depositAddresses).find(entry => entry?.address)?.address
+    : ''
 
   return {
     asset: readDepositField(record, 'asset', 'currency'),
-    network: readDepositField(record, 'network', 'chain'),
-    deposit_address: depositAddress,
+    network: readDepositField(record, 'network', 'chain') || 'unified',
+    deposit_address: depositAddress || firstMappedAddress || '',
     min_deposit: readDepositField(record, 'min_deposit', 'minDeposit', 'minimum_deposit') || undefined,
+    deposit_addresses: depositAddresses,
+    networks,
   }
 }
 
@@ -836,6 +872,15 @@ export type CardProgramSummary = {
   total_card_balance: number | string
 }
 
+export type CardBillingDetails = {
+  line1?: string
+  line2?: string
+  city?: string
+  state?: string
+  postal_code?: string
+  country?: string
+}
+
 export type VirtualCard = {
   card_id: string
   cardholder_name: string
@@ -844,6 +889,8 @@ export type VirtualCard = {
   currency: string
   status: 'ACTIVE' | 'FROZEN' | 'TERMINATED'
   network?: string
+  expiry?: string
+  billing_details?: CardBillingDetails
   created_at: string
   [key: string]: unknown
 }
@@ -887,6 +934,31 @@ export type CardSensitiveDetails = {
   cvv: string
   expiry: string
   balance: string
+  cardholder_name?: string
+  billing_details?: CardBillingDetails
+}
+
+export function formatBillingAddress(billing?: CardBillingDetails | null): string {
+  if (!billing) return ''
+  const street = [billing.line1, billing.line2].filter(Boolean).join(', ')
+  const locality = [billing.city, billing.state].filter(Boolean).join(', ')
+  const cityLine = [locality, billing.postal_code].filter(Boolean).join(' ')
+  return [street, cityLine, billing.country].filter(Boolean).join('\n')
+}
+
+function normalizeBillingDetails(raw: unknown): CardBillingDetails | undefined {
+  if (!raw || typeof raw !== 'object') return undefined
+  const record = raw as Record<string, unknown>
+  const details: CardBillingDetails = {
+    line1: String(record.line1 ?? record.billing_address1 ?? record.street ?? record.address ?? '').trim() || undefined,
+    line2: String(record.line2 ?? record.billing_address2 ?? '').trim() || undefined,
+    city: String(record.city ?? record.billing_city ?? '').trim() || undefined,
+    state: String(record.state ?? record.state_code ?? '').trim() || undefined,
+    postal_code: String(record.postal_code ?? record.billing_zip_code ?? record.zip_code ?? '').trim() || undefined,
+    country: String(record.country ?? record.billing_country ?? record.country_code ?? '').trim() || undefined,
+  }
+  if (!details.line1 && !details.city && !details.country && !details.postal_code) return undefined
+  return details
 }
 
 export type CardSpendTransaction = {
@@ -922,6 +994,8 @@ function normalizeVirtualCard(raw: unknown): VirtualCard | null {
     status: (record.status as VirtualCard['status'])
       ?? (record.is_frozen ? 'FROZEN' : 'ACTIVE'),
     network: record.network ? String(record.network) : undefined,
+    expiry: record.expiry ? String(record.expiry) : undefined,
+    billing_details: normalizeBillingDetails(record.billing_details),
     created_at: String(record.created_at ?? new Date().toISOString()),
   }
 }
@@ -1048,7 +1122,11 @@ export const cardsApi = {
       `/business/${businessId}/cards/details`,
       { method: 'POST', body: { card_id: cardId, wallet_pin: walletPin } },
     )
-    return res.data
+    const data = res.data
+    return {
+      ...data,
+      billing_details: normalizeBillingDetails(data.billing_details) ?? data.billing_details,
+    }
   },
 
   async topup(
@@ -1167,10 +1245,10 @@ export const transactionsApi = {
     if (params.method) qs.set('method', params.method)
     if (params.currency) qs.set('currency', params.currency)
     const query = qs.toString()
-    const res = await request<{ data: Transaction[] }>(
+    const res = await request<unknown>(
       `/business/${id}/transactions${query ? `?${query}` : ''}`
     )
-    return res.data ?? []
+    return unwrapList<Transaction>(res)
   },
 
   async get(transactionId: string, businessId?: string): Promise<Transaction> {
@@ -1271,10 +1349,10 @@ export const transferApi = {
 
 export const cryptoApi = {
   async listMasterWallets(businessId: string): Promise<CryptoMasterWallet[]> {
-    const res = await request<{ data: CryptoMasterWallet[] }>(
+    const res = await request<unknown>(
       `/business/${businessId}/crypto/master-wallets`,
     )
-    return res.data ?? []
+    return unwrapList<CryptoMasterWallet>(res)
   },
 
   createMasterWallet(
@@ -1285,6 +1363,13 @@ export const cryptoApi = {
       `/business/${businessId}/crypto/master-wallets`,
       { method: 'POST', body: payload },
     )
+  },
+
+  async listTransactions(businessId: string): Promise<CryptoTransaction[]> {
+    const res = await request<unknown>(
+      `/business/${businessId}/crypto/transactions?limit=100`,
+    )
+    return unwrapList<CryptoTransaction>(res)
   },
 }
 
@@ -1358,6 +1443,8 @@ export type CustomerCryptoWallet = {
   asset: string
   network: string
   deposit_address: string
+  deposit_addresses?: Record<string, CryptoDepositAddressEntry>
+  networks?: string[]
   balance: string
   locked_balance: string
   offramp?: boolean
@@ -1374,11 +1461,30 @@ export type CryptoAsset = {
   default_network?: string
 }
 
+export type CryptoTransaction = {
+  transaction_id: string
+  type: 'deposit' | 'transfer' | 'swap' | string
+  status: string
+  asset: string
+  network?: string
+  amount: string
+  fee?: string
+  fee_asset?: string
+  reference: string
+  customer_id?: string
+  wallet_id?: string
+  counterparty_address?: string
+  tx_hash?: string
+  created_at?: string
+}
+
 export type CryptoMasterWallet = {
   master_wallet_id: string
   asset: string
   network: string
   deposit_address: string
+  deposit_addresses?: Record<string, CryptoDepositAddressEntry>
+  networks?: string[]
   balance: string
   offramp: boolean
   is_active: boolean
@@ -1446,8 +1552,8 @@ export const customersApi = {
 
   async listCryptoAssets(businessId?: string): Promise<CryptoAsset[]> {
     const id = businessId ?? activeBusinessId()
-    const res = await request<{ data: CryptoAsset[] }>(`/business/${id}/crypto/assets`)
-    return res.data ?? []
+    const res = await request<unknown>(`/business/${id}/crypto/assets`)
+    return unwrapList<CryptoAsset>(res)
   },
 
   createCryptoWallet(

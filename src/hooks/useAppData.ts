@@ -54,8 +54,9 @@ export function useAllTransactions(
       ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: lastPage => {
-      if (lastPage.length < TX_HISTORY_PAGE_SIZE) return undefined
-      return lastPage[lastPage.length - 1]?.transaction_id
+      const rows = Array.isArray(lastPage) ? lastPage : []
+      if (rows.length < TX_HISTORY_PAGE_SIZE) return undefined
+      return rows[rows.length - 1]?.transaction_id
     },
     enabled: !!businessId && approved,
   })
@@ -118,6 +119,17 @@ export function useCryptoMasterWallets(enabled = true) {
   return useQuery({
     queryKey: queryKeys.cryptoMasterWallets(businessId ?? ''),
     queryFn: () => cryptoApi.listMasterWallets(businessId!),
+    enabled: !!businessId && approved && cryptoFloatEnabled && enabled,
+  })
+}
+
+export function useCryptoTransactions(enabled = true) {
+  const { businessId, business } = useBusiness()
+  const approved = business?.verification_status === 'VERIFIED'
+  const cryptoFloatEnabled = business?.crypto_float_enabled === true
+  return useQuery({
+    queryKey: queryKeys.cryptoTransactions(businessId ?? ''),
+    queryFn: () => cryptoApi.listTransactions(businessId!),
     enabled: !!businessId && approved && cryptoFloatEnabled && enabled,
   })
 }

@@ -2,8 +2,15 @@ import { useEffect, useMemo, useState } from 'react'
 import Button from '../ui/Button'
 import PinEntry from './PinEntry'
 import SideSheetStack, { type SheetLayer } from './SideSheetStack'
-import { ApiError, walletApi, type CryptoAsset, type CryptoMasterWallet } from '../../lib/api'
-import { floatWalletLabel, formatNetworkLabel, isStablecoinAsset } from '../../lib/cryptoFloat'
+import { ApiError, walletApi, type CryptoMasterWallet } from '../../lib/api'
+import {
+  floatWalletLabel,
+  formatNetworkLabel,
+  isStablecoinAsset,
+  isUnifiedCryptoNetwork,
+  networkOptions,
+  transferNetworksForWallet,
+} from '../../lib/cryptoFloat'
 import { useBusiness } from '../../context/BusinessContext'
 import { useToast } from '../../context/ToastContext'
 import { useCryptoAssets } from '../../hooks/useAppData'
@@ -29,14 +36,6 @@ function usd(value: number | string | undefined | null) {
   return `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
-function networkOptions(asset: CryptoAsset | null) {
-  if (!asset) return []
-  const networks = asset.networks?.length
-    ? asset.networks
-    : [asset.default_network ?? asset.network].filter(Boolean)
-  return networks as string[]
-}
-
 export default function UsdTransferSheet({
   open,
   onClose,
@@ -49,7 +48,13 @@ export default function UsdTransferSheet({
   const { businessId } = useBusiness()
   const { showToast } = useToast()
   const lockedWallet = floatWallet && isStablecoinAsset(floatWallet.asset) ? floatWallet : null
-  const { data: assets = [], isLoading: loadingAssets } = useCryptoAssets(open && !lockedWallet)
+  const lockToSingleNetwork = Boolean(
+    lockedWallet &&
+    !isStablecoinAsset(lockedWallet.asset) &&
+    !isUnifiedCryptoNetwork(lockedWallet.network),
+  )
+  const { data: assetsData, isLoading: loadingAssets } = useCryptoAssets(open && !lockToSingleNetwork)
+  const assets = Array.isArray(assetsData) ? assetsData : []
   const [detailView, setDetailView] = useState<DetailView>('form')
   const [asset, setAsset] = useState('')
   const [chain, setChain] = useState('')
@@ -59,7 +64,7 @@ export default function UsdTransferSheet({
   const [pinLoading, setPinLoading] = useState(false)
 
   const transferAssets = useMemo(
-    () => assets.filter(item => STABLECOIN_ASSETS.has(item.asset.toUpperCase())),
+    () => assets.filter(item => STABLECOIN_ASSETS.has(String(item?.asset ?? '').toUpperCase())),
     [assets],
   )
 
@@ -67,10 +72,13 @@ export default function UsdTransferSheet({
     () => transferAssets.find(item => item.asset === asset) ?? null,
     [transferAssets, asset],
   )
-  const chains = useMemo(() => networkOptions(selectedAsset), [selectedAsset])
+  const chains = useMemo(() => {
+    if (lockedWallet) return transferNetworksForWallet(lockedWallet, assets)
+    return networkOptions(selectedAsset)
+  }, [lockedWallet, assets, selectedAsset])
   const parsedAmount = Number(amount)
   const resolvedAsset = lockedWallet?.asset ?? asset
-  const resolvedChain = lockedWallet?.network ?? chain
+  const resolvedChain = chain
   const amountValid = amount !== '' && parsedAmount >= MIN_AMOUNT && parsedAmount <= availableUsd
 
   useEffect(() => {
@@ -86,24 +94,29 @@ export default function UsdTransferSheet({
     }
     if (lockedWallet) {
       setAsset(lockedWallet.asset)
-      setChain(lockedWallet.network)
+      if (lockToSingleNetwork) {
+        setChain(lockedWallet.network)
+      }
       return
     }
     if (transferAssets.length === 1 && !asset) {
       setAsset(transferAssets[0].asset)
     }
-  }, [open, transferAssets, asset, lockedWallet])
+  }, [open, transferAssets, asset, lockedWallet, lockToSingleNetwork])
 
   useEffect(() => {
-    if (lockedWallet) return
-    if (!selectedAsset) {
+    if (lockToSingleNetwork) return
+    if (!chains.length) {
       setChain('')
       return
     }
-    const options = networkOptions(selectedAsset)
-    const defaultChain = selectedAsset.default_network ?? options[0] ?? ''
-    setChain(defaultChain)
-  }, [selectedAsset, lockedWallet])
+    const defaultChain = lockedWallet
+      ? (chains[0] ?? '')
+      : (selectedAsset?.default_network ?? chains[0] ?? '')
+    if (!chain || !chains.some(network => network === chain)) {
+      setChain(defaultChain)
+    }
+  }, [selectedAsset, lockedWallet, lockToSingleNetwork, chains, chain])
 
   function canContinue() {
     return (
@@ -162,9 +175,27 @@ export default function UsdTransferSheet({
         <p className={styles.formNotice}>Set your transaction PIN before sending a transfer.</p>
       )}
       <p className={styles.formNotice}>
-        Sending from {lockedWallet.asset} · {formatNetworkLabel(lockedWallet.network)} float wallet.
+        Sending from {floatWalletLabel(lockedWallet)} float wallet.
         Available: {usd(availableUsd)}
       </p>
+
+      {chains.length > 1 && (
+        <div className={styles.field}>
+          <label className={styles.label} htmlFor="usd-transfer-network">Network</label>
+          <select
+            id="usd-transfer-network"
+            className={styles.input}
+            value={chain}
+            onChange={event => setChain(event.target.value)}
+          >
+            {chains.map(network => (
+              <option key={network} value={network}>
+                {formatNetworkLabel(network)}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div className={styles.field}>
         <label className={styles.label} htmlFor="usd-transfer-address">Destination address</label>

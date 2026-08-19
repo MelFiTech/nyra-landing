@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import Button from '../components/ui/Button'
 import EmptyState, { UsersEmptyIcon } from '../components/ui/EmptyState'
+import { TableRowsSkeleton } from '../components/ui/Skeletons'
 import CreateCustomerModal from '../components/customers/CreateCustomerModal'
 import CustomerRowMenu from '../components/customers/CustomerRowMenu'
 import { useBusiness, usePermissions } from '../context/BusinessContext'
@@ -92,7 +93,7 @@ function groupCustomers(wallets: CustomerWallet[]): GroupedCustomer[] {
 export default function CustomersPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { businessId } = useBusiness()
+  const { businessId, businessesLoading } = useBusiness()
   const { canAct } = usePermissions()
   const { showToast } = useToast()
   const [modalOpen, setModalOpen] = useState(false)
@@ -205,33 +206,27 @@ export default function CustomersPage() {
         </div>
 
         <div className={styles.tableWrap}>
-          {pageItems.length === 0 ? (
+          {businessesLoading || (loading && customers.length === 0 && !isError) ? (
+            <TableRowsSkeleton rows={8} />
+          ) : isError && customers.length === 0 ? (
             <EmptyState
               icon={<UsersEmptyIcon />}
-              title={
-                loading && customers.length === 0
-                  ? 'Loading customers…'
-                  : isError
-                    ? 'Could not load customers'
-                    : customers.length === 0
-                      ? 'No customers yet'
-                      : 'No matching customers'
-              }
-              description={
-                loading && customers.length === 0
-                  ? 'Please wait while we fetch your customers'
-                  : isError
-                    ? (error as Error)?.message || 'Check your connection and try again'
-                    : customers.length === 0
-                      ? 'Add your first customer to get started'
-                      : 'Try adjusting your search or filters'
-              }
+              title="Could not load customers"
+              description={(error as Error)?.message || 'Check your connection and try again'}
               action={
-                isError ? (
-                  <Button variant="outline" size="sm" onClick={() => refetch()}>
-                    Retry
-                  </Button>
-                ) : undefined
+                <Button variant="outline" size="sm" onClick={() => refetch()}>
+                  Retry
+                </Button>
+              }
+            />
+          ) : pageItems.length === 0 ? (
+            <EmptyState
+              icon={<UsersEmptyIcon />}
+              title={customers.length === 0 ? 'No customers yet' : 'No matching customers'}
+              description={
+                customers.length === 0
+                  ? 'Add your first customer to get started'
+                  : 'Try adjusting your search or filters'
               }
             />
           ) : (

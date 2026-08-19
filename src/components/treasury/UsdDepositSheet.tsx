@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import QRCode from 'qrcode'
 import { ArrowLeftRight, Check, ChevronRight, Coins, Copy, Landmark } from 'lucide-react'
 import Button from '../ui/Button'
 import EmptyState from '../ui/EmptyState'
 import SideSheetStack, { type SheetLayer } from './SideSheetStack'
+import { ApiError, cryptoApi, walletApi, type UsdConvertQuote, type UsdCryptoDeposit } from '../../lib/api'
+import { formatNetworkLabel, isUnifiedCryptoNetwork, listWalletDepositOptions, networkOptions, networksMatch, uniqueNetworks, walletToCryptoDeposit } from '../../lib/cryptoFloat'
 import { useBusiness } from '../../context/BusinessContext'
 import { useToast } from '../../context/ToastContext'
-import { useBusinessWallet } from '../../hooks/useAppData'
-import { ApiError, walletApi, type UsdConvertQuote, type UsdCryptoDeposit } from '../../lib/api'
+import { useBusinessWallet, useCryptoAssets } from '../../hooks/useAppData'
 import fundStyles from '../cards/FundCardSheet.module.css'
 import styles from './UsdDepositSheet.module.css'
 
@@ -34,11 +35,6 @@ function usd(value: number | string | undefined | null) {
 function naira(value: number | string | undefined | null) {
   const n = Number(value ?? 0)
   return `₦${n.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-}
-
-function formatNetwork(network?: string) {
-  if (!network) return '—'
-  return network.replace(/_/g, ' ').toUpperCase()
 }
 
 const CheckIcon = () => (
@@ -70,6 +66,48 @@ export default function UsdDepositSheet({
   const [converting, setConverting] = useState(false)
   const [convertedUsd, setConvertedUsd] = useState<number | null>(null)
   const [qrDataUrl, setQrDataUrl] = useState('')
+  const [selectedNetwork, setSelectedNetwork] = useState('')
+  const [liveDeposit, setLiveDeposit] = useState<UsdCryptoDeposit | null>(null)
+  const [generatingAddress, setGeneratingAddress] = useState(false)
+  const [generateError, setGenerateError] = useState('')
+  const { data: cryptoAssetsData } = useCryptoAssets(open)
+  const cryptoAssets = Array.isArray(cryptoAssetsData) ? cryptoAssetsData : []
+
+  const resolvedDeposit = liveDeposit ?? cryptoDeposit
+  const catalogAsset = useMemo(
+    () => cryptoAssets.find(item => String(item?.asset ?? '').toUpperCase() === (resolvedDeposit?.asset ?? '').toUpperCase()) ?? null,
+    [cryptoAssets, resolvedDeposit?.asset],
+  )
+  const networkPills = useMemo(() => {
+    const fromCatalog = networkOptions(catalogAsset)
+    if (fromCatalog.length > 0) return fromCatalog
+    return uniqueNetworks([
+      ...(Array.isArray(resolvedDeposit?.networks) ? resolvedDeposit.networks : []),
+      ...Object.values(resolvedDeposit?.deposit_addresses ?? {}).map(entry => entry.network),
+      ...(!isUnifiedCryptoNetwork(resolvedDeposit?.network) ? [resolvedDeposit?.network ?? ''] : []),
+    ].filter(Boolean))
+  }, [catalogAsset, resolvedDeposit])
+
+  const depositOptions = useMemo(
+    () =>
+      listWalletDepositOptions({
+        network: resolvedDeposit?.network ?? '',
+        deposit_address: resolvedDeposit?.deposit_address ?? '',
+        deposit_addresses: resolvedDeposit?.deposit_addresses,
+        networks: resolvedDeposit?.networks,
+      }),
+    [
+      resolvedDeposit?.network,
+      resolvedDeposit?.deposit_address,
+      resolvedDeposit?.deposit_addresses,
+      resolvedDeposit?.networks,
+    ],
+  )
+  const activeDeposit =
+    depositOptions.find(option => networksMatch(option.network, selectedNetwork)) ??
+    null
+  const activeAddress = activeDeposit?.address ?? ''
+  const activeNetwork = selectedNetwork || catalogAsset?.default_network || networkPills[0] || ''
 
   const parsedAmount = Number(amountUsd)
   const amountValid = amountUsd !== '' && parsedAmount >= MIN_USD
@@ -92,6 +130,10 @@ export default function UsdDepositSheet({
       setConvertedUsd(null)
       setConverting(false)
       setQrDataUrl('')
+      setSelectedNetwork('')
+      setLiveDeposit(null)
+      setGeneratingAddress(false)
+      setGenerateError('')
       return
     }
     if (cryptoOnly) {
@@ -100,7 +142,57 @@ export default function UsdDepositSheet({
   }, [open, cryptoOnly])
 
   useEffect(() => {
-    const address = cryptoDeposit?.deposit_address?.trim()
+    if (!open || networkPills.length === 0) return
+    if (!selectedNetwork || !networkPills.some(network => networksMatch(network, selectedNetwork))) {
+      setSelectedNetwork(catalogAsset?.default_network ?? networkPills[0])
+    }
+  }, [open, networkPills, selectedNetwork, catalogAsset?.default_network])
+
+  useEffect(() => {
+    const cryptoActive = open && (cryptoOnly || selectedMethod === 'crypto')
+    const asset = resolvedDeposit?.asset
+    if (!cryptoActive || !businessId || !asset || !selectedNetwork) return
+    if (depositOptions.some(option => networksMatch(option.network, selectedNetwork) && option.address)) {
+      setGeneratingAddress(false)
+      setGenerateError('')
+      return
+    }
+
+    let cancelled = false
+    setGeneratingAddress(true)
+    setGenerateError('')
+    void cryptoApi.createMasterWallet(businessId, { asset, chain: selectedNetwork })
+      .then(res => {
+        if (cancelled) return
+        setLiveDeposit(walletToCryptoDeposit(res.data ?? res))
+      })
+      .catch(error => {
+        if (cancelled) return
+        setGenerateError(
+          error instanceof ApiError
+            ? error.message
+            : 'Could not generate a deposit address for this network.',
+        )
+      })
+      .finally(() => {
+        if (!cancelled) setGeneratingAddress(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    open,
+    cryptoOnly,
+    selectedMethod,
+    businessId,
+    resolvedDeposit?.asset,
+    selectedNetwork,
+    depositOptions,
+  ])
+
+  useEffect(() => {
+    const address = activeAddress.trim()
     if (!open || !address) {
       setQrDataUrl('')
       return
@@ -122,7 +214,7 @@ export default function UsdDepositSheet({
     return () => {
       cancelled = true
     }
-  }, [open, cryptoDeposit?.deposit_address])
+  }, [open, activeAddress])
 
   useEffect(() => {
     if (!open || selectedMethod !== 'ngn' || !businessId || !amountValid) {
@@ -179,8 +271,8 @@ export default function UsdDepositSheet({
       return step === 'success' ? 'Funds added' : 'Convert from NGN'
     }
     if (selectedMethod === 'crypto') {
-      return cryptoOnly && cryptoDeposit
-        ? `Deposit ${cryptoDeposit.asset}`
+      return cryptoOnly && resolvedDeposit
+        ? `Deposit ${resolvedDeposit.asset}`
         : 'Crypto deposit'
     }
     if (selectedMethod === 'bank') return 'Bank transfer'
@@ -265,8 +357,8 @@ export default function UsdDepositSheet({
           <span className={styles.optionText}>
             <span className={styles.optionLabel}>Crypto deposit</span>
             <span className={styles.optionSub}>
-              {cryptoDeposit
-                ? `Send ${cryptoDeposit.asset} on ${formatNetwork(cryptoDeposit.network)}`
+              {resolvedDeposit?.asset
+                ? `Send ${resolvedDeposit.asset} on any supported network`
                 : 'Stablecoin deposit to your program wallet'}
             </span>
           </span>
@@ -376,7 +468,7 @@ export default function UsdDepositSheet({
       <div className={styles.skeleton} />
       <div className={styles.skeleton} />
     </div>
-  ) : !cryptoDeposit?.deposit_address ? (
+  ) : !resolvedDeposit?.asset ? (
     <div className={styles.sheetStage}>
       <EmptyState
         variant="sheet"
@@ -389,60 +481,106 @@ export default function UsdDepositSheet({
     <div className={styles.cryptoDetail}>
       <p className={styles.hint}>
         {cryptoOnly
-          ? 'Scan the QR code or copy the address below. Deposits are credited to your float wallet after on-chain confirmation.'
-          : 'Scan the QR code or copy the address below. Deposits are credited to your virtual card balance after on-chain confirmation.'}
+          ? 'Choose a network, then scan the QR code or copy the address. Deposits are credited after on-chain confirmation.'
+          : 'Choose a network, then scan the QR code or copy the address. Deposits are credited to your virtual card balance after on-chain confirmation.'}
       </p>
 
-      <div className={styles.qrWrap}>
-        {qrDataUrl ? (
-          <img
-            src={qrDataUrl}
-            alt="Deposit address QR code"
-            className={styles.qrImage}
-            width={168}
-            height={168}
-          />
-        ) : (
-          <div className={styles.skeletonQrInline} aria-hidden />
-        )}
-      </div>
-
-      <div className={styles.addressBlock}>
-        <span className={styles.fieldLabel}>Deposit address</span>
-        <div className={styles.addressRow}>
-          <code className={styles.addressValue}>{cryptoDeposit.deposit_address}</code>
-          <button
-            type="button"
-            className={styles.copyIconBtn}
-            aria-label={addressCopied ? 'Address copied' : 'Copy deposit address'}
-            onClick={() => void copyAddress(cryptoDeposit.deposit_address!)}
-          >
-            {addressCopied ? <Check size={16} /> : <Copy size={16} />}
-          </button>
+      {networkPills.length > 1 && (
+        <div className={styles.addressBlock}>
+          <span className={styles.fieldLabel}>Network</span>
+          <div className={styles.networkPills} role="tablist" aria-label="Deposit network">
+            {networkPills.map(network => {
+              const active = networksMatch(network, selectedNetwork)
+              return (
+                <button
+                  key={network}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  className={`${styles.networkPill} ${active ? styles.networkPillActive : ''}`}
+                  onClick={() => {
+                    setSelectedNetwork(network)
+                    setAddressCopied(false)
+                  }}
+                >
+                  {formatNetworkLabel(network)}
+                </button>
+              )
+            })}
+          </div>
         </div>
-      </div>
+      )}
+
+      {generateError && <p className={styles.error}>{generateError}</p>}
+
+      {generatingAddress || !activeAddress ? (
+        <div className={styles.loadingState}>
+          <div className={styles.skeletonQr} />
+          <div className={styles.skeleton} />
+          <p className={styles.hint}>
+            {generatingAddress
+              ? `Generating ${formatNetworkLabel(activeNetwork)} address…`
+              : generateError
+                ? 'Address unavailable for this network.'
+                : 'Select a network to generate a deposit address.'}
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className={styles.qrWrap}>
+            {qrDataUrl ? (
+              <img
+                src={qrDataUrl}
+                alt="Deposit address QR code"
+                className={styles.qrImage}
+                width={168}
+                height={168}
+              />
+            ) : (
+              <div className={styles.skeletonQrInline} aria-hidden />
+            )}
+          </div>
+
+          <div className={styles.addressBlock}>
+            <span className={styles.fieldLabel}>Deposit address</span>
+            <div className={styles.addressRow}>
+              <code className={styles.addressValue}>{activeAddress}</code>
+              <button
+                type="button"
+                className={styles.copyIconBtn}
+                aria-label={addressCopied ? 'Address copied' : 'Copy deposit address'}
+                onClick={() => void copyAddress(activeAddress)}
+              >
+                {addressCopied ? <Check size={16} /> : <Copy size={16} />}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       <ul className={styles.metaList}>
         <li className={styles.metaItem}>
           <span className={styles.metaLabel}>Asset</span>
-          <span className={styles.metaValue}>{cryptoDeposit.asset}</span>
+          <span className={styles.metaValue}>{resolvedDeposit.asset}</span>
         </li>
         <li className={styles.metaItem}>
           <span className={styles.metaLabel}>Network</span>
-          <span className={styles.metaValue}>{formatNetwork(cryptoDeposit.network)}</span>
+          <span className={styles.metaValue}>{formatNetworkLabel(activeNetwork) || '—'}</span>
         </li>
-        {cryptoDeposit.min_deposit && (
+        {resolvedDeposit.min_deposit && (
           <li className={styles.metaItem}>
             <span className={styles.metaLabel}>Minimum deposit</span>
-            <span className={styles.metaValue}>{cryptoDeposit.min_deposit} {cryptoDeposit.asset}</span>
+            <span className={styles.metaValue}>{resolvedDeposit.min_deposit} {resolvedDeposit.asset}</span>
           </li>
         )}
       </ul>
 
-      <p className={styles.warning}>
-        Only send {cryptoDeposit.asset} on {formatNetwork(cryptoDeposit.network)}. Sending other
-        assets or using the wrong network may result in permanent loss.
-      </p>
+      {activeAddress && (
+        <p className={styles.warning}>
+          Only send {resolvedDeposit.asset} on {formatNetworkLabel(activeNetwork)}. Sending other
+          assets or using the wrong network may result in permanent loss.
+        </p>
+      )}
     </div>
   )
 

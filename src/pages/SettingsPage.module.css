@@ -739,6 +739,19 @@
   50% { opacity: 0.45; }
 }
 
+.skBlock {
+  height: 148px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  animation: teamPulse 1.2s ease-in-out infinite;
+}
+
+.skStack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .teamRow {
   display: flex;
   align-items: center;

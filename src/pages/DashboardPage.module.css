@@ -759,6 +759,106 @@
   color: var(--text-muted);
 }
 
+.pageState {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.skGreeting {
+  width: 220px;
+  height: 22px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.skRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.skPill {
+  width: 58px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.skBalance {
+  width: 210px;
+  height: 36px;
+  margin-top: 18px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.skLine {
+  flex: 1;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.skAction {
+  width: 88px;
+  height: 52px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.skMetric {
+  height: 84px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.skTitle {
+  width: 160px;
+  height: 16px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.skTxList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px 0 16px;
+}
+
+.skTxRow {
+  height: 52px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.skChat {
+  flex: 1;
+  min-height: 240px;
+  border-radius: 16px;
+  background: var(--surface-2);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
 /* Empty state illustration — responds to dark mode */
 .illuBar1 { fill: var(--border-mid); }
 .illuBar2 { fill: var(--border); }

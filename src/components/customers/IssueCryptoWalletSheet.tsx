@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import Button from '../ui/Button'
 import SideSheetStack, { type SheetLayer } from '../treasury/SideSheetStack'
-import { customersApi, ApiError, type CryptoAsset } from '../../lib/api'
+import { customersApi, ApiError } from '../../lib/api'
+import { formatNetworkLabel, networkOptions } from '../../lib/cryptoFloat'
 import { useBusiness } from '../../context/BusinessContext'
 import { useCryptoAssets } from '../../hooks/useAppData'
 import styles from './IssueCryptoWalletSheet.module.css'
@@ -11,24 +12,6 @@ type Props = {
   walletId: string
   onClose: () => void
   onCreated: () => void
-}
-
-function formatNetworkLabel(network: string) {
-  const value = network.trim().toLowerCase()
-  if (value === 'trc20') return 'TRC20'
-  if (value === 'erc20') return 'ERC20'
-  if (value === 'bep20') return 'BEP20'
-  if (value === 'tron') return 'Tron'
-  if (value === 'solana') return 'Solana'
-  return network
-}
-
-function networkOptions(asset: CryptoAsset | null) {
-  if (!asset) return []
-  const networks = asset.networks?.length
-    ? asset.networks
-    : [asset.default_network ?? asset.network].filter(Boolean)
-  return networks as string[]
 }
 
 export default function IssueCryptoWalletSheet({ open, walletId, onClose, onCreated }: Props) {
@@ -102,7 +85,7 @@ export default function IssueCryptoWalletSheet({ open, walletId, onClose, onCrea
   ) : (
     <form onSubmit={handleSubmit} className={styles.form}>
       <p className={styles.hint}>
-        Generate an on-chain deposit address for this customer. They can send the selected asset on the chosen network.
+        Generate an on-chain deposit address for this customer. USDT and USDC can be received on more than one network — choose the network that matches the sender.
       </p>
 
       <div className={styles.field}>

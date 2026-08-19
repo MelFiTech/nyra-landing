@@ -4,7 +4,8 @@
   flex-direction: column;
   gap: 16px;
   flex: 1;
-  overflow: hidden;
+  height: 100%;
+  overflow: auto;
   min-height: 0;
 }
 
@@ -71,8 +72,11 @@
 .contentWrap {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  overflow: auto;
   padding-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .emptyWrap {
@@ -89,6 +93,7 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+  flex-shrink: 0;
 }
 
 @media (max-width: 1100px) {
@@ -215,6 +220,148 @@
   font-size: 13px;
 }
 
+.txRowStatic {
+  cursor: default;
+}
+
+.txSection {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.txHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.txTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+.txTabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.txTab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1.5px solid color-mix(in srgb, var(--border-mid) 35%, transparent);
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+
+.txTab:hover {
+  color: var(--text-1);
+  border-color: color-mix(in srgb, var(--border-mid) 65%, transparent);
+}
+
+.txTabActive {
+  border-color: var(--border-mid);
+  color: var(--text-1);
+  background: var(--surface-2);
+}
+
+.tableWrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table thead tr {
+  border-bottom: 1px solid var(--border);
+}
+
+.table th {
+  padding: 12px 16px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-2);
+  text-align: left;
+  white-space: nowrap;
+  background: var(--surface-2);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.table td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  font-size: 13px;
+  color: var(--text-1);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.emptyCell {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 28px 16px;
+}
+
+.direction {
+  font-weight: 600;
+}
+
+.directionIn {
+  color: #16a34a;
+}
+
+.directionOut {
+  color: #dc2626;
+}
+
+.amountCell {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.amountIn {
+  color: #16a34a;
+}
+
+.amountOut {
+  color: #dc2626;
+}
+
+.monoCell {
+  font-family: 'SF Mono', 'Fira Mono', ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
 .footer {
   display: flex;
   align-items: center;
@@ -226,4 +373,46 @@
 .footerCount {
   font-size: 13px;
   color: var(--text-3);
+}
+
+.skCard {
+  min-height: 140px;
+  border-radius: 16px;
+  background: var(--surface-2);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.skTitle {
+  width: 140px;
+  height: 16px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.skPill {
+  width: 56px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.skTable {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+}
+
+.skTxRow {
+  height: 44px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
 }

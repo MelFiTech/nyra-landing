@@ -100,7 +100,7 @@ function StepNav({
 export default function CompliancePage() {
   const navigate = useNavigate()
   const { showToast } = useToast()
-  const { business, refreshBusinesses } = useBusiness()
+  const { business, refreshBusinesses, businessesLoading } = useBusiness()
 
   const verificationStatus = business?.verification_status ?? 'NOT_STARTED'
 
@@ -285,7 +285,15 @@ export default function CompliancePage() {
 
         <main className={styles.rightPanel}>
           <div className={styles.card}>
-            {step === 'bvn' && (
+            {businessesLoading ? (
+              <div className={styles.skForm} aria-hidden>
+                <div className={styles.skLine} />
+                <div className={styles.skLine} />
+                <div className={styles.skField} />
+                <div className={styles.skField} />
+                <div className={styles.skField} />
+              </div>
+            ) : step === 'bvn' && (
               <>
                 <div className={styles.cardTitleBlock}>
                   <h2 className={styles.cardTitle}>Director Identity Verification</h2>

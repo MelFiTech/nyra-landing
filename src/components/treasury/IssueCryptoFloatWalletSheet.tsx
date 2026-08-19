@@ -71,16 +71,16 @@ export default function IssueCryptoFloatWalletSheet({ open, onClose, onCreated }
     <p className={styles.hint}>Loading supported assets…</p>
   ) : availableSlots.length === 0 ? (
     <p className={styles.hint}>
-      You already have float wallets for every supported asset and network Nyra offers your business.
+      You already have a float wallet for every supported asset Nyra offers your business.
     </p>
   ) : (
     <form onSubmit={handleSubmit} className={styles.form}>
       <p className={styles.hint}>
-        Create a business float wallet to receive on-chain deposits for a supported asset. Each asset and network combination gets its own deposit address.
+        Create one float wallet per asset. USDT and USDC use a single balance across every supported network — pick the asset to start. You can receive on more than one chain from that same wallet.
       </p>
 
       <div className={styles.field}>
-        <label className={styles.label} htmlFor="float-wallet-slot">Asset & network</label>
+        <label className={styles.label} htmlFor="float-wallet-slot">Asset</label>
         <select
           id="float-wallet-slot"
           className={styles.input}
@@ -91,7 +91,7 @@ export default function IssueCryptoFloatWalletSheet({ open, onClose, onCreated }
           <option value="">Select asset</option>
           {availableSlots.map(slot => (
             <option key={`${slot.asset}:${slot.chain}`} value={`${slot.asset}:${slot.chain}`}>
-              {slot.label} · {slot.networkLabel}
+              {slot.networkLabel ? `${slot.label} · ${slot.networkLabel}` : slot.label}
             </option>
           ))}
         </select>

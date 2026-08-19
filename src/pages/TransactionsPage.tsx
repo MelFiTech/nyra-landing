@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import Button from '../components/ui/Button'
 import EmptyState, { DocumentEmptyIcon } from '../components/ui/EmptyState'
+import { TableRowsSkeleton } from '../components/ui/Skeletons'
 import FilterMenu, {
   FilterCheckboxOption,
   FilterDateFields,
@@ -9,6 +10,7 @@ import FilterMenu, {
 } from '../components/ui/FilterMenu'
 import TransactionDrawer, { type Transaction } from '../components/treasury/TransactionDrawer'
 import { useBalance } from '../context/BalanceContext'
+import { useBusiness } from '../context/BusinessContext'
 import { useAllTransactions } from '../hooks/useAppData'
 import { mapApiTransaction } from '../lib/mapTransaction'
 import styles from './TransactionsPage.module.css'
@@ -109,6 +111,7 @@ function countActiveFilters(filters: TxFilters) {
 }
 
 export default function TransactionsPage() {
+  const { businessesLoading } = useBusiness()
   const { visible } = useBalance()
   const maskAmt = (val: string) => visible ? val : '••••••'
   const [search, setSearch] = useState('')
@@ -133,6 +136,7 @@ export default function TransactionsPage() {
     isLoading: loading,
     isFetching,
     isError,
+    error,
     refetch,
     fetchNextPage,
     hasNextPage,
@@ -140,12 +144,19 @@ export default function TransactionsPage() {
   } = useAllTransactions(listParams)
 
   const apiTransactions = useMemo(
-    () => txPages?.pages.flat() ?? [],
+    () => (txPages?.pages ?? []).flatMap(page => (Array.isArray(page) ? page : [])),
     [txPages?.pages],
   )
 
   const transactions = useMemo(
-    () => apiTransactions.map(mapApiTransaction),
+    () => apiTransactions.flatMap(row => {
+      try {
+        if (!row || typeof row !== 'object') return []
+        return [mapApiTransaction(row)]
+      } catch {
+        return []
+      }
+    }),
     [apiTransactions]
   )
 
@@ -245,21 +256,17 @@ export default function TransactionsPage() {
     statusFilter !== 'all' ||
     countActiveFilters(filters) > 0
 
-  const emptyTitle = loading
-    ? 'Loading transactions…'
-    : isError
-      ? 'Could not load transactions'
-      : currencyScoped.length === 0 && transactions.length === 0
-        ? 'No transactions yet'
-        : 'No matching transactions'
+  const emptyTitle = isError
+    ? 'Could not load transactions'
+    : currencyScoped.length === 0 && transactions.length === 0
+      ? 'No transactions yet'
+      : 'No matching transactions'
 
-  const emptySub = loading
-    ? 'Please wait while we fetch your wallet activity'
-    : isError
-      ? 'Check your connection and try again'
-      : hasActiveFilters
-        ? 'Try adjusting your search or filters'
-        : 'Wallet activity will appear here once you start transacting'
+  const emptySub = isError
+    ? ((error as Error)?.message || 'Check your connection and try again')
+    : hasActiveFilters
+      ? 'Try adjusting your search or filters'
+      : 'Wallet activity will appear here once you start transacting'
 
   return (
     <div className={styles.page}>
@@ -394,11 +401,20 @@ export default function TransactionsPage() {
         </div>
 
         <div className={styles.tableWrap}>
-          {pageItems.length === 0 ? (
+          {businessesLoading || (loading && transactions.length === 0 && !isError) ? (
+            <TableRowsSkeleton rows={8} />
+          ) : pageItems.length === 0 ? (
             <EmptyState
               icon={<DocumentEmptyIcon />}
               title={emptyTitle}
               description={emptySub}
+              action={
+                isError ? (
+                  <Button variant="outline" size="sm" onClick={() => void refetch()}>
+                    Retry
+                  </Button>
+                ) : undefined
+              }
             />
           ) : (
           <table className={styles.table}>

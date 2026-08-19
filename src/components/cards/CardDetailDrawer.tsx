@@ -5,7 +5,7 @@ import PinEntry from '../treasury/PinEntry'
 import { useBalance } from '../../context/BalanceContext'
 import { useBusiness } from '../../context/BusinessContext'
 import { useToast } from '../../context/ToastContext'
-import { ApiError, cardsApi, type CardSensitiveDetails, type CardSpendTransaction, type VirtualCard } from '../../lib/api'
+import { ApiError, cardsApi, formatBillingAddress, type CardSensitiveDetails, type CardSpendTransaction, type VirtualCard } from '../../lib/api'
 import styles from './CardDetailDrawer.module.css'
 import fundStyles from './FundCardSheet.module.css'
 
@@ -394,9 +394,12 @@ export default function CardDetailDrawer({ card, onClose, onUpdate, onRefresh, c
         const details = await cardsApi.getDetails(businessId, card.card_id, pin)
         setSensitiveDetails(details)
         setDetailsVisible(true)
-        if (details.balance) {
-          onUpdate({ ...card, balance: details.balance })
-        }
+        onUpdate({
+          ...card,
+          balance: details.balance || card.balance,
+          cardholder_name: details.cardholder_name || card.cardholder_name,
+          billing_details: details.billing_details ?? card.billing_details,
+        })
       }
       setPinAction(null)
       setView('card')
@@ -531,6 +534,9 @@ export default function CardDetailDrawer({ card, onClose, onUpdate, onRefresh, c
   const displayCvv = detailsVisible && sensitiveDetails?.cvv
     ? sensitiveDetails.cvv
     : '•••'
+  const billingAddress = formatBillingAddress(
+    sensitiveDetails?.billing_details ?? card?.billing_details,
+  )
 
   const drawerClass = [
     styles.drawer,
@@ -802,6 +808,11 @@ export default function CardDetailDrawer({ card, onClose, onUpdate, onRefresh, c
 
                 <div className={styles.detailList}>
                   <div className={styles.detailRow}>
+                    <span className={styles.detailLabel}>Cardholder</span>
+                    <span className={styles.detailValue}>{card.cardholder_name || '—'}</span>
+                  </div>
+
+                  <div className={styles.detailRow}>
                     <span className={styles.detailLabel}>Card ID</span>
                     <div className={styles.copyRow}>
                       <span className={`${styles.detailValue} ${styles.detailValueMono}`}>{card.card_id}</span>
@@ -859,9 +870,25 @@ export default function CardDetailDrawer({ card, onClose, onUpdate, onRefresh, c
                     <span className={styles.detailValue}>{networkLabel(network)}</span>
                   </div>
 
-                  <div className={styles.detailRow}>
+                  <div className={`${styles.detailRow} ${styles.detailRowTop}`}>
                     <span className={styles.detailLabel}>Billing address</span>
-                    <span className={styles.detailValue}>—</span>
+                    {billingAddress ? (
+                      <div className={styles.copyRow}>
+                        <span className={`${styles.detailValue} ${styles.detailValueWrap}`}>
+                          {billingAddress}
+                        </span>
+                        <button
+                          type="button"
+                          className={`${styles.copyBtn} ${copiedKey === 'billing' ? styles.copyBtnDone : ''}`}
+                          onClick={() => copyText('billing', billingAddress.replace(/\n/g, ', '), 'Billing address copied')}
+                          aria-label="Copy billing address"
+                        >
+                          {copiedKey === 'billing' ? <CheckIcon /> : <CopyIcon />}
+                        </button>
+                      </div>
+                    ) : (
+                      <span className={styles.detailValue}>—</span>
+                    )}
                   </div>
                 </div>
               </div>

@@ -132,7 +132,7 @@ const SearchIllustration = () => (
 
 export default function DashboardPage() {
   const queryClient = useQueryClient()
-  const { business, businessId } = useBusiness()
+  const { business, businessId, businessesLoading } = useBusiness()
   const { canAct } = usePermissions()
   const { visible: balanceVisible, toggle: toggleBalance } = useBalance()
   // const verificationStatus = business?.verification_status
@@ -145,10 +145,14 @@ export default function DashboardPage() {
   const [pinModalOpen, setPinModalOpen] = useState(false)
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null)
   const [walletTab, setWalletTab] = useState<WalletTab>('NGN')
-  const { data: wallet } = useBusinessWallet()
-  const { data: cardSummary, isLoading: cardSummaryLoading } = useCardSummary()
+  const { data: wallet, isLoading: walletLoading, isError: walletError, error: walletLoadError, refetch: refetchWallet } = useBusinessWallet()
+  const { data: cardSummary, isLoading: cardSummaryLoading, isError: cardSummaryError } = useCardSummary()
   const { data: usdCryptoDeposit = null, isLoading: usdCryptoLoading } = useUsdCryptoDeposit()
-  const { data: transactions = [] } = useTransactions({ page_size: 50 })
+  const { data: transactions = [], isLoading: txLoading } = useTransactions({ page_size: 50 })
+  const dashboardLoading =
+    businessesLoading ||
+    (!wallet && !walletError && walletLoading) ||
+    (!cardSummary && !cardSummaryError && cardSummaryLoading)
 
   const ngnTransactions = useMemo(
     () => transactions.filter(tx => txCurrency(tx) === 'NGN'),
@@ -226,17 +230,61 @@ export default function DashboardPage() {
 
   return (
     <>
-      {/* {showVerificationBanner && (
-        <AlertBanner
-          centered
-          actionLabel="Verify now"
-          onClick={() => navigate('/app/compliance')}
-        >
-          Your business is not yet verified. Complete KYB compliance to unlock full transaction limits.
-        </AlertBanner>
-      )} */}
       <div className={styles.content}>
-        <h1 className={styles.greeting}>Hello, {business?.name ?? 'Mel-Fi Technology Limited'}</h1>
+        {dashboardLoading ? (
+          <>
+            <div className={`${styles.greeting} ${styles.skGreeting}`} aria-hidden />
+            <div className={styles.grid} ref={gridRef}>
+              <div className={styles.leftCol} style={{ width: `${leftPct}%`, flexShrink: 0 }}>
+                <div className={styles.walletCard}>
+                  <div className={styles.skRow}>
+                    <span className={styles.skPill} />
+                    <span className={styles.skPill} />
+                  </div>
+                  <div className={styles.skBalance} />
+                  <div className={styles.skRow}>
+                    <span className={styles.skLine} />
+                    <span className={styles.skLine} />
+                  </div>
+                  <div className={styles.skRow}>
+                    <span className={styles.skAction} />
+                    <span className={styles.skAction} />
+                  </div>
+                </div>
+                <div className={styles.metrics}>
+                  <div className={styles.skMetric} />
+                  <div className={styles.skMetric} />
+                  <div className={styles.skMetric} />
+                </div>
+                <section className={styles.txSection}>
+                  <div className={styles.skTitle} />
+                  <div className={styles.skTxList}>
+                    <div className={styles.skTxRow} />
+                    <div className={styles.skTxRow} />
+                    <div className={styles.skTxRow} />
+                    <div className={styles.skTxRow} />
+                  </div>
+                </section>
+              </div>
+              <div className={styles.dragHandle} onMouseDown={onDragStart} />
+              <div className={styles.rightCol}>
+                <div className={styles.skChat} />
+              </div>
+            </div>
+          </>
+        ) : walletError && !wallet ? (
+          <div className={styles.pageState}>
+            <p className={styles.emptyTitle}>Could not load dashboard</p>
+            <p className={styles.emptySub}>
+              {(walletLoadError as Error)?.message || 'Check your connection and try again.'}
+            </p>
+            <Button variant="outline" size="sm" onClick={() => void refetchWallet()}>
+              Retry
+            </Button>
+          </div>
+        ) : (
+          <>
+        <h1 className={styles.greeting}>Hello, {business?.name || 'there'}</h1>
 
         <div className={styles.grid} ref={gridRef}>
           {/* Left: Wallet card + actions + transactions */}
@@ -429,7 +477,14 @@ export default function DashboardPage() {
             {/* Recent transactions — same width as wallet */}
             <section className={styles.txSection}>
               <h2 className={styles.txTitle}>Recent transactions</h2>
-              {walletTransactions.length === 0 ? (
+              {txLoading && walletTransactions.length === 0 ? (
+                <div className={styles.skTxList}>
+                  <div className={styles.skTxRow} />
+                  <div className={styles.skTxRow} />
+                  <div className={styles.skTxRow} />
+                  <div className={styles.skTxRow} />
+                </div>
+              ) : walletTransactions.length === 0 ? (
                 <div className={styles.emptyState}>
                   <SearchIllustration />
                   <p className={styles.emptyTitle}>No transactions</p>
@@ -502,6 +557,8 @@ export default function DashboardPage() {
             <ChatPanel onOpenTransfer={() => setTransferOpen(true)} />
           </div>
         </div>
+          </>
+        )}
       </div>
 
       <DepositModal

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import Button from '../components/ui/Button'
 import EmptyState, { WebhookEmptyIcon } from '../components/ui/EmptyState'
+import { TableRowsSkeleton } from '../components/ui/Skeletons'
 import FilterMenu, {
   FilterCheckboxOption,
   FilterDateFields,
@@ -135,8 +136,8 @@ function timeAgo(iso: string) {
 
 export default function WebhooksPage() {
   const { showToast } = useToast()
-  const { businessId } = useBusiness()
-  const { data: logs = [], isLoading: loading, isFetching, refetch } = useWebhookDeliveries()
+  const { businessId, businessesLoading } = useBusiness()
+  const { data: logs = [], isLoading: loading, isFetching, isError, error, refetch } = useWebhookDeliveries()
   const [search, setSearch] = useState('')
   const [filters, setFilters] = useState<WebhookFilters>(EMPTY_FILTERS)
   const [draftFilters, setDraftFilters] = useState<WebhookFilters>(EMPTY_FILTERS)
@@ -366,24 +367,29 @@ export default function WebhooksPage() {
         </div>
 
         <div className={styles.tableWrap}>
-          {pageItems.length === 0 ? (
+          {businessesLoading || (loading && logs.length === 0 && !isError) ? (
+            <TableRowsSkeleton rows={8} />
+          ) : isError && logs.length === 0 ? (
             <EmptyState
               icon={<WebhookEmptyIcon />}
-              title={
-                loading
-                  ? 'Loading deliveries…'
-                  : logs.length === 0
-                    ? 'No deliveries yet'
-                    : 'No matching deliveries'
+              title="Could not load deliveries"
+              description={(error as Error)?.message || 'Check your connection and try again'}
+              action={
+                <Button variant="outline" size="sm" onClick={() => void refetch()}>
+                  Retry
+                </Button>
               }
+            />
+          ) : pageItems.length === 0 ? (
+            <EmptyState
+              icon={<WebhookEmptyIcon />}
+              title={logs.length === 0 ? 'No deliveries yet' : 'No matching deliveries'}
               description={
-                loading
-                  ? 'Please wait while we fetch webhook activity'
-                  : logs.length === 0
-                    ? 'Webhook deliveries will appear here once events fire'
-                    : hasActiveFilters
-                      ? 'Try adjusting your search or filters'
-                      : 'No deliveries match the current view'
+                logs.length === 0
+                  ? 'Webhook deliveries will appear here once events fire'
+                  : hasActiveFilters
+                    ? 'Try adjusting your search or filters'
+                    : 'No deliveries match the current view'
               }
             />
           ) : (

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import Button from '../components/ui/Button'
 import EmptyState, { CardEmptyIcon } from '../components/ui/EmptyState'
+import { TableRowsSkeleton } from '../components/ui/Skeletons'
 import CardDetailDrawer from '../components/cards/CardDetailDrawer'
 import CreateCardSheet from '../components/cards/CreateCardSheet'
 import UsdDepositSheet from '../components/treasury/UsdDepositSheet'
@@ -72,9 +73,9 @@ function CardStatus({ status }: { status: VirtualCard['status'] }) {
 export default function CardsPage() {
   const { visible: balanceVisible } = useBalance()
   const { canAct } = usePermissions()
-  const { businessId } = useBusiness()
+  const { businessId, businessesLoading } = useBusiness()
   const queryClient = useQueryClient()
-  const { data: summary, isLoading: summaryLoading } = useCardSummary()
+  const { data: summary, isLoading: summaryLoading, isError: summaryError } = useCardSummary()
   const { data: cards = [], isLoading: cardsLoading, isError: cardsError, error: cardsLoadError, refetch: refetchCards } = useCards()
   const { data: usdCryptoDeposit = null, isLoading: usdCryptoLoading } = useUsdCryptoDeposit()
   const [page, setPage] = useState(1)
@@ -102,19 +103,18 @@ export default function CardsPage() {
     [displayCards, currentPage],
   )
 
-  const usdBalanceValue = summaryLoading
-    ? '—'
-    : !balanceVisible
-      ? '$ ••••'
-      : compactUsd(summary?.usd_balance)
+  const metricsLoading = businessesLoading || (summaryLoading && !summary && !summaryError)
+  const cardsListLoading = businessesLoading || (cardsLoading && cards.length === 0 && !cardsError)
 
-  const totalCardsValue = summaryLoading ? '—' : String(summary?.total_cards ?? 0)
+  const usdBalanceValue = !balanceVisible
+    ? '$ ••••'
+    : compactUsd(summary?.usd_balance)
 
-  const totalCardBalanceValue = summaryLoading
-    ? '—'
-    : !balanceVisible
-      ? '$ ••••'
-      : compactUsd(summary?.total_card_balance)
+  const totalCardsValue = String(summary?.total_cards ?? 0)
+
+  const totalCardBalanceValue = !balanceVisible
+    ? '$ ••••'
+    : compactUsd(summary?.total_card_balance)
 
   function handleCardUpdate(updated: VirtualCard) {
     setCardOverrides(prev => ({ ...prev, [updated.card_id]: updated }))
@@ -165,6 +165,13 @@ export default function CardsPage() {
         )}
       </div>
 
+      {metricsLoading ? (
+        <div className={styles.metrics}>
+          <div className={styles.skMetric} />
+          <div className={styles.skMetric} />
+          <div className={styles.skMetric} />
+        </div>
+      ) : (
       <div className={styles.metrics}>
         <div className={styles.metricCard}>
           <div className={styles.metricHeader}>
@@ -190,14 +197,11 @@ export default function CardsPage() {
           <span className={styles.metricValue}>{totalCardBalanceValue}</span>
         </div>
       </div>
+      )}
 
       <div className={styles.tableWrap}>
-        {cardsLoading && cards.length === 0 ? (
-          <EmptyState
-            icon={<CardEmptyIcon />}
-            title="Loading cards…"
-            description="Please wait while we fetch your virtual cards."
-          />
+        {cardsListLoading ? (
+          <TableRowsSkeleton rows={6} />
         ) : cardsError && cards.length === 0 ? (
           <EmptyState
             icon={<CardEmptyIcon />}

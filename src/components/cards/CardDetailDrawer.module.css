@@ -399,6 +399,15 @@
   border-bottom: 1px solid var(--border);
 }
 
+.detailRowTop {
+  align-items: flex-start;
+}
+
+.detailValueWrap {
+  white-space: pre-line;
+  max-width: 240px;
+}
+
 .detailRow:last-child {
   border-bottom: none;
 }
@@ -428,6 +437,10 @@
   gap: 8px;
   justify-content: flex-end;
   min-width: 0;
+}
+
+.detailRowTop .copyRow {
+  align-items: flex-start;
 }
 
 .copyBtn {

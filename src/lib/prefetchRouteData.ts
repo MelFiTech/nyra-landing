@@ -37,9 +37,19 @@ export function prefetchRouteData(
       )
       break
     case '/app/transactions':
-      void prefetch(queryClient, queryKeys.transactions(businessId, { page_size: 200 }), () =>
-        transactionsApi.list({ page_size: 200 }, businessId),
-      )
+      void queryClient.prefetchInfiniteQuery({
+        queryKey: queryKeys.transactions(businessId, { mode: 'all' }),
+        queryFn: ({ pageParam }) =>
+          transactionsApi.list(
+            {
+              page_size: 100,
+              ...(pageParam ? { cursor: String(pageParam) } : {}),
+            },
+            businessId,
+          ),
+        initialPageParam: undefined as string | undefined,
+        staleTime: STALE_TIME,
+      })
       break
     case '/app/assets':
       void prefetch(queryClient, queryKeys.cryptoMasterWallets(businessId), () =>
@@ -47,6 +57,9 @@ export function prefetchRouteData(
       )
       void prefetch(queryClient, queryKeys.cryptoAssets(businessId), () =>
         customersApi.listCryptoAssets(businessId),
+      )
+      void prefetch(queryClient, queryKeys.cryptoTransactions(businessId), () =>
+        cryptoApi.listTransactions(businessId),
       )
       void prefetch(queryClient, queryKeys.cardSummary(businessId), () =>
         cardsApi.getSummary(businessId),

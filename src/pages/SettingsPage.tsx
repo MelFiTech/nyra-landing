@@ -244,7 +244,7 @@ function ApiKeysTab() {
       )}
 
       {loading && !client ? (
-        <div className={styles.keysEmpty}><p className={styles.emptySub}>Loading…</p></div>
+        <div className={styles.skBlock} aria-hidden />
       ) : client ? (
         <div className={styles.credCard}>
           <div className={styles.credCardHeader}>
@@ -421,7 +421,10 @@ function WebhooksTab() {
       )}
 
       {loading && configs.length === 0 ? (
-        <div className={styles.emptyBlock}><p className={styles.emptySub}>Loading…</p></div>
+        <div className={styles.skStack} aria-hidden>
+          <div className={styles.skBlock} />
+          <div className={styles.skBlock} />
+        </div>
       ) : configs.length === 0 ? (
         <div className={styles.emptyBlock}>
           <div className={styles.emptyIcon}>
@@ -527,7 +530,7 @@ function ProfileTab() {
 // --- Compliance Tab ---
 function ComplianceTab() {
   const navigate = useNavigate()
-  const { business } = useBusiness()
+  const { business, businessesLoading } = useBusiness()
   const backendStatus = business?.verification_status ?? 'NOT_STARTED'
   const status = backendStatus === 'VERIFIED'
     ? 'verified'
@@ -554,10 +557,12 @@ function ComplianceTab() {
           <div className={styles.sectionTitle}>Compliance</div>
           <div className={styles.sectionSub}>Business verification status and registered details.</div>
         </div>
-        <span className={badgeClass}>{badgeLabel}</span>
+        {!businessesLoading && <span className={badgeClass}>{badgeLabel}</span>}
       </div>
 
-      {status === 'unverified' ? (
+      {businessesLoading ? (
+        <div className={styles.skBlock} aria-hidden />
+      ) : status === 'unverified' ? (
         <div className={styles.complianceEmpty}>
           <p className={styles.complianceEmptyText}>
             Your business has not completed KYB verification yet. Complete verification to unlock full transaction limits.
@@ -702,7 +707,7 @@ function TeamTab() {
   const [sheetOpen, setSheetOpen] = useState(false)
   const [resendingId, setResendingId] = useState<string | null>(null)
 
-  const { data: members = [], isLoading, isFetching } = useQuery({
+  const { data: members = [], isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: queryKeys.team(businessId ?? ''),
     queryFn: () => teamApi.list(businessId!),
     enabled: !!businessId && canManageTeam,
@@ -788,7 +793,7 @@ function TeamTab() {
           </div>
 
           <div className={styles.teamList}>
-            {isLoading || (isFetching && teamMembers.length === 0) ? (
+            {isLoading || (isFetching && teamMembers.length === 0 && !isError) ? (
               <div className={styles.teamSkeletons} aria-busy="true" aria-label="Loading team members">
                 {[0, 1, 2].map(i => (
                   <div key={i} className={styles.teamSkeletonRow}>
@@ -801,6 +806,17 @@ function TeamTab() {
                   </div>
                 ))}
               </div>
+            ) : isError && teamMembers.length === 0 ? (
+              <EmptyState
+                icon={<UsersEmptyIcon />}
+                title="Could not load team"
+                description="Check your connection and try again"
+                action={
+                  <Button variant="outline" size="sm" onClick={() => void refetch()}>
+                    Retry
+                  </Button>
+                }
+              />
             ) : teamMembers.length === 0 ? (
               <EmptyState
                 icon={<UsersEmptyIcon />}

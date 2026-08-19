@@ -280,6 +280,13 @@
   padding-bottom: 24px;
 }
 
+.skMetric {
+  height: 92px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
 .cardSkeleton {
   height: 280px; border-radius: 16px;
   background: var(--surface-2); animation: pulse 1.2s ease-in-out infinite;

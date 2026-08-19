@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import Button from '../components/ui/Button'
 import IssueCryptoWalletSheet from '../components/customers/IssueCryptoWalletSheet'
 import EmptyState, { CardEmptyIcon, DocumentEmptyIcon, WalletEmptyIcon } from '../components/ui/EmptyState'
+import { BlockSkeleton, TableRowsSkeleton } from '../components/ui/Skeletons'
 import { useBusiness, usePermissions } from '../context/BusinessContext'
 import { useCustomer, useCustomerCryptoWallets, useCustomers, useCustomerTransactions } from '../hooks/useAppData'
 import { queryKeys } from '../lib/queryKeys'
@@ -15,6 +16,10 @@ import {
   type GroupStatus,
 } from '../lib/customers'
 import type { CustomerDetails } from '../lib/api'
+import {
+  formatWalletNetworks,
+  listWalletDepositOptions,
+} from '../lib/cryptoFloat'
 import { useToast } from '../context/ToastContext'
 import styles from './CustomerDetailPage.module.css'
 
@@ -62,15 +67,6 @@ function fullName(d: CustomerDetails) {
 
 function addressLine(d: CustomerDetails) {
   return [d.address_line_1, d.address_line_2, d.city, d.country].filter(Boolean).join(', ')
-}
-
-function formatNetwork(network?: string) {
-  if (!network) return '—'
-  const value = network.trim().toLowerCase()
-  if (value === 'trc20') return 'TRC20'
-  if (value === 'erc20') return 'ERC20'
-  if (value === 'bep20') return 'BEP20'
-  return network.toUpperCase()
 }
 
 function formatCryptoBalance(value: string | undefined) {
@@ -181,7 +177,20 @@ export default function CustomerDetailPage() {
       </div>
 
       {loading ? (
-        <div className={styles.centerState}>Loading customer…</div>
+        <div className={styles.body}>
+          <div className={`${styles.leftPanel} ${styles.skPanelPad}`}>
+            <BlockSkeleton height={220} />
+            <div className={styles.skGap} />
+            <BlockSkeleton height={180} />
+          </div>
+          <div className={`${styles.rightPanel} ${styles.skPanelPad}`}>
+            <BlockSkeleton height={40} />
+            <div className={styles.skGap} />
+            <div className={styles.tableWrap}>
+              <TableRowsSkeleton rows={6} />
+            </div>
+          </div>
+        </div>
       ) : !customer ? (
         <div className={styles.centerState}>
           <p className={styles.centerTitle}>Customer not found</p>
@@ -260,12 +269,10 @@ export default function CustomerDetailPage() {
                       {issueCryptoButton}
                     </div>
                   )}
-                  {loadingCryptoWallets ? (
-                  <EmptyState
-                    icon={<WalletEmptyIcon />}
-                    title="Loading crypto wallets…"
-                    description="Please wait while we fetch deposit addresses for this customer"
-                  />
+                  {loadingCryptoWallets && cryptoWallets.length === 0 ? (
+                  <div className={styles.tableWrap}>
+                    <TableRowsSkeleton rows={5} />
+                  </div>
                 ) : cryptoWallets.length === 0 ? (
                   <EmptyState
                     icon={<WalletEmptyIcon />}
@@ -287,23 +294,27 @@ export default function CustomerDetailPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {cryptoWallets.map(wallet => (
+                        {cryptoWallets.map(wallet => {
+                          const depositOptions = listWalletDepositOptions(wallet)
+                          const primary = depositOptions[0]
+                          const address = primary?.address || wallet.deposit_address
+                          return (
                           <tr key={wallet.wallet_id}>
                             <td className={styles.nameCell}>{wallet.asset}</td>
-                            <td>{formatNetwork(wallet.network)}</td>
+                            <td>{formatWalletNetworks(wallet) || '—'}</td>
                             <td>
-                              {wallet.deposit_address ? (
+                              {address ? (
                                 <span className={styles.accountNumberCell}>
-                                  <span className={styles.cryptoAddress} title={wallet.deposit_address}>
-                                    {wallet.deposit_address.length > 22
-                                      ? `${wallet.deposit_address.slice(0, 10)}…${wallet.deposit_address.slice(-8)}`
-                                      : wallet.deposit_address}
+                                  <span className={styles.cryptoAddress} title={address}>
+                                    {address.length > 22
+                                      ? `${address.slice(0, 10)}…${address.slice(-8)}`
+                                      : address}
                                   </span>
                                   <Button
                                     variant="icon"
                                     iconSm
                                     title="Copy deposit address"
-                                    onClick={() => copy(wallet.deposit_address, 'Deposit address copied')}
+                                    onClick={() => copy(address, 'Deposit address copied')}
                                   >
                                     <CopyIcon />
                                   </Button>
@@ -326,7 +337,8 @@ export default function CustomerDetailPage() {
                             </td>
                             <td className={styles.dateCell}>{formatDateTime(wallet.created_at)}</td>
                           </tr>
-                        ))}
+                          )
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -397,12 +409,10 @@ export default function CustomerDetailPage() {
                 )
               )}
               {tab === 'transactions' && (
-                loadingTxns ? (
-                  <EmptyState
-                    icon={<DocumentEmptyIcon />}
-                    title="Loading transactions…"
-                    description="Please wait while we fetch this customer’s activity"
-                  />
+                loadingTxns && transactions.length === 0 ? (
+                  <div className={styles.tableWrap}>
+                    <TableRowsSkeleton rows={6} />
+                  </div>
                 ) : transactions.length === 0 ? (
                   <EmptyState
                     icon={<DocumentEmptyIcon />}

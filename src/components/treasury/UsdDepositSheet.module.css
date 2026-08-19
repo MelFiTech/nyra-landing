@@ -99,6 +99,51 @@
   gap: 8px;
 }
 
+.networkSelect {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-1);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.networkPills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.networkPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1.5px solid color-mix(in srgb, var(--border-mid) 35%, transparent);
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+
+.networkPill:hover {
+  color: var(--text-1);
+  border-color: color-mix(in srgb, var(--border-mid) 65%, transparent);
+}
+
+.networkPillActive {
+  border-color: var(--border-mid);
+  color: var(--text-1);
+  background: var(--surface-2);
+}
+
 .addressRow {
   display: flex;
   align-items: flex-start;

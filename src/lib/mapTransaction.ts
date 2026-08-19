@@ -28,9 +28,9 @@ function formatMoney(value: number | string | undefined | null, currency = 'NGN'
 }
 
 /** Date + time in 12-hour format for business-facing views. */
-export function formatTxDateTime(iso: string | undefined | null): string {
-  if (!iso) return '—'
-  const d = new Date(iso)
+export function formatTxDateTime(iso: unknown): string {
+  if (!iso || typeof iso === 'object') return '—'
+  const d = new Date(String(iso))
   if (isNaN(d.getTime())) return '—'
   const date = d.toLocaleDateString('en-NG', {
     weekday: 'short',
@@ -46,8 +46,9 @@ export function formatTxDateTime(iso: string | undefined | null): string {
   return `${date}, ${time}`
 }
 
-function formatTxDateShort(iso: string) {
-  const d = new Date(iso)
+export function formatTxDateShort(iso: unknown) {
+  if (iso == null || typeof iso === 'object') return ''
+  const d = new Date(String(iso))
   if (isNaN(d.getTime())) return ''
   return d.toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' })
 }
@@ -105,7 +106,7 @@ function extractParty(t: ApiTransaction): TransactionParty | undefined {
   const sender = readParty(data.sender)
   const recipient = readParty(data.recipient)
   const beneficiary = readParty(data.beneficiary)
-  const credit = t.transaction_type === 'CREDIT'
+  const credit = String(t.transaction_type ?? '').toUpperCase() === 'CREDIT'
 
   if (credit) {
     const name =
@@ -239,7 +240,7 @@ function isVasCashback(t: ApiTransaction): boolean {
 
 /** Direct credit into the business float account (bank transfer to account number). */
 function isFloatWalletFunding(t: ApiTransaction): boolean {
-  if (t.transaction_type !== 'CREDIT') return false
+  if (String(t.transaction_type ?? '').toUpperCase() !== 'CREDIT') return false
   if (isVasCashback(t)) return false
   const cat = categoryKey(t)
   if (!cat.includes('wallet funding') && !cat.includes('funding')) return false
@@ -338,9 +339,9 @@ function buildTimeline(t: ApiTransaction, status: Transaction['status']): Transa
 }
 
 export function mapApiTransaction(t: ApiTransaction): Transaction {
-  const status = normalizeStatus(t.transaction_status)
-  const credit = t.transaction_type === 'CREDIT'
-  const currency = (t.currency ?? 'NGN').toUpperCase()
+  const status = normalizeStatus(str(t.transaction_status) ?? String(t.transaction_status ?? ''))
+  const credit = String(t.transaction_type ?? '').toUpperCase() === 'CREDIT'
+  const currency = (str(t.currency) ?? 'NGN').toUpperCase()
   const amountRaw = formatMoney(Math.abs(Number(t.amount)), currency)
   const processedAt = formatTxDateTime(t.created_at)
   const date = formatTxDateShort(t.created_at)

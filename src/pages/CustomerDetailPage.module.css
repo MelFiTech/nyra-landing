@@ -42,6 +42,14 @@
   overflow-y: auto;
 }
 
+.skPanelPad {
+  padding: 16px;
+}
+
+.skGap {
+  height: 12px;
+}
+
 .avatarSection {
   display: flex;
   flex-direction: column;
