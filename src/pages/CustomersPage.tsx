@@ -64,6 +64,48 @@ function formatDate(iso?: string) {
     ', ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 }
 
+function normalizeSearchToken(value: unknown) {
+  return String(value ?? '').trim().toLowerCase()
+}
+
+function customerSearchHaystack(group: GroupedCustomer) {
+  const tokens: string[] = [
+    group.name,
+    group.primaryWalletId,
+    group.key,
+  ]
+
+  for (const account of group.accounts) {
+    tokens.push(
+      ...[
+        account.account_number,
+        account.bank_name,
+        account.wallet_id,
+        account.external_reference,
+        account.customer_details?.external_reference,
+        account.customer_details?.email,
+        account.customer_details?.phone_number,
+      ].filter((value): value is string => value != null && value !== ''),
+    )
+  }
+
+  return tokens
+    .map(normalizeSearchToken)
+    .filter(Boolean)
+}
+
+function matchesCustomerSearch(group: GroupedCustomer, rawQuery: string) {
+  const q = normalizeSearchToken(rawQuery)
+  if (!q) return true
+  const tokens = customerSearchHaystack(group)
+  if (tokens.some(token => token.includes(q))) return true
+
+  // IDs are often pasted with spaces or dashes — also match a compacted form.
+  const compactQ = q.replace(/[\s-_]/g, '')
+  if (compactQ.length < 4) return false
+  return tokens.some(token => token.replace(/[\s-_]/g, '').includes(compactQ))
+}
+
 function groupCustomers(wallets: CustomerWallet[]): GroupedCustomer[] {
   const map = new Map<string, CustomerWallet[]>()
 
@@ -123,18 +165,10 @@ export default function CustomersPage() {
   }, [grouped])
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase()
     return grouped.filter(group => {
       if (statusFilter === 'active' && group.status !== 'active') return false
       if (statusFilter === 'frozen' && group.status === 'active') return false
-      if (q) {
-        const hay = [
-          group.name,
-          ...group.accounts.flatMap(a => [a.account_number, a.bank_name, a.wallet_id]),
-        ].join(' ').toLowerCase()
-        if (!hay.includes(q)) return false
-      }
-      return true
+      return matchesCustomerSearch(group, search)
     })
   }, [grouped, statusFilter, search])
 
@@ -198,7 +232,7 @@ export default function CustomersPage() {
             <span className={styles.searchIcon}><SearchIcon /></span>
             <input
               className={styles.searchInput}
-              placeholder="Search by name, account number, or bank..."
+              placeholder="Search name, wallet ID, customer ID…"
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1) }}
             />
@@ -235,7 +269,7 @@ export default function CustomersPage() {
                 <tr>
                   <th>Customer Name</th>
                   <th>Account Number</th>
-                  <th>Date Added</th>
+                  <th className={styles.colDate}>Date Added</th>
                   <th>Status</th>
                   <th className={styles.actionsHead} aria-label="Actions" />
                 </tr>
@@ -271,7 +305,7 @@ export default function CustomersPage() {
                         )}
                       </div>
                     </td>
-                    <td className={styles.dateCell}>{formatDate(group.createdAt)}</td>
+                    <td className={`${styles.dateCell} ${styles.colDate}`}>{formatDate(group.createdAt)}</td>
                     <td>
                       {group.status === 'active' ? (
                         <span className={styles.statusActive}>
@@ -301,6 +335,15 @@ export default function CustomersPage() {
                             label: 'Copy wallet ID',
                             onClick: () => copyText(group.primaryWalletId, 'Wallet ID copied'),
                           },
+                          ...(group.primaryAccount.external_reference
+                            ? [{
+                                label: 'Copy customer ID',
+                                onClick: () => copyText(
+                                  group.primaryAccount.external_reference!,
+                                  'Customer ID copied',
+                                ),
+                              }]
+                            : []),
                           {
                             label: 'Copy account number',
                             onClick: () => copyText(group.primaryAccount.account_number, 'Account number copied'),

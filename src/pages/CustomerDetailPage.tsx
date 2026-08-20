@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import Button from '../components/ui/Button'
 import IssueCryptoWalletSheet from '../components/customers/IssueCryptoWalletSheet'
+import TransactionDrawer, { type Transaction } from '../components/treasury/TransactionDrawer'
 import EmptyState, { CardEmptyIcon, DocumentEmptyIcon, WalletEmptyIcon } from '../components/ui/EmptyState'
 import { BlockSkeleton, TableRowsSkeleton } from '../components/ui/Skeletons'
 import { useBusiness, usePermissions } from '../context/BusinessContext'
@@ -20,6 +21,7 @@ import {
   formatWalletNetworks,
   listWalletDepositOptions,
 } from '../lib/cryptoFloat'
+import { mapApiTransaction } from '../lib/mapTransaction'
 import { useToast } from '../context/ToastContext'
 import styles from './CustomerDetailPage.module.css'
 
@@ -121,6 +123,7 @@ export default function CustomerDetailPage() {
   const { showToast } = useToast()
   const [tab, setTab] = useState<Tab>('accounts')
   const [issueCryptoOpen, setIssueCryptoOpen] = useState(false)
+  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null)
   const { data: customerFromApi, isLoading: loadingCustomer } = useCustomer(id)
   const { data: allCustomers = [], isLoading: loadingList } = useCustomers()
 
@@ -286,11 +289,11 @@ export default function CustomerDetailPage() {
                       <thead>
                         <tr>
                           <th>Asset</th>
-                          <th>Network</th>
+                          <th className={styles.colOptional}>Network</th>
                           <th>Deposit address</th>
                           <th>Balance</th>
                           <th>Status</th>
-                          <th>Date created</th>
+                          <th className={styles.colDate}>Date created</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -301,7 +304,7 @@ export default function CustomerDetailPage() {
                           return (
                           <tr key={wallet.wallet_id}>
                             <td className={styles.nameCell}>{wallet.asset}</td>
-                            <td>{formatWalletNetworks(wallet) || '—'}</td>
+                            <td className={styles.colOptional}>{formatWalletNetworks(wallet) || '—'}</td>
                             <td>
                               {address ? (
                                 <span className={styles.accountNumberCell}>
@@ -335,7 +338,7 @@ export default function CustomerDetailPage() {
                                 </span>
                               )}
                             </td>
-                            <td className={styles.dateCell}>{formatDateTime(wallet.created_at)}</td>
+                            <td className={`${styles.dateCell} ${styles.colDate}`}>{formatDateTime(wallet.created_at)}</td>
                           </tr>
                           )
                         })}
@@ -359,10 +362,10 @@ export default function CustomerDetailPage() {
                         <tr>
                           <th>Account name</th>
                           <th>Account number</th>
-                          <th>Bank</th>
-                          <th>Type</th>
+                          <th className={styles.colOptional}>Bank</th>
+                          <th className={styles.colOptional}>Type</th>
                           <th>Status</th>
-                          <th>Date added</th>
+                          <th className={styles.colDate}>Date added</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -385,8 +388,8 @@ export default function CustomerDetailPage() {
                                 </Button>
                               </span>
                             </td>
-                            <td>{account.bank_name}</td>
-                            <td>{account.is_dva_polaris ? 'Dedicated (Polaris)' : account.is_dva_9psb ? 'Dedicated (9PSB)' : 'Standard'}</td>
+                            <td className={styles.colOptional}>{account.bank_name}</td>
+                            <td className={styles.colOptional}>{account.is_dva_polaris ? 'Dedicated (Polaris)' : account.is_dva_9psb ? 'Dedicated (9PSB)' : 'Standard'}</td>
                             <td>
                               {account.frozen ? (
                                 <span className={styles.statusFrozen}>
@@ -400,7 +403,7 @@ export default function CustomerDetailPage() {
                                 </span>
                               )}
                             </td>
-                            <td className={styles.dateCell}>{formatDateTime(account.created_at)}</td>
+                            <td className={`${styles.dateCell} ${styles.colDate}`}>{formatDateTime(account.created_at)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -425,20 +428,38 @@ export default function CustomerDetailPage() {
                       <thead>
                         <tr>
                           <th>Description</th>
-                          <th>Type</th>
+                          <th className={styles.colOptional}>Type</th>
                           <th>Amount</th>
                           <th>Status</th>
-                          <th>Date</th>
+                          <th className={styles.colDate}>Date</th>
                         </tr>
                       </thead>
                       <tbody>
                         {transactions.map(tx => {
                           const credit = tx.transaction_type === 'CREDIT'
                           const status = (tx.transaction_status ?? '').toLowerCase()
+                          const description = tx.description || tx.transaction_reference || '—'
                           return (
-                            <tr key={tx.transaction_id}>
-                              <td className={styles.nameCell}>{tx.description || tx.transaction_reference || '—'}</td>
-                              <td>{credit ? 'Credit' : 'Debit'}</td>
+                            <tr
+                              key={tx.transaction_id}
+                              className={styles.txRow}
+                              onClick={() => setSelectedTx(mapApiTransaction(tx))}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault()
+                                  setSelectedTx(mapApiTransaction(tx))
+                                }
+                              }}
+                              role="button"
+                              tabIndex={0}
+                              aria-label={`View transaction: ${description}`}
+                            >
+                              <td className={styles.nameCell}>
+                                <span className={styles.descTruncate} title={description}>
+                                  {description}
+                                </span>
+                              </td>
+                              <td className={styles.colOptional}>{credit ? 'Credit' : 'Debit'}</td>
                               <td className={credit ? styles.amountCredit : styles.amountDebit}>
                                 {credit ? '+' : '-'}{formatNaira(tx.amount)}
                               </td>
@@ -448,7 +469,7 @@ export default function CustomerDetailPage() {
                                   {capitalize(status || 'pending')}
                                 </span>
                               </td>
-                              <td className={styles.dateCell}>{formatDateTime(tx.created_at)}</td>
+                              <td className={`${styles.dateCell} ${styles.colDate}`}>{formatDateTime(tx.created_at)}</td>
                             </tr>
                           )
                         })}
@@ -477,6 +498,8 @@ export default function CustomerDetailPage() {
           onCreated={refreshCryptoWallets}
         />
       )}
+
+      <TransactionDrawer tx={selectedTx} onClose={() => setSelectedTx(null)} />
     </div>
   )
 }

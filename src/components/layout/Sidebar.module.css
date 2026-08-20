@@ -231,3 +231,37 @@
   color: var(--text-1);
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
+
+.mobileClose {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    position: fixed;
+    left: 12px;
+    top: 12px;
+    z-index: 200;
+    width: min(280px, calc(100vw - 24px)) !important;
+    min-width: min(280px, calc(100vw - 24px)) !important;
+    height: calc(100dvh - 24px);
+    margin: 0;
+    transform: translateX(calc(-100% - 24px));
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s;
+    pointer-events: none;
+  }
+
+  .sidebar.mobileOpen {
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  .desktopCollapse {
+    display: none;
+  }
+
+  .mobileClose {
+    display: flex;
+    margin-left: auto;
+  }
+}

@@ -81,9 +81,11 @@ const SignOutIcon = () => (
 type Props = {
   collapsed: boolean
   onToggle: () => void
+  mobileOpen?: boolean
+  onCloseMobile?: () => void
 }
 
-export default function Sidebar({ collapsed, onToggle }: Props) {
+export default function Sidebar({ collapsed, onToggle, mobileOpen = false, onCloseMobile }: Props) {
   const navigate = useNavigate()
   const location = useLocation()
   const queryClient = useQueryClient()
@@ -107,6 +109,9 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
     }
   }, [theme])
 
+  // Mobile drawer always shows labels; ignore desktop collapse there.
+  const showLabels = !collapsed || mobileOpen
+
   const isTreasuryActive = ['/app/dashboard', '/app/assets', '/app/transactions'].includes(location.pathname)
   const isSpendActive = ['/app/cards', '/app/cards/physical'].includes(location.pathname)
   const isVirtualCardsActive = location.pathname === '/app/cards'
@@ -116,11 +121,11 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
   const isDocsActive = location.pathname === '/app/docs'
   const isSettingsActive = location.pathname === '/app/settings'
 
-  const navItemStyle = collapsed
+  const navItemStyle = !showLabels
     ? { justifyContent: 'center', padding: '9px 0' }
     : undefined
 
-  const inviteBtnStyle = collapsed
+  const inviteBtnStyle = !showLabels
     ? { justifyContent: 'center', padding: '9px 0' }
     : undefined
 
@@ -128,26 +133,46 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
     if (businessId) prefetchRouteData(queryClient, businessId, path)
   }, [businessId, queryClient])
 
+  function go(path: string) {
+    navigate(path)
+    onCloseMobile?.()
+  }
+
   function handleSignOut() {
     session.clear()
+    onCloseMobile?.()
     navigate('/app/login')
   }
 
   return (
     <aside
-      className={styles.sidebar}
-      style={{ width: collapsed ? 60 : 220, minWidth: collapsed ? 60 : 220 }}
+      className={`${styles.sidebar} ${mobileOpen ? styles.mobileOpen : ''}`}
+      style={mobileOpen ? undefined : { width: collapsed ? 60 : 220, minWidth: collapsed ? 60 : 220 }}
+      aria-hidden={false}
     >
       <div className={styles.logo}>
-        {collapsed ? <NyraLogo variant="icon" /> : <NyraLogo />}
+        {showLabels ? <NyraLogo /> : <NyraLogo variant="icon" />}
         <Button
           variant="icon"
           iconSm
-          className={`${styles.collapseBtn} ${collapsed ? styles.collapseBtnCollapsed : ''}`}
+          className={`${styles.collapseBtn} ${collapsed && !mobileOpen ? styles.collapseBtnCollapsed : ''} ${styles.desktopCollapse}`}
           onClick={onToggle}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           <CollapseIcon />
+        </Button>
+        <Button
+          variant="icon"
+          iconSm
+          className={styles.mobileClose}
+          onClick={() => onCloseMobile?.()}
+          title="Close menu"
+          aria-label="Close menu"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
         </Button>
       </div>
 
@@ -157,41 +182,41 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
           <button
             className={`${styles.navItem} ${isTreasuryActive ? styles.active : ''}`}
             style={navItemStyle}
-            onClick={() => { if (!collapsed) setTreasuryOpen(v => !v) }}
+            onClick={() => { if (showLabels) setTreasuryOpen(v => !v) }}
             onMouseEnter={() => {
               prefetchRoute('/app/dashboard')
               prefetchRoute('/app/assets')
               prefetchRoute('/app/transactions')
             }}
-            title={collapsed ? 'Treasury' : undefined}
+            title={!showLabels ? 'Treasury' : undefined}
           >
             <span className={styles.icon}><TreasuryIcon /></span>
-            {!collapsed && <span>Treasury</span>}
-            {!collapsed && (
+            {showLabels && <span>Treasury</span>}
+            {showLabels && (
               <span className={`${styles.chevron} ${treasuryOpen ? styles.open : ''}`}>
                 <ChevronDown />
               </span>
             )}
           </button>
-          {treasuryOpen && !collapsed && (
+          {treasuryOpen && showLabels && (
             <div className={styles.subNav}>
               <button
                 className={`${styles.subItem} ${location.pathname === '/app/dashboard' ? styles.subActive : ''}`}
-                onClick={() => navigate('/app/dashboard')}
+                onClick={() => go('/app/dashboard')}
                 onMouseEnter={() => prefetchRoute('/app/dashboard')}
               >
                 Accounts
               </button>
               <button
                 className={`${styles.subItem} ${location.pathname === '/app/assets' ? styles.subActive : ''}`}
-                onClick={() => navigate('/app/assets')}
+                onClick={() => go('/app/assets')}
                 onMouseEnter={() => prefetchRoute('/app/assets')}
               >
                 Assets
               </button>
               <button
                 className={`${styles.subItem} ${location.pathname === '/app/transactions' ? styles.subActive : ''}`}
-                onClick={() => navigate('/app/transactions')}
+                onClick={() => go('/app/transactions')}
                 onMouseEnter={() => prefetchRoute('/app/transactions')}
               >
                 Transactions
@@ -205,33 +230,33 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
           <button
             className={`${styles.navItem} ${isSpendActive ? styles.active : ''}`}
             style={navItemStyle}
-            onClick={() => { if (!collapsed) setSpendOpen(v => !v) }}
+            onClick={() => { if (showLabels) setSpendOpen(v => !v) }}
             onMouseEnter={() => {
               prefetchRoute('/app/cards')
               prefetchRoute('/app/cards/physical')
             }}
-            title={collapsed ? 'Spend' : undefined}
+            title={!showLabels ? 'Spend' : undefined}
           >
             <span className={styles.icon}><SpendIcon /></span>
-            {!collapsed && <span>Spend</span>}
-            {!collapsed && (
+            {showLabels && <span>Spend</span>}
+            {showLabels && (
               <span className={`${styles.chevron} ${spendOpen ? styles.open : ''}`}>
                 <ChevronDown />
               </span>
             )}
           </button>
-          {spendOpen && !collapsed && (
+          {spendOpen && showLabels && (
             <div className={styles.subNav}>
               <button
                 className={`${styles.subItem} ${isVirtualCardsActive ? styles.subActive : ''}`}
-                onClick={() => navigate('/app/cards')}
+                onClick={() => go('/app/cards')}
                 onMouseEnter={() => prefetchRoute('/app/cards')}
               >
                 Virtual card
               </button>
               <button
                 className={`${styles.subItem} ${isPhysicalCardsActive ? styles.subActive : ''}`}
-                onClick={() => navigate('/app/cards/physical')}
+                onClick={() => go('/app/cards/physical')}
                 onMouseEnter={() => prefetchRoute('/app/cards/physical')}
               >
                 Physical card
@@ -243,44 +268,47 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
         <button
           className={`${styles.navItem} ${isCustomersActive ? styles.active : ''}`}
           style={navItemStyle}
-          onClick={() => navigate('/app/customers')}
+          onClick={() => go('/app/customers')}
           onMouseEnter={() => prefetchRoute('/app/customers')}
-          title={collapsed ? 'Customers' : undefined}
+          title={!showLabels ? 'Customers' : undefined}
         >
           <span className={styles.icon}><CustomersIcon /></span>
-          {!collapsed && <span>Customers</span>}
+          {showLabels && <span>Customers</span>}
         </button>
 
         <button
           className={`${styles.navItem} ${isWebhooksActive ? styles.active : ''}`}
           style={navItemStyle}
-          onClick={() => navigate('/app/webhooks')}
+          onClick={() => go('/app/webhooks')}
           onMouseEnter={() => prefetchRoute('/app/webhooks')}
-          title={collapsed ? 'Webhooks' : undefined}
+          title={!showLabels ? 'Webhooks' : undefined}
         >
           <span className={styles.icon}><WebhookIcon /></span>
-          {!collapsed && <span>Webhooks</span>}
+          {showLabels && <span>Webhooks</span>}
         </button>
 
         <button
           className={`${styles.navItem} ${isDocsActive ? styles.active : ''}`}
           style={navItemStyle}
-          onClick={() => window.open('/docs', '_blank', 'noopener,noreferrer')}
-          title={collapsed ? 'API docs' : undefined}
+          onClick={() => {
+            window.open('/docs', '_blank', 'noopener,noreferrer')
+            onCloseMobile?.()
+          }}
+          title={!showLabels ? 'API docs' : undefined}
         >
           <span className={styles.icon}><DocsIcon /></span>
-          {!collapsed && <span>API docs</span>}
+          {showLabels && <span>API docs</span>}
         </button>
 
         <button
           className={`${styles.navItem} ${isSettingsActive ? styles.active : ''}`}
           style={navItemStyle}
-          onClick={() => navigate('/app/settings')}
+          onClick={() => go('/app/settings')}
           onMouseEnter={() => prefetchRoute('/app/settings')}
-          title={collapsed ? 'Settings' : undefined}
+          title={!showLabels ? 'Settings' : undefined}
         >
           <span className={styles.icon}><SettingsIcon /></span>
-          {!collapsed && <span>Settings</span>}
+          {showLabels && <span>Settings</span>}
         </button>
       </nav>
 
@@ -290,16 +318,16 @@ export default function Sidebar({ collapsed, onToggle }: Props) {
           className={styles.signOutBtn}
           style={inviteBtnStyle}
           onClick={handleSignOut}
-          title={collapsed ? 'Sign out' : undefined}
+          title={!showLabels ? 'Sign out' : undefined}
           type="button"
         >
           <span className={styles.icon}><SignOutIcon /></span>
-          {!collapsed && <span>Sign out</span>}
+          {showLabels && <span>Sign out</span>}
         </Button>
       </div>
 
       <div className={styles.bottom}>
-        {!collapsed ? (
+        {showLabels ? (
           <div className={styles.themePill}>
             <button
               className={`${styles.themeBtn} ${theme === 'default' ? styles.themeBtnActive : ''}`}

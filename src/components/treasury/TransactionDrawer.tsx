@@ -180,9 +180,9 @@ export default function TransactionDrawer({ tx, onClose }: Props) {
     })
   }, [banks, display?.party])
 
-  const showBankAvatar = Boolean(
-    heroBank && hasValue(display?.party?.bankName),
-  )
+  const partyBankName = heroBank?.bank_name || display?.party?.bankName
+  const showBankAvatar = Boolean(heroBank)
+  const showBankDetail = Boolean(heroBank || hasValue(display?.party?.bankName))
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -335,15 +335,15 @@ export default function TransactionDrawer({ tx, onClose }: Props) {
                         <span className={styles.detailValue}>{display.party.name}</span>
                       </div>
 
-                      {hasValue(display.party.bankName) && (
+                      {showBankDetail && hasValue(partyBankName) && (
                         <div className={styles.detailRow}>
                           <span className={styles.detailLabel}>Bank</span>
                           <div className={styles.bankRow}>
                             <BankLogo
-                              bank={heroBank ?? { bank_name: display.party.bankName }}
+                              bank={heroBank ?? { bank_name: partyBankName }}
                               size={28}
                             />
-                            <span className={styles.detailValue}>{display.party.bankName}</span>
+                            <span className={styles.detailValue}>{partyBankName}</span>
                           </div>
                         </div>
                       )}

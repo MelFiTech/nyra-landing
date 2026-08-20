@@ -1,6 +1,7 @@
 .layout {
   display: flex;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   background: var(--bg);
 }
@@ -12,6 +13,7 @@
   min-width: 0;
   background: var(--bg);
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
 }
 
@@ -22,4 +24,38 @@
   overflow: hidden;
   padding-bottom: 12px;
   min-height: 0;
+}
+
+.navBackdrop {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    display: block;
+  }
+
+  .main {
+    width: 100%;
+  }
+
+  .content {
+    padding-bottom: 8px;
+  }
+
+  .navBackdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 190;
+    background: rgba(15, 23, 42, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .navBackdropVisible {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }

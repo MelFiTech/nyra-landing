@@ -190,6 +190,7 @@
   font-family: 'SF Mono', 'Fira Code', monospace;
   color: var(--text-2);
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .balanceCell {
@@ -258,7 +259,51 @@
 
 @media (max-width: 768px) {
   .metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .metrics > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  .page {
+    padding: 16px 12px 0;
+  }
+
+  .pageHeader {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .cardsGrid {
     grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .metricValue {
+    font-size: 18px;
+  }
+
+  .cardNumberCol {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 12px 10px 0;
+  }
+
+  .metricCard {
+    padding: 12px;
+  }
+
+  .metricValue {
+    font-size: 16px;
+  }
+
+  .metricLabel {
+    font-size: 11px;
   }
 }
 

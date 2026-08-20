@@ -181,7 +181,9 @@ function ApiKeysTab() {
           </div>
         </div>
         {canManageApiKeys && client && !createOpen && (
-          <Button variant="text" onClick={() => openCreate(client.app_name)}>Rotate Key</Button>
+          <div className={styles.sectionActions}>
+            <Button variant="text" onClick={() => openCreate(client.app_name)}>Rotate Key</Button>
+          </div>
         )}
       </div>
 
@@ -384,7 +386,7 @@ function WebhooksTab() {
           <div className={styles.sectionTitle}>Webhook Endpoints</div>
           <div className={styles.sectionSub}>Configure URLs to receive real-time event notifications from Nyra.</div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className={styles.sectionActions}>
           {canManageWebhooks && configs.length > 0 && (
             <Button variant="secondary" size="sm" onClick={sendTest} loading={testing === 'all'}>Send test event</Button>
           )}
@@ -771,9 +773,11 @@ function TeamTab() {
           <div className={styles.sectionTitle}>Team</div>
         </div>
         {canManageTeam && (
-          <Button variant="primary" size="sm" onClick={() => setSheetOpen(true)}>
-            + Add team member
-          </Button>
+          <div className={styles.sectionActions}>
+            <Button variant="primary" size="sm" onClick={() => setSheetOpen(true)}>
+              + Add team member
+            </Button>
+          </div>
         )}
       </div>
 

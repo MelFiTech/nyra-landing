@@ -448,6 +448,15 @@ export default function LoginPage() {
                   : `Code expires in ${formatCountdown(secondsLeft)}`}
               </p>
 
+              <Button
+                type="submit"
+                fullWidth
+                loading={loading}
+                disabled={otpExpired || otp.join('').length < 6}
+              >
+                Sign in
+              </Button>
+
               <p className={styles.otpHint}>
                 {otpExpired ? (
                   <>
@@ -465,15 +474,6 @@ export default function LoginPage() {
                   </>
                 )}
               </p>
-
-              <Button
-                type="submit"
-                fullWidth
-                loading={loading}
-                disabled={otpExpired || otp.join('').length < 6}
-              >
-                Sign in
-              </Button>
             </form>
           </>
         )}

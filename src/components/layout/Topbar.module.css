@@ -108,3 +108,56 @@
   background: var(--hover-bg);
   color: var(--text-1);
 }
+
+.menuBtn {
+  display: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  color: var(--text-2);
+  flex-shrink: 0;
+}
+
+.menuBtn:hover {
+  background: var(--hover-bg);
+  color: var(--text-1);
+}
+
+@media (max-width: 900px) {
+  .topbar {
+    padding: 0 12px;
+    gap: 10px;
+    height: 52px;
+  }
+
+  .left {
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .menuBtn {
+    display: flex;
+  }
+
+  .sandboxToggle {
+    padding: 4px 8px;
+    gap: 6px;
+    margin-right: 0;
+  }
+
+  .sandboxLabel {
+    font-size: 12px;
+  }
+
+  .right {
+    gap: 2px;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .sandboxLabel {
+    display: none;
+  }
+}

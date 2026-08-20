@@ -11,7 +11,9 @@ type MetaParty = {
   account_number?: string
   account_no?: string
   bank_name?: string
+  bankName?: string
   bank_code?: string
+  bankCode?: string
 }
 
 function titleCase(value: string | undefined) {
@@ -81,12 +83,22 @@ function readParty(raw: unknown): MetaParty | undefined {
 
 function partyName(p?: MetaParty): string | undefined {
   if (!p) return undefined
-  return p.account_name || p.name
+  return firstStr(p.account_name, p.name)
 }
 
 function partyAccount(p?: MetaParty): string | undefined {
   if (!p) return undefined
-  return p.account_number || p.account_no
+  return firstStr(p.account_number, p.account_no)
+}
+
+function partyBankName(p?: MetaParty): string | undefined {
+  if (!p) return undefined
+  return firstStr(p.bank_name, p.bankName)
+}
+
+function partyBankCode(p?: MetaParty): string | undefined {
+  if (!p) return undefined
+  return firstStr(p.bank_code, p.bankCode)
 }
 
 function metaData(t: ApiTransaction): Record<string, unknown> | undefined {
@@ -114,10 +126,16 @@ function extractParty(t: ApiTransaction): TransactionParty | undefined {
       partyName(beneficiary) ||
       str(data.customer_name)
     const accountNumber = partyAccount(sender) || partyAccount(beneficiary)
-    const bankName = sender?.bank_name || beneficiary?.bank_name
-    const bankCode = sender?.bank_code || beneficiary?.bank_code
+    const bankName =
+      partyBankName(sender) ||
+      partyBankName(beneficiary) ||
+      firstStr(data.bank_name, data.bankName, data.sender_bank)
+    const bankCode =
+      partyBankCode(sender) ||
+      partyBankCode(beneficiary) ||
+      firstStr(data.bank_code, data.bankCode, data.sender_bank_code)
 
-    if (!name && !accountNumber && !bankName) return undefined
+    if (!name && !accountNumber && !bankName && !bankCode) return undefined
 
     return {
       label: 'Received from',
@@ -132,10 +150,26 @@ function extractParty(t: ApiTransaction): TransactionParty | undefined {
     partyName(beneficiary) ||
     partyName(recipient)
   const accountNumber = partyAccount(beneficiary) || partyAccount(recipient)
-  const bankName = beneficiary?.bank_name || recipient?.bank_name
-  const bankCode = beneficiary?.bank_code || recipient?.bank_code
+  const bankName =
+    partyBankName(beneficiary) ||
+    partyBankName(recipient) ||
+    firstStr(
+      data.bank_name,
+      data.bankName,
+      data.destination_bank_name,
+      data.destinationBankName,
+    )
+  const bankCode =
+    partyBankCode(beneficiary) ||
+    partyBankCode(recipient) ||
+    firstStr(
+      data.bank_code,
+      data.bankCode,
+      data.destination_bank_code,
+      data.destinationBankCode,
+    )
 
-  if (!name && !accountNumber && !bankName) return undefined
+  if (!name && !accountNumber && !bankName && !bankCode) return undefined
 
   return {
     label: 'Sent to',

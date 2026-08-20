@@ -865,3 +865,157 @@
 .illuCircleStroke { stroke: var(--border-mid); }
 .illuLine { stroke: var(--border-mid); }
 .illuCircleFill { fill: var(--surface-2); }
+
+@media (max-width: 1100px) {
+  .quickGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .content {
+    padding: 12px 12px 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .greeting {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+
+  .grid {
+    flex-direction: column;
+    overflow: visible;
+    gap: 12px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .leftCol {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: none;
+    overflow: hidden;
+    min-width: 0;
+  }
+
+  .dragHandle {
+    display: none;
+  }
+
+  .rightCol {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    min-height: 320px;
+  }
+
+  .walletCard {
+    padding: 14px 14px 0;
+    min-width: 0;
+  }
+
+  .walletBody {
+    padding: 18px 16px;
+    min-width: 0;
+  }
+
+  .walletBottom {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .walletActions {
+    margin-left: 0;
+    justify-content: flex-start;
+    gap: 20px;
+  }
+
+  .balanceAmount {
+    font-size: 24px;
+    flex-wrap: wrap;
+  }
+
+  .walletTabsScroll {
+    padding: 0 14px 10px;
+  }
+
+  .metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    padding: 12px 14px 16px;
+    min-width: 0;
+  }
+
+  .metricCard {
+    min-width: 0;
+    overflow: hidden;
+    padding: 10px 8px;
+    gap: 6px;
+  }
+
+  .metricLabel {
+    font-size: 10px;
+    line-height: 1.25;
+  }
+
+  .metricBody {
+    gap: 4px;
+  }
+
+  .metricValue {
+    font-size: 12px;
+    letter-spacing: -0.2px;
+  }
+
+  .metricChart {
+    display: none;
+  }
+
+  .txSection {
+    padding: 14px;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .txList {
+    min-width: 0;
+  }
+
+  .txRow {
+    min-width: 0;
+  }
+
+  .quickActionsSection {
+    padding: 0 14px 14px;
+  }
+
+  .quickGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .content {
+    padding: 10px 10px 0;
+  }
+
+  .quickGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .balanceRow {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .metrics {
+    padding: 10px 10px 14px;
+  }
+
+  .txSection {
+    padding: 12px 10px;
+  }
+}

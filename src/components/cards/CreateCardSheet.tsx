@@ -13,6 +13,7 @@ type MissingField = CardReadiness['missing'][number]
 
 type PlatformCustomerOption = {
   walletId: string
+  customerId?: string
   name: string
   accountNumber: string
 }
@@ -80,6 +81,7 @@ export default function CreateCardSheet({ open, onClose, onCreated }: Props) {
       .filter(customer => !customer.isFloat)
       .map(customer => ({
         walletId: customer.wallet_id,
+        customerId: customer.external_reference?.trim() || undefined,
         name: customer.owners_fullname?.trim() || customer.wallet_id,
         accountNumber: customer.account_number,
       }))
@@ -94,9 +96,15 @@ export default function CreateCardSheet({ open, onClose, onCreated }: Props) {
   const filteredCustomers = useMemo(() => {
     const q = customerSearch.trim().toLowerCase()
     if (!q) return customerOptions
-    return customerOptions.filter(c =>
-      [c.name, c.accountNumber, c.walletId].join(' ').toLowerCase().includes(q),
-    )
+    const compactQ = q.replace(/[\s-_]/g, '')
+    return customerOptions.filter(c => {
+      const tokens = [c.name, c.accountNumber, c.walletId, c.customerId]
+        .map(v => String(v ?? '').toLowerCase())
+        .filter(Boolean)
+      if (tokens.some(token => token.includes(q))) return true
+      if (compactQ.length < 4) return false
+      return tokens.some(token => token.replace(/[\s-_]/g, '').includes(compactQ))
+    })
   }, [customerOptions, customerSearch])
 
   const missingFields = readiness?.missing ?? []
@@ -258,7 +266,7 @@ export default function CreateCardSheet({ open, onClose, onCreated }: Props) {
           <div className={styles.selectMenu} role="listbox" aria-label="Customers">
             <input
               className={styles.menuSearch}
-              placeholder="Search customers..."
+              placeholder="Search by name, wallet ID, or customer ID..."
               value={customerSearch}
               onChange={e => setCustomerSearch(e.target.value)}
               autoFocus

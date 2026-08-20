@@ -4,8 +4,10 @@
   flex-direction: column;
   gap: 16px;
   flex: 1;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
   min-height: 0;
+  max-width: 100%;
 }
 
 .pageHeader {
@@ -163,11 +165,15 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
+  overflow-x: auto;
   overflow-y: auto;
   flex: 1;
   min-height: 0;
+  min-width: 0;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
+  -webkit-overflow-scrolling: touch;
 }
 
 .table {
@@ -234,11 +240,16 @@
   font-weight: 600;
   color: var(--text-1);
   font-family: 'SF Mono', 'Fira Code', monospace;
+  white-space: nowrap;
 }
 
 .accountBank {
   font-size: 12px;
   color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.colDate {
 }
 
 .actionsHead {
@@ -347,3 +358,134 @@
 
 .pageBtn:hover:not(:disabled) { background: var(--hover-bg); }
 .pageBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+@media (max-width: 720px) {
+  .page {
+    padding: 16px 12px 0;
+  }
+
+  .pageHeader {
+    align-items: flex-start;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .pageTitle {
+    font-size: 18px;
+    text-align: left;
+  }
+
+  .headerActions {
+    margin-left: auto;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .searchWrap {
+    max-width: none;
+    min-width: 0;
+    width: 100%;
+    flex: none;
+  }
+
+  .filters {
+    width: 100%;
+    overflow-x: auto;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .colDate {
+    display: none;
+  }
+
+  .accountBank {
+    display: none;
+  }
+
+  .accountCell {
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+
+  .customerName {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 46vw;
+  }
+
+  .table th,
+  .table td {
+    padding: 11px 10px;
+    font-size: 12.5px;
+  }
+
+  .actionsHead,
+  .actionsCell {
+    width: 40px;
+    padding-left: 4px;
+    padding-right: 8px;
+  }
+
+  .footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .pagination {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 560px) {
+  .page {
+    padding: 12px 10px 0;
+  }
+
+  .headerActions {
+    gap: 8px;
+  }
+
+  .addBtn {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .customerName {
+    max-width: 38vw;
+    font-size: 13px;
+  }
+
+  .accountNumber {
+    font-size: 12px;
+  }
+
+  .table th,
+  .table td {
+    padding: 10px 8px;
+  }
+
+  .statusActive,
+  .statusPending,
+  .statusMixed {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 12px 10px 0;
+  }
+}

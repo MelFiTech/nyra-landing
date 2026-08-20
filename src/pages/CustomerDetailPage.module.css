@@ -319,6 +319,23 @@
 .nameCell {
   font-weight: 600;
   color: var(--text-1);
+  max-width: 280px;
+}
+
+.descTruncate {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.txRow {
+  cursor: pointer;
+}
+
+.txRow:focus-visible td {
+  outline: 2px solid var(--brand);
+  outline-offset: -2px;
 }
 
 .accountNumberCell {
@@ -362,4 +379,126 @@
   font-size: 12px;
   font-weight: 600;
   color: var(--text-1);
+}
+
+@media (max-width: 960px) {
+  .body {
+    grid-template-columns: 1fr;
+    overflow: auto;
+  }
+
+  .leftPanel {
+    max-height: none;
+  }
+
+  .rightPanel {
+    min-height: 420px;
+  }
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding: 16px 12px 0;
+    overflow: auto;
+  }
+
+  .breadcrumb {
+    font-size: 13px;
+    min-width: 0;
+  }
+
+  .breadcrumbCurrent {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  .body {
+    gap: 12px;
+  }
+
+  .avatarSection {
+    padding: 20px 16px 16px;
+  }
+
+  .infoRow {
+    padding: 10px 14px;
+    align-items: flex-start;
+  }
+
+  .infoLabel {
+    white-space: normal;
+  }
+
+  .infoValue {
+    text-align: left;
+    word-break: break-word;
+  }
+
+  .truncate {
+    max-width: min(160px, 42vw);
+  }
+
+  .detailsHeading {
+    padding: 12px 14px 4px;
+  }
+
+  .detailsEmpty {
+    padding: 6px 14px 14px;
+  }
+
+  .tabs {
+    padding: 0 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tabBtn {
+    padding: 12px 12px;
+    font-size: 13px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .tabToolbar {
+    padding: 10px 12px 0;
+  }
+
+  .table th,
+  .table td {
+    padding: 10px 12px;
+    font-size: 12.5px;
+  }
+
+  .nameCell {
+    max-width: 42vw;
+  }
+
+  .colOptional {
+    display: none;
+  }
+
+  .colDate {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 12px 10px 0;
+  }
+
+  .nameCell {
+    max-width: 36vw;
+  }
+
+  .accountNumber {
+    font-size: 12px;
+  }
 }

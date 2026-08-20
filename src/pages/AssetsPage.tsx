@@ -296,10 +296,12 @@ function AssetsPageInner() {
                       <div className={styles.cardHeading}>
                         <span className={styles.assetName}>{asText(item.asset)}</span>
                       </div>
-                      <CustomerRowMenu
-                        ariaLabel={`${item.asset} wallet actions`}
-                        items={menuItems(item)}
-                      />
+                      <div className={styles.cardMenu}>
+                        <CustomerRowMenu
+                          ariaLabel={`${item.asset} wallet actions`}
+                          items={menuItems(item)}
+                        />
+                      </div>
                     </div>
 
                     <div className={styles.cardBody}>
@@ -338,7 +340,7 @@ function AssetsPageInner() {
                   </div>
                 </div>
 
-                <div className={txStyles.tableWrap}>
+                <div className={`${txStyles.tableWrap} ${styles.tableWrap}`}>
                   {txLoading && visibleTransactions.length === 0 && !txError ? (
                     <TableRowsSkeleton rows={6} />
                   ) : txError && visibleTransactions.length === 0 ? (
@@ -368,10 +370,10 @@ function AssetsPageInner() {
                         <tr>
                           <th style={{ width: 28 }}></th>
                           <th>Type</th>
-                          <th>Method</th>
+                          <th className={styles.colOptional}>Method</th>
                           <th>Currency</th>
                           <th>Amount</th>
-                          <th>Date</th>
+                          <th className={styles.colOptional}>Date</th>
                           <th>Status</th>
                         </tr>
                       </thead>
@@ -382,26 +384,26 @@ function AssetsPageInner() {
                               <span className={`${txStyles.dot} ${tx.dot === 'green' ? txStyles.dotGreen : txStyles.dotRed}`} />
                             </td>
                             <td className={txStyles.fromTo}>{tx.flowType}</td>
-                            <td className={txStyles.method}>{tx.method}</td>
+                            <td className={`${txStyles.method} ${styles.colOptional}`}>{tx.method}</td>
                             <td className={txStyles.currency}>{tx.currency}</td>
                             <td className={`${txStyles.amount} ${tx.amountType === 'credit' ? txStyles.amountCredit : txStyles.amountDebit}`}>
                               {tx.amount}
                             </td>
-                            <td className={txStyles.date}>{tx.date}</td>
+                            <td className={`${txStyles.date} ${styles.colOptional}`}>{tx.date}</td>
                             <td>
                               {tx.status === 'successful' ? (
                                 <span className={txStyles.badgeSuccess}>
                                   <span className={txStyles.badgeIcon}><CheckIcon /></span>
-                                  Successful
+                                  <span className={styles.statusText}>Successful</span>
                                 </span>
                               ) : tx.status === 'failed' ? (
                                 <span className={txStyles.badgeFailed}>
                                   <span className={txStyles.badgeIcon}><XIcon /></span>
-                                  Failed
+                                  <span className={styles.statusText}>Failed</span>
                                 </span>
                               ) : (
                                 <span className={txStyles.badgeFailed} style={{ background: '#fffbeb', color: '#d97706' }}>
-                                  Pending
+                                  <span className={styles.statusText}>Pending</span>
                                 </span>
                               )}
                             </td>

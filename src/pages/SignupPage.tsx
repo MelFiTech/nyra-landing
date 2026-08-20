@@ -259,11 +259,11 @@ export default function SignupPage() {
                   />
                 ))}
               </div>
+              <Button type="submit" variant="primary" fullWidth loading={loading} disabled={otp.join('').length < 6}>Verify email</Button>
               <p className={styles.otpHint}>
                 Didn't receive it?{' '}
                 <Button type="button" variant="text" onClick={handleResend}>Resend code</Button>
               </p>
-              <Button type="submit" variant="primary" fullWidth loading={loading} disabled={otp.join('').length < 6}>Verify email</Button>
             </form>
           </>
         )}

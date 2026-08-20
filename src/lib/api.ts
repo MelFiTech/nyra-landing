@@ -1393,6 +1393,8 @@ export type CustomerWallet = {
   isFloat?: boolean
   is_dva_polaris?: boolean
   is_dva_9psb?: boolean
+  /** Business-facing customer id / external reference (available on list). */
+  external_reference?: string | null
   /** Snapshot of details the business submitted at creation (only on single fetch). */
   customer_details?: CustomerDetails | null
   created_at?: string

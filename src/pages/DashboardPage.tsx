@@ -145,6 +145,9 @@ export default function DashboardPage() {
   const [pinModalOpen, setPinModalOpen] = useState(false)
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null)
   const [walletTab, setWalletTab] = useState<WalletTab>('NGN')
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(max-width: 900px)').matches : false,
+  )
   const { data: wallet, isLoading: walletLoading, isError: walletError, error: walletLoadError, refetch: refetchWallet } = useBusinessWallet()
   const { data: cardSummary, isLoading: cardSummaryLoading, isError: cardSummaryError } = useCardSummary()
   const { data: usdCryptoDeposit = null, isLoading: usdCryptoLoading } = useUsdCryptoDeposit()
@@ -163,8 +166,17 @@ export default function DashboardPage() {
     [transactions],
   )
   const walletTransactions = walletTab === 'NGN' ? ngnTransactions : usdTransactions
+  const visibleTransactions = isMobile ? walletTransactions.slice(0, 4) : walletTransactions
   const usdInflow = useMemo(() => sumTxAmount(usdTransactions, 'CREDIT'), [usdTransactions])
   const usdOutflow = useMemo(() => sumTxAmount(usdTransactions, 'DEBIT'), [usdTransactions])
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 900px)')
+    const sync = () => setIsMobile(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
 
   useEffect(() => {
     if (wallet && !wallet.wallet_pin_changed) setPinModalOpen(true)
@@ -235,7 +247,7 @@ export default function DashboardPage() {
           <>
             <div className={`${styles.greeting} ${styles.skGreeting}`} aria-hidden />
             <div className={styles.grid} ref={gridRef}>
-              <div className={styles.leftCol} style={{ width: `${leftPct}%`, flexShrink: 0 }}>
+              <div className={styles.leftCol} style={isMobile ? undefined : { width: `${leftPct}%`, flexShrink: 0 }}>
                 <div className={styles.walletCard}>
                   <div className={styles.skRow}>
                     <span className={styles.skPill} />
@@ -288,7 +300,7 @@ export default function DashboardPage() {
 
         <div className={styles.grid} ref={gridRef}>
           {/* Left: Wallet card + actions + transactions */}
-          <div className={styles.leftCol} style={{ width: `${leftPct}%`, flexShrink: 0 }}>
+          <div className={styles.leftCol} style={isMobile ? undefined : { width: `${leftPct}%`, flexShrink: 0 }}>
             <div className={styles.walletCard}>
               <div className={styles.walletTop}>
                 <div className={styles.walletTabs}>
@@ -441,19 +453,6 @@ export default function DashboardPage() {
                 <div key={metric.label} className={styles.metricCard}>
                   <div className={styles.metricHeader}>
                     <span className={styles.metricLabel}>{metric.label}</span>
-                    <span className={`${styles.metricTrend} ${styles[`metricTrend${metric.trend === 'up' ? 'Up' : 'Down'}`]}`}>
-                      {metric.trend === 'up' ? (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-                          <polyline points="17 6 23 6 23 12" />
-                        </svg>
-                      ) : (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
-                          <polyline points="17 18 23 18 23 12" />
-                        </svg>
-                      )}
-                    </span>
                   </div>
                   <div className={styles.metricBody}>
                     <span className={styles.metricValue}>
@@ -496,7 +495,7 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <ul className={styles.txList}>
-                  {walletTransactions.map(tx => (
+                  {visibleTransactions.map(tx => (
                     <li
                       key={tx.transaction_id}
                       className={styles.txRow}

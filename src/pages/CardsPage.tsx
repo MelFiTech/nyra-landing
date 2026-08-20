@@ -237,7 +237,7 @@ export default function CardsPage() {
                 <thead>
                   <tr>
                     <th>Cardholder</th>
-                    <th>Card Number</th>
+                    <th className={styles.cardNumberCol}>Card Number</th>
                     <th>Balance</th>
                     <th>Status</th>
                     <th>Date Issued</th>
@@ -260,7 +260,9 @@ export default function CardsPage() {
                       aria-label={`View card for ${card.cardholder_name}`}
                     >
                       <td className={styles.nameCell}>{card.cardholder_name}</td>
-                      <td className={styles.cardNumberCell}>{maskCardNumber(card.last_four)}</td>
+                      <td className={`${styles.cardNumberCell} ${styles.cardNumberCol}`}>
+                        {maskCardNumber(card.last_four)}
+                      </td>
                       <td className={styles.balanceCell}>
                         {balanceVisible ? usd(card.balance) : '$ ••••'}
                       </td>

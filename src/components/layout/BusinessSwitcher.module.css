@@ -11,6 +11,7 @@
   border-radius: 0;
   background: transparent;
   max-width: 240px;
+  min-width: 0;
   transition: color 0.12s;
 }
 .trigger:hover { color: var(--text-2); }
@@ -135,3 +136,14 @@
 }
 .input:focus { border-color: var(--brand); }
 .addActions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 2px; }
+
+@media (max-width: 560px) {
+  .trigger {
+    max-width: min(160px, 42vw);
+  }
+
+  .menu {
+    width: min(300px, calc(100vw - 24px));
+    left: 0;
+  }
+}

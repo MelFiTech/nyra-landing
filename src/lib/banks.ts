@@ -70,6 +70,16 @@ export function findBank(
   if (code) {
     const byCode = banksByCode(banks)
     if (byCode[code]) return byCode[code]
+    // NIP / provider codes sometimes drop or add leading zeros
+    const padded = code.padStart(3, '0')
+    if (byCode[padded]) return byCode[padded]
+    const unpadded = code.replace(/^0+/, '') || code
+    if (byCode[unpadded]) return byCode[unpadded]
+    const match = banks.find(b => {
+      const codes = [b.bank_code, b.bank_long_code].filter(Boolean) as string[]
+      return codes.some(c => c === code || c.replace(/^0+/, '') === unpadded)
+    })
+    if (match) return match
   }
   const name = query.bankName?.trim()
   if (!name) return undefined
