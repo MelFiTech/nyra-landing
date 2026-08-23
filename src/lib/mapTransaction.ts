@@ -1,9 +1,10 @@
-import { type Transaction as ApiTransaction } from './api'
+import { type Transaction as ApiTransaction, type CryptoTransaction } from './api'
 import {
   type Transaction,
   type TransactionDetailField,
   type TransactionParty,
 } from '../components/treasury/TransactionDrawer'
+import { formatCryptoAmount, formatNetworkLabel } from './cryptoFloat'
 
 type MetaParty = {
   name?: string
@@ -420,5 +421,174 @@ export function mapApiTransaction(t: ApiTransaction): Transaction {
     timeline: buildTimeline(t, status),
     prevBalance: formatMoney(t.balance_before, currency),
     currBalance: formatMoney(t.balance_after, currency),
+  }
+}
+
+function truncateAddress(address: string, head = 10, tail = 8) {
+  if (address.length <= head + tail + 3) return address
+  return `${address.slice(0, head)}…${address.slice(-tail)}`
+}
+
+function cryptoStatus(status: string | undefined): Transaction['status'] {
+  const s = (status ?? '').toLowerCase()
+  if (['success', 'successful', 'completed', 'confirmed'].includes(s)) return 'successful'
+  if (['failed', 'reversed', 'cancelled', 'rejected'].includes(s)) return 'failed'
+  return 'pending'
+}
+
+function cryptoTxKey(tx: CryptoTransaction) {
+  return String(tx.transaction_id || tx.reference || '')
+}
+
+function formatCryptoLedgerBalance(
+  value: unknown,
+  asset: string,
+  asUsd: boolean,
+): string {
+  if (value == null || value === '') return '—'
+  if (asUsd) {
+    const n = Number(value)
+    if (!Number.isFinite(n)) return '—'
+    return `USD ${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  }
+  return formatCryptoAmount(value, asset, false)
+}
+
+/** Backfill deposit ledger balances when API rows predate balance metadata. */
+export function enrichCryptoTransactionBalances(
+  tx: CryptoTransaction,
+  sameAssetTxs: CryptoTransaction[],
+  currentFloatBalance?: string | null,
+): CryptoTransaction {
+  if (
+    tx.balance_before != null && tx.balance_before !== '' &&
+    tx.balance_after != null && tx.balance_after !== ''
+  ) {
+    return tx
+  }
+
+  if (String(tx.type ?? '').toLowerCase() !== 'deposit') return tx
+  if (currentFloatBalance == null || currentFloatBalance === '') return tx
+
+  const deposits = sameAssetTxs
+    .filter(row => String(row.type ?? '').toLowerCase() === 'deposit')
+    .sort((a, b) => {
+      const ta = new Date(String(a.created_at || 0)).getTime()
+      const tb = new Date(String(b.created_at || 0)).getTime()
+      return tb - ta
+    })
+
+  let running = Number(currentFloatBalance)
+  if (!Number.isFinite(running)) return tx
+
+  const computed = new Map<string, { balance_before: string; balance_after: string }>()
+  for (const row of deposits) {
+    const amount = Number(row.amount || 0)
+    if (!Number.isFinite(amount)) continue
+    const after = running
+    const before = running - amount
+    computed.set(cryptoTxKey(row), {
+      balance_before: String(before),
+      balance_after: String(after),
+    })
+    running = before
+  }
+
+  const hit = computed.get(cryptoTxKey(tx))
+  return hit ? { ...tx, ...hit } : tx
+}
+
+export function mapCryptoTransaction(tx: CryptoTransaction): Transaction {
+  const type = String(tx.type ?? '').toLowerCase()
+  const credit = type === 'deposit'
+  const asset = String(tx.asset ?? '').toUpperCase() || '—'
+  const network = formatNetworkLabel(tx.network)
+  const method = !network || network === '—' ? 'On-chain' : network
+  const status = cryptoStatus(tx.status)
+  const amountRaw = formatCryptoAmount(tx.amount, asset, false)
+  const feeAsset = String(tx.fee_asset ?? asset)
+  const fee = tx.fee != null && tx.fee !== ''
+    ? formatCryptoAmount(tx.fee, feeAsset, false)
+    : '—'
+  const processedAt = formatTxDateTime(tx.created_at)
+  const date = formatTxDateShort(tx.created_at) || '—'
+  const reference = String(tx.reference || tx.transaction_id || '—')
+  const title = credit
+    ? 'Crypto deposit'
+    : type === 'transfer'
+      ? 'Crypto transfer'
+      : type === 'swap'
+        ? 'Crypto swap'
+        : titleCase(type || 'Crypto transaction')
+
+  const detailFields: TransactionDetailField[] = []
+  if (tx.tx_hash) {
+    detailFields.push({ label: 'Transaction hash', value: tx.tx_hash, copyable: true })
+  }
+  if (tx.counterparty_address) {
+    detailFields.push({
+      label: credit ? 'From address' : 'To address',
+      value: tx.counterparty_address,
+      copyable: true,
+    })
+  }
+  if (network && network !== '—') {
+    detailFields.push({ label: 'Network', value: network })
+  }
+  if (tx.wallet_id) {
+    detailFields.push({ label: 'Wallet ID', value: tx.wallet_id, copyable: true })
+  }
+
+  const counterparty = tx.counterparty_address
+    ? truncateAddress(tx.counterparty_address)
+    : '—'
+
+  const ledgerAsUsd = type === 'transfer'
+  const prevBalance = formatCryptoLedgerBalance(tx.balance_before, asset, ledgerAsUsd)
+  const currBalance = formatCryptoLedgerBalance(tx.balance_after, asset, ledgerAsUsd)
+
+  return {
+    id: String(tx.transaction_id || tx.reference || `${asset}-${date}`),
+    title,
+    dot: status === 'successful' ? 'green' : 'red',
+    fromTo: credit ? 'Inflow' : 'Outflow',
+    method,
+    amount: `${credit ? '+' : '−'} ${amountRaw}`,
+    amountRaw: `${credit ? '+' : '−'}${amountRaw}`,
+    amountType: credit ? 'credit' : 'debit',
+    currency: 'USD',
+    date,
+    processedAt,
+    status,
+    reference,
+    counterparty,
+    fee,
+    summary: `${credit ? 'Received' : 'Sent'} ${amountRaw}`,
+    wallet: `${asset} float`,
+    category: asset,
+    channel: 'On-chain',
+    transactionType: credit ? 'credit' : 'debit',
+    party: tx.counterparty_address
+      ? {
+          label: credit ? 'Received from' : 'Sent to',
+          name: truncateAddress(tx.counterparty_address),
+        }
+      : undefined,
+    detailFields,
+    timeline: [
+      { label: 'Transaction initiated', date: processedAt, type: 'neutral' },
+      {
+        label: status === 'successful'
+          ? 'Confirmed on-chain'
+          : status === 'failed'
+            ? 'Transaction failed'
+            : 'Awaiting confirmation',
+        date: processedAt,
+        type: status === 'successful' ? 'success' : status === 'failed' ? 'fail' : 'neutral',
+      },
+    ],
+    prevBalance,
+    currBalance,
+    skipRemoteFetch: true,
   }
 }

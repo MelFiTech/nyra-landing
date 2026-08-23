@@ -5,6 +5,7 @@ import EmptyState, { DocumentEmptyIcon } from '../components/ui/EmptyState'
 import RouteErrorBoundary from '../components/ui/RouteErrorBoundary'
 import { TableRowsSkeleton } from '../components/ui/Skeletons'
 import CustomerRowMenu from '../components/customers/CustomerRowMenu'
+import TransactionDrawer from '../components/treasury/TransactionDrawer'
 import UsdDepositSheet from '../components/treasury/UsdDepositSheet'
 import UsdTransferSheet from '../components/treasury/UsdTransferSheet'
 import { useBalance } from '../context/BalanceContext'
@@ -23,7 +24,7 @@ import {
   isStablecoinAsset,
   walletToCryptoDeposit,
 } from '../lib/cryptoFloat'
-import { formatTxDateShort } from '../lib/mapTransaction'
+import { formatTxDateShort, enrichCryptoTransactionBalances, mapCryptoTransaction } from '../lib/mapTransaction'
 import { queryKeys } from '../lib/queryKeys'
 import styles from './AssetsPage.module.css'
 import txStyles from './TransactionsPage.module.css'
@@ -144,6 +145,7 @@ function AssetsPageInner() {
 
   const [assetTab, setAssetTab] = useState<AssetTab>('all')
   const [txPage, setTxPage] = useState(1)
+  const [selectedTxId, setSelectedTxId] = useState<string | null>(null)
 
   const orderedWallets = useMemo(() => {
     const rank = (asset?: string) => {
@@ -156,12 +158,37 @@ function AssetsPageInner() {
     return [...floatWallets].sort((a, b) => rank(a.asset) - rank(b.asset))
   }, [floatWallets])
 
-  const visibleTransactions = useMemo(() => {
-    const rows = assetTab === 'all'
+  const filteredCryptoTxs = useMemo(() => {
+    return assetTab === 'all'
       ? cryptoTransactions
       : cryptoTransactions.filter(tx => String(tx.asset ?? '').toUpperCase() === assetTab)
-    return rows.map(tx => mapCryptoRow(tx, !balanceVisible))
-  }, [cryptoTransactions, assetTab, balanceVisible])
+  }, [cryptoTransactions, assetTab])
+
+  const visibleTransactions = useMemo(
+    () => filteredCryptoTxs.map(tx => mapCryptoRow(tx, !balanceVisible)),
+    [filteredCryptoTxs, balanceVisible],
+  )
+
+  const selectedTx = useMemo(() => {
+    if (!selectedTxId) return null
+    const raw = filteredCryptoTxs.find(tx => {
+      const id = asText(tx.transaction_id, asText(tx.reference, ''))
+      return id === selectedTxId
+    })
+    if (!raw) return null
+
+    const asset = String(raw.asset ?? '').toUpperCase()
+    const wallet = orderedWallets.find(item => String(item.asset ?? '').toUpperCase() === asset)
+    const sameAssetTxs = filteredCryptoTxs.filter(
+      row => String(row.asset ?? '').toUpperCase() === asset,
+    )
+    const enriched = enrichCryptoTransactionBalances(
+      raw,
+      sameAssetTxs,
+      wallet?.balance,
+    )
+    return mapCryptoTransaction(enriched)
+  }, [filteredCryptoTxs, orderedWallets, selectedTxId])
 
   const txTotalPages = Math.max(1, Math.ceil(visibleTransactions.length / PAGE_SIZE))
   const txCurrentPage = Math.min(txPage, txTotalPages)
@@ -379,7 +406,20 @@ function AssetsPageInner() {
                       </thead>
                       <tbody>
                         {txPageItems.map(tx => (
-                          <tr key={tx.id} className={`${txStyles.txRow} ${styles.txRowStatic}`}>
+                          <tr
+                            key={tx.id}
+                            className={txStyles.txRow}
+                            onClick={() => setSelectedTxId(tx.id)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault()
+                                setSelectedTxId(tx.id)
+                              }
+                            }}
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`View ${tx.flowType} transaction details`}
+                          >
                             <td>
                               <span className={`${txStyles.dot} ${tx.dot === 'green' ? txStyles.dotGreen : txStyles.dotRed}`} />
                             </td>
@@ -465,6 +505,8 @@ function AssetsPageInner() {
           onTransferred={refreshAssets}
         />
       ) : null}
+
+      <TransactionDrawer tx={selectedTx} onClose={() => setSelectedTxId(null)} />
     </div>
   )
 }

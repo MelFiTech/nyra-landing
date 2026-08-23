@@ -420,10 +420,6 @@
   font-size: 13px;
 }
 
-.txRowStatic {
-  cursor: default;
-}
-
 .txSection {
   flex: 1;
   min-height: 0;

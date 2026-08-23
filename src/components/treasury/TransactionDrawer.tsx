@@ -115,6 +115,8 @@ export type Transaction = {
   timeline: { label: string; date: string; type: 'neutral' | 'success' | 'fail' }[]
   prevBalance: string
   currBalance: string
+  /** When true, drawer uses list payload only (e.g. crypto float txs). */
+  skipRemoteFetch?: boolean
 }
 
 type Props = {
@@ -199,7 +201,7 @@ export default function TransactionDrawer({ tx, onClose }: Props) {
   }, [])
 
   useEffect(() => {
-    if (!tx?.id || !businessId) {
+    if (!tx?.id || !businessId || tx.skipRemoteFetch) {
       setDetail(null)
       setLoading(false)
       return
@@ -226,7 +228,7 @@ export default function TransactionDrawer({ tx, onClose }: Props) {
     return () => {
       cancelled = true
     }
-  }, [tx?.id, businessId])
+  }, [tx?.id, tx?.skipRemoteFetch, businessId])
 
   useEffect(() => {
     return () => {

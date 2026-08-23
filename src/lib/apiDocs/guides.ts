@@ -614,15 +614,18 @@ export const DOC_GUIDES: DocGuide[] = [
       {
         heading: 'Managing cards',
         paragraphs: [
-          'After issuance via API, cards appear in the dashboard under Virtual card. Operators can fund cards, freeze or unfreeze, reveal PAN/CVV with wallet PIN, withdraw back to program balance, or terminate cards without additional API work.',
-          'Sensitive card details (full PAN, CVV) require POST /business/cards/details with wallet_pin. Never expose this endpoint or PIN handling to client-side code.',
+          'After issuance via API, cards appear in the dashboard under Virtual card. Operators can fund cards, freeze or unfreeze, reveal PAN/CVV, withdraw back to program balance, or terminate cards from the dashboard UI.',
+          'The Business API exposes the same freeze, unfreeze, details, and withdraw actions without wallet_pin — your client credentials authenticate the request. Never call card details from client-side code; keep PAN/CVV retrieval on your backend only.',
         ],
       },
       {
-        heading: 'Wallet PIN',
+        heading: 'Wallet PIN (dashboard only)',
         paragraphs: [
-          'Freeze, unfreeze, card detail retrieval, and card withdrawal require your 4-digit business wallet PIN in the request body. Set the PIN in the dashboard before calling these routes.',
-          'Card top-up via API does not require wallet_pin; protect top-up endpoints on your backend with your own authorization.',
+          'Your 4-digit business wallet PIN is required for some dashboard-only actions (for example sending stablecoins from the USD card-program balance). Set the PIN in the dashboard before using those routes.',
+          'Business API card routes (details, freeze, unfreeze, withdraw, topup) do not accept wallet_pin. Protect those endpoints on your backend with your own authorization.',
+        ],
+        bullets: [
+          'POST /business/{businessId}/usd-wallet/transfer: on-chain send from USD card-program balance (dashboard JWT; requires wallet_pin; USDT, USDC, or PYUSD; minimum $1 USD including fees)',
         ],
       },
       {
@@ -691,18 +694,23 @@ export const DOC_GUIDES: DocGuide[] = [
     sections: [
       {
         paragraphs: [
-          'Crypto collections must be enabled for your business before you can issue deposit addresses or receive on-chain payments.',
+          'Crypto collections must be enabled for your business (crypto_float_enabled) before you can issue deposit addresses, manage treasury float wallets, or send on-chain withdrawals. The Business API also requires provider credentials to be configured server-side; otherwise crypto routes return HTTP 503.',
         ],
       },
       {
         heading: 'Recommended API flow',
         bullets: [
-          'GET /business/crypto/assets: list assets and networks available for your business',
+          'GET /business/crypto/assets: list assets and networks (customer deposits and master float support USDT, USDC, and BTC)',
           'POST /business/wallets: create the NGN wallet customer (optional but recommended; reuse wallet_id for cards and crypto)',
           'POST /business/crypto/customers: register a crypto customer, or pass managed_wallet_id to link an existing wallet customer',
           'POST /business/crypto/customers/{customerId}/wallets: issue a deposit address (asset and optional chain)',
           'GET /business/crypto/customers/{customerId}/wallets: list deposit addresses for reconciliation',
-          'POST /business/crypto/transfers: withdraw from business treasury to an on-chain address',
+          'GET /business/crypto/master-wallets: list business treasury (float) wallets; may auto-provision defaults',
+          'POST /business/crypto/master-wallets: explicitly create a float wallet when needed',
+          'POST /business/crypto/fees/quote: preview network fees before a withdrawal',
+          'POST /business/crypto/transfers: withdraw from business treasury (chain required)',
+          'GET /business/crypto/transfers/{reference}: poll withdrawal status',
+          'GET /business/crypto/transactions: reconcile deposits, transfers, and swaps (includes balance_before and balance_after when recorded)',
         ],
       },
       {
@@ -712,12 +720,22 @@ export const DOC_GUIDES: DocGuide[] = [
         ],
       },
       {
+        heading: 'Treasury float vs customer wallets',
+        paragraphs: [
+          'Master float wallets hold your business treasury balance for each supported asset. Customer deposit wallets are per-end-user addresses that credit the customer\'s crypto balance when funded on-chain.',
+          'Withdrawals via POST /business/crypto/transfers debit master float. Deposits to customer addresses emit crypto.wallet.funded webhooks and appear in GET /business/crypto/transactions when linked to your business.',
+        ],
+      },
+      {
         heading: 'Dashboard flow',
         paragraphs: [
-          'On the Nyra dashboard, open a customer and use the Wallets tab to issue and view on-chain deposit addresses without API client credentials.',
+          'On the Nyra dashboard, open a customer and use the Wallets tab to issue and view on-chain deposit addresses without API client credentials. The Assets page lists treasury transactions and master float wallets when crypto is enabled.',
         ],
         bullets: [
           'GET /business/{businessId}/crypto/assets: supported assets (dashboard JWT)',
+          'GET /business/{businessId}/crypto/master-wallets: list treasury float wallets',
+          'POST /business/{businessId}/crypto/master-wallets: create a treasury float wallet',
+          'GET /business/{businessId}/crypto/transactions: treasury transaction history',
           'GET /business/{businessId}/wallet-customers/{walletId}/crypto-wallets: list deposit addresses for the customer',
           'POST /business/{businessId}/wallet-customers/{walletId}/crypto-wallets: issue a new deposit address (asset and optional chain)',
         ],

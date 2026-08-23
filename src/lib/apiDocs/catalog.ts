@@ -1276,10 +1276,9 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
     method: 'POST',
     path: '/business/cards/details',
     description:
-      'Returns full PAN, CVV, expiry, and live balance for a card. Requires your business wallet PIN (wallet_pin). Use only from your backend.',
+      'Returns full PAN, CVV, expiry, and live balance for a card. Business API client auth only — no wallet PIN required. Call only from your backend; never expose this route to end-user clients.',
     params: [
       { name: 'card_id', location: 'body', type: 'string', required: true, description: 'Virtual card ID from issue or list.' },
-      { name: 'wallet_pin', location: 'body', type: 'string', required: true, description: '4-digit business wallet PIN.', example: '1234' },
     ],
     responses: [
       {
@@ -1367,10 +1366,9 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
     title: 'Freeze card',
     method: 'POST',
     path: '/business/cards/freeze',
-    description: 'Temporarily block new authorizations on a virtual card.',
+    description: 'Temporarily block new authorizations on a virtual card. Business API client auth only — no wallet PIN required.',
     params: [
       { name: 'card_id', location: 'body', type: 'string', required: true, description: 'Virtual card ID.' },
-      { name: 'wallet_pin', location: 'body', type: 'string', required: true, description: '4-digit business wallet PIN.' },
     ],
     responses: [
       {
@@ -1390,10 +1388,9 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
     title: 'Unfreeze card',
     method: 'POST',
     path: '/business/cards/unfreeze',
-    description: 'Re-enable a previously frozen virtual card.',
+    description: 'Re-enable a previously frozen virtual card. Business API client auth only — no wallet PIN required.',
     params: [
       { name: 'card_id', location: 'body', type: 'string', required: true, description: 'Virtual card ID.' },
-      { name: 'wallet_pin', location: 'body', type: 'string', required: true, description: '4-digit business wallet PIN.' },
     ],
     responses: [
       {
@@ -1414,11 +1411,10 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
     method: 'POST',
     path: '/business/cards/withdraw',
     description:
-      'Move USD from a virtual card back to your card-program balance (minus withdrawal fees). Requires wallet_pin.',
+      'Move USD from a virtual card back to your card-program balance (minus withdrawal fees). Business API client auth only — no wallet PIN required.',
     params: [
       { name: 'card_id', location: 'body', type: 'string', required: true, description: 'Virtual card ID.' },
-      { name: 'amount', location: 'body', type: 'number', required: true, description: 'USD amount to withdraw from the card.', example: '20' },
-      { name: 'wallet_pin', location: 'body', type: 'string', required: true, description: '4-digit business wallet PIN.' },
+      { name: 'amount', location: 'body', type: 'number', required: true, description: 'USD amount to withdraw from the card (1-300).', example: '20' },
     ],
     responses: [
       {
@@ -1439,7 +1435,7 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
     method: 'GET',
     path: '/business/crypto/assets',
     description:
-      'Supported stablecoin assets and networks available for your business.',
+      'Supported assets and networks available for your business. Customer deposit wallets and master float wallets currently support USDT, USDC, and BTC.',
     responses: [
       {
         status: 200,
@@ -1524,7 +1520,7 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
         location: 'body',
         type: 'string',
         required: true,
-        description: 'Asset code from GET /business/crypto/assets.',
+        description: 'Asset code: USDT, USDC, or BTC.',
         example: 'USDT',
       },
       {
@@ -1610,13 +1606,18 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
     title: 'Crypto withdrawal',
     method: 'POST',
     path: '/business/crypto/transfers',
-    description: 'Withdraw crypto from your business treasury to an on-chain address.',
+    description:
+      'Withdraw crypto from your business treasury to an on-chain address. chain is required. Call POST /business/crypto/fees/quote first to preview network fees. Poll GET /business/crypto/transfers/{reference} for status updates.',
     params: [
-      { name: 'asset', location: 'body', type: 'string', required: true, description: 'Asset to send.' },
-      { name: 'chain', location: 'body', type: 'string', required: true, description: 'Blockchain network slug.' },
-      { name: 'amount', location: 'body', type: 'string', required: true, description: 'Amount to withdraw.' },
-      { name: 'address', location: 'body', type: 'string', required: true, description: 'Destination address.' },
-      { name: 'reference', location: 'body', type: 'string', required: false, description: 'Optional idempotency reference.' },
+      { name: 'address', location: 'body', type: 'string', required: true, description: 'Destination on-chain address.' },
+      { name: 'asset', location: 'body', type: 'string', required: true, description: 'Asset to send (for example USDT, USDC, BTC).' },
+      { name: 'chain', location: 'body', type: 'string', required: true, description: 'Network slug (for example trc20, erc20, bitcoin).', example: 'trc20' },
+      { name: 'amount', location: 'body', type: 'string', required: true, description: 'Amount to withdraw in major units.', example: '75.5' },
+      { name: 'reference', location: 'body', type: 'string', required: false, description: 'Optional idempotency reference; Nyra generates one if omitted.' },
+      { name: 'reason', location: 'body', type: 'string', required: false, description: 'Optional internal reason.' },
+      { name: 'narration', location: 'body', type: 'string', required: false, description: 'Optional narration shown to providers where supported.' },
+      { name: 'memo', location: 'body', type: 'string', required: false, description: 'Optional destination memo/tag for chains that require it.' },
+      { name: 'funding_source', location: 'body', type: 'string', required: false, description: 'Funding source for provider routing. Currently USD when supported.', enum: ['USD'] },
     ],
     responses: [
       {
@@ -1630,8 +1631,211 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
     "status": "pending",
     "asset": "USDT",
     "network": "trc20",
-    "amount": "75.5"
+    "amount": "75.5",
+    "address": "T…",
+    "chain": "trc20",
+    "fee": "1.5"
   }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'crypto-list-transfers',
+    group: 'crypto',
+    title: 'List crypto transfers',
+    method: 'GET',
+    path: '/business/crypto/transfers',
+    description: 'Recent on-chain withdrawals initiated by your business.',
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Crypto transfers fetched successfully",
+  "data": [
+    {
+      "reference": "CRY-TXN-…",
+      "status": "pending",
+      "asset": "USDT",
+      "network": "trc20",
+      "amount": "75.5",
+      "address": "T…"
+    }
+  ]
+}`,
+      },
+    ],
+  },
+  {
+    id: 'crypto-get-transfer',
+    group: 'crypto',
+    title: 'Get transfer status',
+    method: 'GET',
+    path: '/business/crypto/transfers/{reference}',
+    description: 'Poll a single withdrawal by the reference returned from POST /business/crypto/transfers.',
+    params: [
+      {
+        name: 'reference',
+        location: 'path',
+        type: 'string',
+        required: true,
+        description: 'Transfer reference from the create response.',
+      },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Crypto transfer fetched successfully",
+  "data": {
+    "reference": "CRY-TXN-…",
+    "status": "successful",
+    "asset": "USDT",
+    "network": "trc20",
+    "amount": "75.5",
+    "address": "T…",
+    "hash": "0x…"
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'crypto-transfer-fee-quote',
+    group: 'crypto',
+    title: 'Quote transfer fee',
+    method: 'POST',
+    path: '/business/crypto/fees/quote',
+    description: 'Preview network and platform fees before POST /business/crypto/transfers.',
+    params: [
+      { name: 'asset', location: 'body', type: 'string', required: true, description: 'Asset to send.', example: 'USDT' },
+      { name: 'chain', location: 'body', type: 'string', required: true, description: 'Network slug.', example: 'trc20' },
+      { name: 'amount', location: 'body', type: 'string', required: true, description: 'Withdrawal amount in major units.', example: '75.5' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Crypto transfer fee quote fetched successfully",
+  "data": {
+    "asset": "USDT",
+    "chain": "trc20",
+    "amount": "75.5",
+    "fee": "1.5",
+    "fee_asset": "USDT"
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'crypto-list-master-wallets',
+    group: 'crypto',
+    title: 'List master float wallets',
+    method: 'GET',
+    path: '/business/crypto/master-wallets',
+    description:
+      'Business treasury (float) wallets for USDT, USDC, and BTC. Requires crypto float to be enabled for your business. Listing may auto-provision default wallets.',
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Master crypto wallets fetched successfully",
+  "data": [
+    {
+      "master_wallet_id": "BCM-…",
+      "asset": "USDT",
+      "network": "trc20",
+      "deposit_address": "T…",
+      "deposit_addresses": { "trc20": { "address": "T…", "network": "trc20" } },
+      "networks": ["trc20", "erc20"],
+      "balance": "1250.50",
+      "offramp": false,
+      "is_active": true
+    }
+  ]
+}`,
+      },
+    ],
+  },
+  {
+    id: 'crypto-create-master-wallet',
+    group: 'crypto',
+    title: 'Create master float wallet',
+    method: 'POST',
+    path: '/business/crypto/master-wallets',
+    description:
+      'Explicitly create a business treasury wallet for USDT, USDC, or BTC. Requires crypto float enabled. Optional chain selects the default network when multiple are supported.',
+    params: [
+      { name: 'asset', location: 'body', type: 'string', required: true, description: 'USDT, USDC, or BTC.', example: 'USDT' },
+      { name: 'chain', location: 'body', type: 'string', required: false, description: 'Default network slug when the asset supports multiple networks.', example: 'trc20' },
+      { name: 'offramp', location: 'body', type: 'boolean', required: false, description: 'Enable off-ramp where supported.' },
+    ],
+    responses: [
+      {
+        status: 201,
+        label: 'Created',
+        body: `{
+  "success": true,
+  "message": "Master crypto wallet created successfully",
+  "data": {
+    "master_wallet_id": "BCM-…",
+    "asset": "USDT",
+    "network": "trc20",
+    "deposit_address": "T…",
+    "balance": "0",
+    "offramp": false,
+    "is_active": true
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'crypto-list-transactions',
+    group: 'crypto',
+    title: 'List crypto transactions',
+    method: 'GET',
+    path: '/business/crypto/transactions',
+    description:
+      'Deposits, transfers, and swaps for your business treasury. Each row includes balance_before and balance_after when recorded at settlement time.',
+    params: [
+      { name: 'type', location: 'query', type: 'string', required: false, description: 'Filter by deposit, transfer, or swap.', enum: ['deposit', 'transfer', 'swap'] },
+      { name: 'asset', location: 'query', type: 'string', required: false, description: 'Filter by asset (for example USDT).' },
+      { name: 'customer_id', location: 'query', type: 'string', required: false, description: 'Filter by crypto customer ID.' },
+      { name: 'limit', location: 'query', type: 'number', required: false, description: 'Max rows to return (1-200).', defaultValue: '100' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Crypto transactions fetched successfully",
+  "data": [
+    {
+      "transaction_id": "BCT-…",
+      "type": "deposit",
+      "status": "successful",
+      "asset": "USDT",
+      "network": "trc20",
+      "amount": "150.25",
+      "reference": "dep_abc123",
+      "wallet_id": "BCM-…",
+      "tx_hash": "0x…",
+      "balance_before": "1100.25",
+      "balance_after": "1250.50",
+      "created_at": "2026-07-22T18:22:01.000Z"
+    }
+  ]
 }`,
       },
     ],

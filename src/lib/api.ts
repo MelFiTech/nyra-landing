@@ -1477,6 +1477,8 @@ export type CryptoTransaction = {
   wallet_id?: string
   counterparty_address?: string
   tx_hash?: string
+  balance_before?: string
+  balance_after?: string
   created_at?: string
 }
 
