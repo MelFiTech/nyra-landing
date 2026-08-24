@@ -12,6 +12,7 @@ import { useBalance } from '../context/BalanceContext'
 import { useBusiness, usePermissions } from '../context/BusinessContext'
 import {
   useBusinessWallet,
+  useBtcUsdRate,
   useCardSummary,
   useCryptoMasterWallets,
   useCryptoTransactions,
@@ -141,9 +142,36 @@ function AssetsPageInner() {
     isFetching: txFetching,
     refetch: refetchTransactions,
   } = useCryptoTransactions(cryptoFloatEnabled)
+  const hasBtcWallet = useMemo(
+    () => floatWalletsData?.some(item => String(item.asset ?? '').toUpperCase() === 'BTC') ?? false,
+    [floatWalletsData],
+  )
+  const { data: btcUsdRate } = useBtcUsdRate(cryptoFloatEnabled && hasBtcWallet)
 
   const floatWallets = Array.isArray(floatWalletsData) ? floatWalletsData : []
   const cryptoTransactions = Array.isArray(cryptoTransactionsData) ? cryptoTransactionsData : []
+
+  function formatUsd(value: number | string | undefined | null, masked: boolean) {
+    if (masked) return '$ ••••'
+    if (value == null || value === '') return '—'
+    const n = Number(value)
+    if (!Number.isFinite(n)) return '—'
+    return `$${n.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`
+  }
+
+  function btcUsdEquivalent(item: CryptoMasterWallet) {
+    if (item.balance_usd != null && item.balance_usd !== '') {
+      const fromApi = Number(item.balance_usd)
+      if (Number.isFinite(fromApi)) return fromApi
+    }
+    const balance = Number(item.balance ?? 0)
+    const rate = Number(btcUsdRate ?? 0)
+    if (!Number.isFinite(balance) || !Number.isFinite(rate) || rate <= 0) return null
+    return balance * rate
+  }
 
   const [assetTab, setAssetTab] = useState<AssetTab>('all')
   const [txPage, setTxPage] = useState(1)
@@ -350,16 +378,11 @@ function AssetsPageInner() {
                             : formatCryptoAmount(item.balance, item.asset, !balanceVisible)}
                         </span>
                       </div>
-                      {String(item.asset ?? '').toUpperCase() === 'BTC' && item.balance_usd != null && item.balance_usd !== '' ? (
+                      {String(item.asset ?? '').toUpperCase() === 'BTC' ? (
                         <div className={styles.usdEquiv}>
                           <span className={styles.usdEquivLabel}>USD</span>
                           <span className={styles.usdEquivValue}>
-                            {!balanceVisible
-                              ? '$ ••••'
-                              : `$${Number(item.balance_usd).toLocaleString('en-US', {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })}`}
+                            {formatUsd(btcUsdEquivalent(item), !balanceVisible)}
                           </span>
                         </div>
                       ) : null}

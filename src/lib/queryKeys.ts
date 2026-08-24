@@ -13,6 +13,7 @@ export const queryKeys = {
   cryptoAssets: (businessId: string) => ['crypto-assets', businessId] as const,
   cryptoMasterWallets: (businessId: string) => ['crypto-master-wallets', businessId] as const,
   cryptoTransactions: (businessId: string) => ['crypto-transactions', businessId] as const,
+  cryptoBtcUsdRate: (businessId: string) => ['crypto-btc-usd-rate', businessId] as const,
   webhookConfigs: (businessId: string) => ['webhook-configs', businessId] as const,
   webhookDeliveries: (businessId: string) => ['webhook-deliveries', businessId] as const,
   apiClient: (businessId: string) => ['api-client', businessId] as const,

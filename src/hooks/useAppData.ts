@@ -4,6 +4,7 @@ import {
   cardsApi,
   cryptoApi,
   customersApi,
+  fetchBtcUsdSpotRate,
   notificationsApi,
   transactionsApi,
   type TransactionListParams,
@@ -131,6 +132,18 @@ export function useCryptoTransactions(enabled = true) {
     queryKey: queryKeys.cryptoTransactions(businessId ?? ''),
     queryFn: () => cryptoApi.listTransactions(businessId!),
     enabled: !!businessId && approved && cryptoFloatEnabled && enabled,
+  })
+}
+
+export function useBtcUsdRate(enabled = true) {
+  const { businessId, business } = useBusiness()
+  const approved = business?.verification_status === 'VERIFIED'
+  const cryptoFloatEnabled = business?.crypto_float_enabled === true
+  return useQuery({
+    queryKey: queryKeys.cryptoBtcUsdRate(businessId ?? ''),
+    queryFn: () => fetchBtcUsdSpotRate(businessId!),
+    enabled: !!businessId && approved && cryptoFloatEnabled && enabled,
+    staleTime: 60_000,
   })
 }
 

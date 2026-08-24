@@ -1402,6 +1402,59 @@ export const cryptoApi = {
       { method: 'POST', body },
     )
   },
+
+  async listRates(businessId: string): Promise<CryptoFxRate[]> {
+    const res = await request<unknown>(`/business/${businessId}/crypto/rates`)
+    return unwrapList<CryptoFxRate>(res)
+  },
+}
+
+export type CryptoFxRate = {
+  pair: string
+  source: string
+  target: string
+  rate?: string
+}
+
+/** BTC/USDT ≈ USD. Prefers Nyra rates, then public spot tickers. */
+export async function fetchBtcUsdSpotRate(businessId?: string): Promise<number | null> {
+  if (businessId) {
+    try {
+      const rates = await cryptoApi.listRates(businessId)
+      const btcUsdt = rates.find(
+        row =>
+          String(row.source ?? '').toUpperCase() === 'BTC' &&
+          ['USDT', 'USD', 'USDC'].includes(String(row.target ?? '').toUpperCase()),
+      )
+      const n = Number(btcUsdt?.rate)
+      if (Number.isFinite(n) && n > 0) return n
+    } catch {
+      /* fall through */
+    }
+  }
+
+  const publicUrls = [
+    'https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT',
+    'https://api.coinbase.com/v2/prices/BTC-USD/spot',
+  ]
+
+  for (const url of publicUrls) {
+    try {
+      const res = await fetch(url)
+      if (!res.ok) continue
+      const json = (await res.json()) as Record<string, unknown>
+      const direct = Number(json.price)
+      if (Number.isFinite(direct) && direct > 0) return direct
+      const nested = json.data && typeof json.data === 'object'
+        ? Number((json.data as Record<string, unknown>).amount)
+        : NaN
+      if (Number.isFinite(nested) && nested > 0) return nested
+    } catch {
+      /* try next */
+    }
+  }
+
+  return null
 }
 
 // ── Customers (managed wallets) ─────────────────────────────────────────
