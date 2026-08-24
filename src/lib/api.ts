@@ -772,6 +772,30 @@ export type UsdWalletTransferResult = {
   usd_balance?: number
 }
 
+export type CryptoFloatTransferPayload = {
+  address: string
+  asset: string
+  chain: string
+  amount: string
+  wallet_pin: string
+  memo?: string
+  reason?: string
+  reference?: string
+}
+
+export type CryptoFloatTransferResult = {
+  reference: string
+  transfer_id?: string
+  amount: string
+  asset: string
+  address: string
+  chain?: string
+  network?: string
+  status?: string
+  fee?: string
+  hash?: string
+}
+
 function readDepositField(record: Record<string, unknown>, ...keys: string[]) {
   for (const key of keys) {
     const value = record[key]
@@ -1371,6 +1395,13 @@ export const cryptoApi = {
     )
     return unwrapList<CryptoTransaction>(res)
   },
+
+  transferFloat(businessId: string, body: CryptoFloatTransferPayload) {
+    return request<{ data: CryptoFloatTransferResult }>(
+      `/business/${businessId}/crypto/transfers`,
+      { method: 'POST', body },
+    )
+  },
 }
 
 // ── Customers (managed wallets) ─────────────────────────────────────────
@@ -1490,6 +1521,8 @@ export type CryptoMasterWallet = {
   deposit_addresses?: Record<string, CryptoDepositAddressEntry>
   networks?: string[]
   balance: string
+  /** Approximate USD value when returned by the API (BTC). */
+  balance_usd?: string
   offramp: boolean
   is_active: boolean
   created_at?: string

@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import Button from '../ui/Button'
 import PinEntry from './PinEntry'
 import SideSheetStack, { type SheetLayer } from './SideSheetStack'
-import { ApiError, walletApi, type CryptoMasterWallet } from '../../lib/api'
+import { ApiError, cryptoApi, walletApi, type CryptoMasterWallet } from '../../lib/api'
 import {
   floatWalletLabel,
+  formatCryptoAmount,
   formatNetworkLabel,
+  isFloatTransferAsset,
   isStablecoinAsset,
   isUnifiedCryptoNetwork,
   networkOptions,
@@ -20,6 +22,7 @@ type Props = {
   open: boolean
   onClose: () => void
   availableUsd: number
+  availableCrypto?: number
   floatWallet?: CryptoMasterWallet | null
   pinReady?: boolean
   canAct?: boolean
@@ -28,7 +31,8 @@ type Props = {
 
 type DetailView = 'form' | 'review' | 'pin'
 
-const MIN_AMOUNT = 1
+const MIN_USD_AMOUNT = 1
+const MIN_BTC_AMOUNT = 0.00001
 const STABLECOIN_ASSETS = new Set(['USDT', 'USDC', 'PYUSD'])
 
 function usd(value: number | string | undefined | null) {
@@ -40,6 +44,7 @@ export default function UsdTransferSheet({
   open,
   onClose,
   availableUsd,
+  availableCrypto,
   floatWallet = null,
   pinReady = true,
   canAct = true,
@@ -47,13 +52,17 @@ export default function UsdTransferSheet({
 }: Props) {
   const { businessId } = useBusiness()
   const { showToast } = useToast()
-  const lockedWallet = floatWallet && isStablecoinAsset(floatWallet.asset) ? floatWallet : null
+  const lockedWallet = floatWallet ?? null
+  const usesCryptoFloat = Boolean(lockedWallet && isFloatTransferAsset(lockedWallet.asset))
+  const usesUsdProgram = !usesCryptoFloat
   const lockToSingleNetwork = Boolean(
     lockedWallet &&
     !isStablecoinAsset(lockedWallet.asset) &&
     !isUnifiedCryptoNetwork(lockedWallet.network),
   )
-  const { data: assetsData, isLoading: loadingAssets } = useCryptoAssets(open && !lockToSingleNetwork)
+  const { data: assetsData, isLoading: loadingAssets } = useCryptoAssets(
+    open && usesUsdProgram && !lockToSingleNetwork,
+  )
   const assets = Array.isArray(assetsData) ? assetsData : []
   const [detailView, setDetailView] = useState<DetailView>('form')
   const [asset, setAsset] = useState('')
@@ -79,7 +88,15 @@ export default function UsdTransferSheet({
   const parsedAmount = Number(amount)
   const resolvedAsset = lockedWallet?.asset ?? asset
   const resolvedChain = chain
-  const amountValid = amount !== '' && parsedAmount >= MIN_AMOUNT && parsedAmount <= availableUsd
+  const availableBalance = usesCryptoFloat
+    ? (availableCrypto ?? Number(lockedWallet?.balance ?? 0))
+    : availableUsd
+  const minAmount = usesCryptoFloat ? MIN_BTC_AMOUNT : MIN_USD_AMOUNT
+  const amountValid =
+    amount !== '' &&
+    parsedAmount >= minAmount &&
+    parsedAmount <= availableBalance
+  const amountStep = usesCryptoFloat ? '0.00000001' : '0.01'
 
   useEffect(() => {
     if (!open) {
@@ -133,7 +150,7 @@ export default function UsdTransferSheet({
     if (!businessId || !canContinue()) return
     setPinLoading(true)
     try {
-      const res = await walletApi.transferUsd(businessId, {
+      const body = {
         address: address.trim(),
         asset: resolvedAsset,
         chain: resolvedChain,
@@ -141,11 +158,17 @@ export default function UsdTransferSheet({
         wallet_pin: pin,
         memo: memo.trim() || undefined,
         reason: memo.trim() || undefined,
-      })
+      }
+      const res = usesCryptoFloat
+        ? await cryptoApi.transferFloat(businessId, body)
+        : await walletApi.transferUsd(businessId, body)
       onClose()
       onTransferred?.()
+      const amountLabel = usesCryptoFloat
+        ? formatCryptoAmount(parsedAmount, resolvedAsset)
+        : usd(parsedAmount)
       showToast(
-        `${usd(parsedAmount)} ${resolvedAsset} transfer initiated${res.data.reference ? ` (${res.data.reference})` : ''}`,
+        `${amountLabel} transfer initiated${res.data.reference ? ` (${res.data.reference})` : ''}`,
       )
     } catch (err) {
       setPinLoading(false)
@@ -161,10 +184,14 @@ export default function UsdTransferSheet({
   }
 
   const detailTitles: Record<DetailView, string> = {
-    form: 'Send from USD wallet',
+    form: usesCryptoFloat ? 'Send BTC' : 'Send from USD wallet',
     review: 'Review transfer',
     pin: 'Confirm transfer',
   }
+
+  const availableLabel = usesCryptoFloat
+    ? formatCryptoAmount(availableBalance, resolvedAsset)
+    : usd(availableBalance)
 
   const form = lockedWallet ? (
     <div className={styles.form}>
@@ -176,7 +203,7 @@ export default function UsdTransferSheet({
       )}
       <p className={styles.formNotice}>
         Sending from {floatWalletLabel(lockedWallet)} float wallet.
-        Available: {usd(availableUsd)}
+        Available: {availableLabel}
       </p>
 
       {chains.length > 1 && (
@@ -209,22 +236,26 @@ export default function UsdTransferSheet({
       </div>
 
       <div className={styles.field}>
-        <label className={styles.label} htmlFor="usd-transfer-amount">Amount (USD)</label>
+        <label className={styles.label} htmlFor="usd-transfer-amount">
+          {usesCryptoFloat ? `Amount (${resolvedAsset})` : 'Amount (USD)'}
+        </label>
         <input
           id="usd-transfer-amount"
           className={styles.input}
           type="number"
-          min={MIN_AMOUNT}
-          step="0.01"
-          placeholder="0.00"
+          min={minAmount}
+          step={amountStep}
+          placeholder={usesCryptoFloat ? '0.00000000' : '0.00'}
           value={amount}
           onChange={event => setAmount(event.target.value)}
         />
-        {amount && parsedAmount < MIN_AMOUNT && (
-          <span className={styles.verifying}>Minimum transfer is {usd(MIN_AMOUNT)}</span>
+        {amount && parsedAmount < minAmount && (
+          <span className={styles.verifying}>
+            Minimum transfer is {usesCryptoFloat ? formatCryptoAmount(minAmount, resolvedAsset) : usd(minAmount)}
+          </span>
         )}
-        {amount && parsedAmount > availableUsd && (
-          <span className={styles.verifying}>Amount exceeds available balance ({usd(availableUsd)})</span>
+        {amount && parsedAmount > availableBalance && (
+          <span className={styles.verifying}>Amount exceeds available balance ({availableLabel})</span>
         )}
       </div>
 
@@ -308,22 +339,26 @@ export default function UsdTransferSheet({
       </div>
 
       <div className={styles.field}>
-        <label className={styles.label} htmlFor="usd-transfer-amount">Amount (USD)</label>
+        <label className={styles.label} htmlFor="usd-transfer-amount">
+          {usesCryptoFloat ? `Amount (${resolvedAsset})` : 'Amount (USD)'}
+        </label>
         <input
           id="usd-transfer-amount"
           className={styles.input}
           type="number"
-          min={MIN_AMOUNT}
-          step="0.01"
-          placeholder="0.00"
+          min={minAmount}
+          step={amountStep}
+          placeholder={usesCryptoFloat ? '0.00000000' : '0.00'}
           value={amount}
           onChange={event => setAmount(event.target.value)}
         />
-        {amount && parsedAmount < MIN_AMOUNT && (
-          <span className={styles.verifying}>Minimum transfer is {usd(MIN_AMOUNT)}</span>
+        {amount && parsedAmount < minAmount && (
+          <span className={styles.verifying}>
+            Minimum transfer is {usesCryptoFloat ? formatCryptoAmount(minAmount, resolvedAsset) : usd(minAmount)}
+          </span>
         )}
-        {amount && parsedAmount > availableUsd && (
-          <span className={styles.verifying}>Amount exceeds available balance ({usd(availableUsd)})</span>
+        {amount && parsedAmount > availableBalance && (
+          <span className={styles.verifying}>Amount exceeds available balance ({availableLabel})</span>
         )}
       </div>
 
@@ -346,7 +381,9 @@ export default function UsdTransferSheet({
 
   const reviewContent = (
     <div className={styles.review}>
-      <div className={styles.reviewAmount}>{usd(parsedAmount)}</div>
+      <div className={styles.reviewAmount}>
+        {usesCryptoFloat ? formatCryptoAmount(parsedAmount, resolvedAsset) : usd(parsedAmount)}
+      </div>
       <div className={styles.reviewRows}>
         <div className={styles.reviewRow}><span>Asset</span><span>{resolvedAsset}</span></div>
         <div className={styles.reviewRow}><span>Network</span><span>{formatNetworkLabel(resolvedChain)}</span></div>
@@ -364,7 +401,7 @@ export default function UsdTransferSheet({
       onConfirm={handleConfirm}
       loading={pinLoading}
       length={4}
-      subtitle={`Confirm transfer of ${usd(parsedAmount)} ${resolvedAsset}`}
+      subtitle={`Confirm transfer of ${usesCryptoFloat ? formatCryptoAmount(parsedAmount, resolvedAsset) : `${usd(parsedAmount)} ${resolvedAsset}`}`}
     />
   )
 

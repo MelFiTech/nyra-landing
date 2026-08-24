@@ -21,6 +21,8 @@ import {
   floatWalletKey,
   formatCryptoAmount,
   formatNetworkLabel,
+  canTransferFromFloatWallet,
+  isFloatTransferAsset,
   isStablecoinAsset,
   walletToCryptoDeposit,
 } from '../lib/cryptoFloat'
@@ -216,8 +218,16 @@ function AssetsPageInner() {
   }
 
   function canTransferWallet(item: CryptoMasterWallet) {
-    if (!canTransfer || !isStablecoinAsset(item.asset)) return false
-    return usdAvailable >= 1
+    if (!canTransfer) return false
+    if (isStablecoinAsset(item.asset)) return usdAvailable >= 1
+    if (isFloatTransferAsset(item.asset)) {
+      return Number(item.balance ?? 0) >= 0.00001
+    }
+    return false
+  }
+
+  function transferAvailableCrypto(item: CryptoMasterWallet) {
+    return Number(item.balance ?? 0)
   }
 
   function menuItems(item: CryptoMasterWallet) {
@@ -229,7 +239,7 @@ function AssetsPageInner() {
       },
     ]
 
-    if (isStablecoinAsset(item.asset)) {
+    if (canTransferFromFloatWallet(item.asset)) {
       items.push({
         label: 'Transfer',
         disabled: !canTransferWallet(item),
@@ -340,6 +350,19 @@ function AssetsPageInner() {
                             : formatCryptoAmount(item.balance, item.asset, !balanceVisible)}
                         </span>
                       </div>
+                      {String(item.asset ?? '').toUpperCase() === 'BTC' && item.balance_usd != null && item.balance_usd !== '' ? (
+                        <div className={styles.usdEquiv}>
+                          <span className={styles.usdEquivLabel}>USD</span>
+                          <span className={styles.usdEquivValue}>
+                            {!balanceVisible
+                              ? '$ ••••'
+                              : `$${Number(item.balance_usd).toLocaleString('en-US', {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })}`}
+                          </span>
+                        </div>
+                      ) : null}
                     </div>
                   </article>
                 ))}
@@ -499,6 +522,11 @@ function AssetsPageInner() {
           open
           onClose={() => setTransferWallet(null)}
           availableUsd={transferAvailableUsd}
+          availableCrypto={
+            isFloatTransferAsset(transferWallet.asset)
+              ? transferAvailableCrypto(transferWallet)
+              : undefined
+          }
           floatWallet={transferWallet}
           pinReady={Boolean(wallet?.wallet_pin_changed)}
           canAct={canAct}

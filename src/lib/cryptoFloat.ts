@@ -40,6 +40,15 @@ export function isStablecoinAsset(asset?: string | null) {
   return STABLECOIN_ASSETS.has(String(asset ?? '').trim().toUpperCase())
 }
 
+/** On-chain send from master float (not USD card-program balance). */
+export function isFloatTransferAsset(asset?: string | null) {
+  return String(asset ?? '').trim().toUpperCase() === 'BTC'
+}
+
+export function canTransferFromFloatWallet(asset?: string | null) {
+  return isStablecoinAsset(asset) || isFloatTransferAsset(asset)
+}
+
 export function isUnifiedCryptoNetwork(network?: string) {
   return normalizeNetworkKey(network) === UNIFIED_NETWORK
 }
