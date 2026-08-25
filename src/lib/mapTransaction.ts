@@ -446,12 +446,13 @@ function formatCryptoLedgerBalance(
   asUsd: boolean,
 ): string {
   if (value == null || value === '') return '—'
+  if (typeof value === 'object') return '—'
+  const n = Number(value)
+  if (!Number.isFinite(n)) return '—'
   if (asUsd) {
-    const n = Number(value)
-    if (!Number.isFinite(n)) return '—'
     return `USD ${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   }
-  return formatCryptoAmount(value, asset, false)
+  return formatCryptoAmount(n, asset, false)
 }
 
 /** Backfill deposit ledger balances when API rows predate balance metadata. */
