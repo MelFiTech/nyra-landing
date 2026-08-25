@@ -45,6 +45,12 @@ export function isFloatTransferAsset(asset?: string | null) {
   return String(asset ?? '').trim().toUpperCase() === 'BTC'
 }
 
+/** Default withdrawal network for BTC float sends (Bitnob unified wallets use network=unified). */
+export function defaultTransferChainForAsset(asset?: string | null) {
+  if (String(asset ?? '').trim().toUpperCase() === 'BTC') return 'bitcoin'
+  return ''
+}
+
 export function canTransferFromFloatWallet(asset?: string | null) {
   return isStablecoinAsset(asset) || isFloatTransferAsset(asset)
 }
@@ -198,6 +204,16 @@ export function transferNetworksForWallet(
   wallet: Pick<CryptoMasterWallet, 'asset' | 'network' | 'networks' | 'deposit_addresses'>,
   assets: CryptoAsset[],
 ) {
+  const asset = String(wallet.asset ?? '').trim().toUpperCase()
+  if (asset === 'BTC') {
+    const fromWallet = uniqueNetworks([
+      ...(wallet.networks ?? []),
+      ...listWalletDepositOptions(wallet).map(option => option.network),
+      wallet.network,
+    ]).filter(network => !isUnifiedCryptoNetwork(network))
+    return fromWallet.length > 0 ? fromWallet : [defaultTransferChainForAsset('BTC')]
+  }
+
   if (isStablecoinAsset(wallet.asset) || isUnifiedCryptoNetwork(wallet.network)) {
     const catalog = assets.find(item => item.asset.toUpperCase() === wallet.asset.toUpperCase())
     const fromCatalog = networkOptions(catalog ?? null)

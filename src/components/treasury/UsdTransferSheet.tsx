@@ -7,6 +7,7 @@ import {
   floatWalletLabel,
   formatCryptoAmount,
   formatNetworkLabel,
+  defaultTransferChainForAsset,
   isFloatTransferAsset,
   isStablecoinAsset,
   isUnifiedCryptoNetwork,
@@ -87,7 +88,6 @@ export default function UsdTransferSheet({
   }, [lockedWallet, assets, selectedAsset])
   const parsedAmount = Number(amount)
   const resolvedAsset = lockedWallet?.asset ?? asset
-  const resolvedChain = chain
   const availableBalance = usesCryptoFloat
     ? (availableCrypto ?? Number(lockedWallet?.balance ?? 0))
     : availableUsd
@@ -112,7 +112,13 @@ export default function UsdTransferSheet({
     if (lockedWallet) {
       setAsset(lockedWallet.asset)
       if (lockToSingleNetwork) {
-        setChain(lockedWallet.network)
+        setChain(
+          isUnifiedCryptoNetwork(lockedWallet.network)
+            ? defaultTransferChainForAsset(lockedWallet.asset) || lockedWallet.network
+            : lockedWallet.network,
+        )
+      } else if (isFloatTransferAsset(lockedWallet.asset)) {
+        setChain(defaultTransferChainForAsset(lockedWallet.asset))
       }
       return
     }
@@ -122,18 +128,27 @@ export default function UsdTransferSheet({
   }, [open, transferAssets, asset, lockedWallet, lockToSingleNetwork])
 
   useEffect(() => {
-    if (lockToSingleNetwork) return
+    if (lockToSingleNetwork && !isFloatTransferAsset(lockedWallet?.asset)) return
     if (!chains.length) {
-      setChain('')
+      if (isFloatTransferAsset(resolvedAsset || lockedWallet?.asset)) {
+        setChain(defaultTransferChainForAsset(resolvedAsset || lockedWallet?.asset))
+      } else {
+        setChain('')
+      }
       return
     }
     const defaultChain = lockedWallet
-      ? (chains[0] ?? '')
+      ? (chains.find(network => !isUnifiedCryptoNetwork(network)) ?? chains[0] ?? defaultTransferChainForAsset(lockedWallet.asset))
       : (selectedAsset?.default_network ?? chains[0] ?? '')
-    if (!chain || !chains.some(network => network === chain)) {
+    if (!chain || isUnifiedCryptoNetwork(chain) || !chains.some(network => network === chain)) {
       setChain(defaultChain)
     }
-  }, [selectedAsset, lockedWallet, lockToSingleNetwork, chains, chain])
+  }, [selectedAsset, lockedWallet, lockToSingleNetwork, chains, chain, resolvedAsset])
+
+  const resolvedChain =
+    isUnifiedCryptoNetwork(chain) || !chain
+      ? defaultTransferChainForAsset(resolvedAsset) || chain
+      : chain
 
   function canContinue() {
     return (
@@ -141,6 +156,7 @@ export default function UsdTransferSheet({
       pinReady &&
       Boolean(resolvedAsset) &&
       Boolean(resolvedChain) &&
+      !isUnifiedCryptoNetwork(resolvedChain) &&
       address.trim().length >= 8 &&
       amountValid
     )
