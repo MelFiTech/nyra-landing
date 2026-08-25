@@ -142,17 +142,13 @@ function AssetsPageInner() {
     isFetching: txFetching,
     refetch: refetchTransactions,
   } = useCryptoTransactions(cryptoFloatEnabled)
-  const hasBtcWallet = useMemo(
-    () => floatWalletsData?.some(item => String(item.asset ?? '').toUpperCase() === 'BTC') ?? false,
-    [floatWalletsData],
-  )
-  const { data: btcUsdRate } = useBtcUsdRate(cryptoFloatEnabled && hasBtcWallet)
+  const { data: btcUsdRate } = useBtcUsdRate(cryptoFloatEnabled)
 
   const floatWallets = Array.isArray(floatWalletsData) ? floatWalletsData : []
   const cryptoTransactions = Array.isArray(cryptoTransactionsData) ? cryptoTransactionsData : []
 
   function formatUsd(value: number | string | undefined | null, masked: boolean) {
-    if (masked) return '$ ••••'
+    if (masked) return '$••••'
     if (value == null || value === '') return '—'
     const n = Number(value)
     if (!Number.isFinite(n)) return '—'
@@ -163,13 +159,14 @@ function AssetsPageInner() {
   }
 
   function btcUsdEquivalent(item: CryptoMasterWallet) {
-    if (item.balance_usd != null && item.balance_usd !== '') {
+    if (item.balance_usd != null && String(item.balance_usd).trim() !== '') {
       const fromApi = Number(item.balance_usd)
       if (Number.isFinite(fromApi)) return fromApi
     }
     const balance = Number(item.balance ?? 0)
     const rate = Number(btcUsdRate ?? 0)
-    if (!Number.isFinite(balance) || !Number.isFinite(rate) || rate <= 0) return null
+    if (!Number.isFinite(balance)) return null
+    if (!Number.isFinite(rate) || rate <= 0) return null
     return balance * rate
   }
 

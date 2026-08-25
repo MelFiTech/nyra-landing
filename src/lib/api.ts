@@ -1416,8 +1416,11 @@ export type CryptoFxRate = {
   rate?: string
 }
 
-/** BTC/USDT ≈ USD. Prefers Nyra rates, then public spot tickers. */
+/** BTC/USDT ≈ USD. Prefers public CORS-friendly spot, then Nyra rates. */
 export async function fetchBtcUsdSpotRate(businessId?: string): Promise<number | null> {
+  const fromPublic = await fetchPublicBtcUsdSpot()
+  if (fromPublic != null) return fromPublic
+
   if (businessId) {
     try {
       const rates = await cryptoApi.listRates(businessId)
@@ -1429,31 +1432,48 @@ export async function fetchBtcUsdSpotRate(businessId?: string): Promise<number |
       const n = Number(btcUsdt?.rate)
       if (Number.isFinite(n) && n > 0) return n
     } catch {
-      /* fall through */
+      /* ignore */
     }
   }
 
-  const publicUrls = [
-    'https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT',
-    'https://api.coinbase.com/v2/prices/BTC-USD/spot',
+  return null
+}
+
+async function fetchPublicBtcUsdSpot(): Promise<number | null> {
+  const sources: Array<() => Promise<number | null>> = [
+    async () => {
+      const res = await fetch(
+        'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd',
+      )
+      if (!res.ok) return null
+      const json = (await res.json()) as { bitcoin?: { usd?: number } }
+      const n = Number(json.bitcoin?.usd)
+      return Number.isFinite(n) && n > 0 ? n : null
+    },
+    async () => {
+      const res = await fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot')
+      if (!res.ok) return null
+      const json = (await res.json()) as { data?: { amount?: string } }
+      const n = Number(json.data?.amount)
+      return Number.isFinite(n) && n > 0 ? n : null
+    },
+    async () => {
+      const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT')
+      if (!res.ok) return null
+      const json = (await res.json()) as { price?: string }
+      const n = Number(json.price)
+      return Number.isFinite(n) && n > 0 ? n : null
+    },
   ]
 
-  for (const url of publicUrls) {
+  for (const load of sources) {
     try {
-      const res = await fetch(url)
-      if (!res.ok) continue
-      const json = (await res.json()) as Record<string, unknown>
-      const direct = Number(json.price)
-      if (Number.isFinite(direct) && direct > 0) return direct
-      const nested = json.data && typeof json.data === 'object'
-        ? Number((json.data as Record<string, unknown>).amount)
-        : NaN
-      if (Number.isFinite(nested) && nested > 0) return nested
+      const rate = await load()
+      if (rate != null) return rate
     } catch {
       /* try next */
     }
   }
-
   return null
 }
 
