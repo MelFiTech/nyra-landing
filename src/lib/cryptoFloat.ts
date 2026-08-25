@@ -112,6 +112,49 @@ export function formatCryptoAmount(
   })}${symbol ? ` ${symbol}` : ''}`
 }
 
+export function formatUsdAmount(
+  value: number | string | undefined | null,
+  masked = false,
+) {
+  if (masked) return '$••••'
+  const n = Number(value ?? 0)
+  if (!Number.isFinite(n)) return '—'
+  return `$${n.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`
+}
+
+/** Crypto amount with USD equivalent for BTC whenever a rate/value is available. */
+export function formatCryptoAmountWithUsd(
+  value: number | string | undefined | null,
+  asset?: string | null,
+  opts?: {
+    masked?: boolean
+    usdRate?: number | null
+    usdValue?: number | string | null
+  },
+) {
+  const masked = opts?.masked === true
+  const base = formatCryptoAmount(value, asset, masked)
+  if (masked || !isFloatTransferAsset(asset)) return base
+
+  let usd: number | null = null
+  if (opts?.usdValue != null && String(opts.usdValue).trim() !== '') {
+    const fromValue = Number(opts.usdValue)
+    if (Number.isFinite(fromValue)) usd = fromValue
+  } else {
+    const amount = Number(value ?? 0)
+    const rate = Number(opts?.usdRate ?? 0)
+    if (Number.isFinite(amount) && Number.isFinite(rate) && rate > 0) {
+      usd = amount * rate
+    }
+  }
+
+  if (usd == null) return base
+  return `${base} (≈ ${formatUsdAmount(usd)})`
+}
+
 export function networkOptions(asset: CryptoAsset | null) {
   if (!asset) return []
   const networks = asset.networks?.length

@@ -1578,6 +1578,7 @@ export type CryptoTransaction = {
   fee_asset?: string
   reference: string
   customer_id?: string
+  customer_name?: string
   wallet_id?: string
   counterparty_address?: string
   tx_hash?: string

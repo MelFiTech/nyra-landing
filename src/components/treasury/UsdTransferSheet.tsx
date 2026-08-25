@@ -5,7 +5,7 @@ import SideSheetStack, { type SheetLayer } from './SideSheetStack'
 import { ApiError, cryptoApi, walletApi, type CryptoMasterWallet } from '../../lib/api'
 import {
   floatWalletLabel,
-  formatCryptoAmount,
+  formatCryptoAmountWithUsd,
   formatNetworkLabel,
   defaultTransferChainForAsset,
   isFloatTransferAsset,
@@ -16,7 +16,7 @@ import {
 } from '../../lib/cryptoFloat'
 import { useBusiness } from '../../context/BusinessContext'
 import { useToast } from '../../context/ToastContext'
-import { useCryptoAssets } from '../../hooks/useAppData'
+import { useBtcUsdRate, useCryptoAssets } from '../../hooks/useAppData'
 import styles from './TransferModal.module.css'
 
 type Props = {
@@ -64,6 +64,7 @@ export default function UsdTransferSheet({
   const { data: assetsData, isLoading: loadingAssets } = useCryptoAssets(
     open && usesUsdProgram && !lockToSingleNetwork,
   )
+  const { data: btcUsdRate } = useBtcUsdRate(open && usesCryptoFloat)
   const assets = Array.isArray(assetsData) ? assetsData : []
   const [detailView, setDetailView] = useState<DetailView>('form')
   const [asset, setAsset] = useState('')
@@ -181,7 +182,7 @@ export default function UsdTransferSheet({
       onClose()
       onTransferred?.()
       const amountLabel = usesCryptoFloat
-        ? formatCryptoAmount(parsedAmount, resolvedAsset)
+        ? formatCryptoAmountWithUsd(parsedAmount, resolvedAsset, { usdRate: btcUsdRate })
         : usd(parsedAmount)
       showToast(
         `${amountLabel} transfer initiated${res.data.reference ? ` (${res.data.reference})` : ''}`,
@@ -206,7 +207,7 @@ export default function UsdTransferSheet({
   }
 
   const availableLabel = usesCryptoFloat
-    ? formatCryptoAmount(availableBalance, resolvedAsset)
+    ? formatCryptoAmountWithUsd(availableBalance, resolvedAsset, { usdRate: btcUsdRate })
     : usd(availableBalance)
 
   const form = lockedWallet ? (
@@ -267,7 +268,7 @@ export default function UsdTransferSheet({
         />
         {amount && parsedAmount < minAmount && (
           <span className={styles.verifying}>
-            Minimum transfer is {usesCryptoFloat ? formatCryptoAmount(minAmount, resolvedAsset) : usd(minAmount)}
+            Minimum transfer is {usesCryptoFloat ? formatCryptoAmountWithUsd(minAmount, resolvedAsset, { usdRate: btcUsdRate }) : usd(minAmount)}
           </span>
         )}
         {amount && parsedAmount > availableBalance && (
@@ -370,7 +371,7 @@ export default function UsdTransferSheet({
         />
         {amount && parsedAmount < minAmount && (
           <span className={styles.verifying}>
-            Minimum transfer is {usesCryptoFloat ? formatCryptoAmount(minAmount, resolvedAsset) : usd(minAmount)}
+            Minimum transfer is {usesCryptoFloat ? formatCryptoAmountWithUsd(minAmount, resolvedAsset, { usdRate: btcUsdRate }) : usd(minAmount)}
           </span>
         )}
         {amount && parsedAmount > availableBalance && (
@@ -398,7 +399,7 @@ export default function UsdTransferSheet({
   const reviewContent = (
     <div className={styles.review}>
       <div className={styles.reviewAmount}>
-        {usesCryptoFloat ? formatCryptoAmount(parsedAmount, resolvedAsset) : usd(parsedAmount)}
+        {usesCryptoFloat ? formatCryptoAmountWithUsd(parsedAmount, resolvedAsset, { usdRate: btcUsdRate }) : usd(parsedAmount)}
       </div>
       <div className={styles.reviewRows}>
         <div className={styles.reviewRow}><span>Asset</span><span>{resolvedAsset}</span></div>
@@ -417,7 +418,7 @@ export default function UsdTransferSheet({
       onConfirm={handleConfirm}
       loading={pinLoading}
       length={4}
-      subtitle={`Confirm transfer of ${usesCryptoFloat ? formatCryptoAmount(parsedAmount, resolvedAsset) : `${usd(parsedAmount)} ${resolvedAsset}`}`}
+      subtitle={`Confirm transfer of ${usesCryptoFloat ? formatCryptoAmountWithUsd(parsedAmount, resolvedAsset, { usdRate: btcUsdRate }) : `${usd(parsedAmount)} ${resolvedAsset}`}`}
     />
   )
 

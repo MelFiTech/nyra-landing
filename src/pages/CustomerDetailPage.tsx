@@ -7,7 +7,7 @@ import TransactionDrawer, { type Transaction } from '../components/treasury/Tran
 import EmptyState, { CardEmptyIcon, DocumentEmptyIcon, WalletEmptyIcon } from '../components/ui/EmptyState'
 import { BlockSkeleton, TableRowsSkeleton } from '../components/ui/Skeletons'
 import { useBusiness, usePermissions } from '../context/BusinessContext'
-import { useCustomer, useCustomerCryptoWallets, useCustomers, useCustomerTransactions } from '../hooks/useAppData'
+import { useCustomer, useCustomerCryptoWallets, useCustomers, useCustomerTransactions, useBtcUsdRate } from '../hooks/useAppData'
 import { queryKeys } from '../lib/queryKeys'
 import {
   findCustomerByWalletId,
@@ -18,6 +18,7 @@ import {
 } from '../lib/customers'
 import type { CustomerDetails } from '../lib/api'
 import {
+  formatCryptoAmountWithUsd,
   formatWalletNetworks,
   listWalletDepositOptions,
 } from '../lib/cryptoFloat'
@@ -69,12 +70,6 @@ function fullName(d: CustomerDetails) {
 
 function addressLine(d: CustomerDetails) {
   return [d.address_line_1, d.address_line_2, d.city, d.country].filter(Boolean).join(', ')
-}
-
-function formatCryptoBalance(value: string | undefined) {
-  const n = Number(value ?? 0)
-  if (!Number.isFinite(n)) return value ?? '0'
-  return n.toLocaleString('en-US', { maximumFractionDigits: 8 })
 }
 
 function txStatusClass(status: string) {
@@ -146,6 +141,8 @@ export default function CustomerDetailPage() {
 
   const { data: cryptoWallets = [], isLoading: loadingCryptoWallets } = useCustomerCryptoWallets(id)
   const { data: transactions = [], isLoading: loadingTxns } = useCustomerTransactions(id)
+  const hasBtcWallet = cryptoWallets.some(wallet => String(wallet.asset ?? '').toUpperCase() === 'BTC')
+  const { data: btcUsdRate } = useBtcUsdRate(hasBtcWallet)
 
   function copy(text: string, hint = 'Copied to clipboard') {
     navigator.clipboard.writeText(text)
@@ -324,7 +321,11 @@ export default function CustomerDetailPage() {
                                 </span>
                               ) : '—'}
                             </td>
-                            <td>{formatCryptoBalance(wallet.balance)} {wallet.asset}</td>
+                            <td>
+                              {formatCryptoAmountWithUsd(wallet.balance, wallet.asset, {
+                                usdRate: btcUsdRate,
+                              })}
+                            </td>
                             <td>
                               {wallet.is_active ? (
                                 <span className={styles.statusActive}>

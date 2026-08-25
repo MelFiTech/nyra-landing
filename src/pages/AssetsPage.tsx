@@ -21,6 +21,7 @@ import type { CryptoMasterWallet, CryptoTransaction } from '../lib/api'
 import {
   floatWalletKey,
   formatCryptoAmount,
+  formatCryptoAmountWithUsd,
   formatNetworkLabel,
   canTransferFromFloatWallet,
   isFloatTransferAsset,
@@ -86,11 +87,11 @@ function normalizeCryptoStatus(status: unknown): 'successful' | 'failed' | 'pend
   return 'pending'
 }
 
-function mapCryptoRow(tx: CryptoTransaction, masked: boolean) {
+function mapCryptoRow(tx: CryptoTransaction, masked: boolean, usdRate?: number | null) {
   const type = asText(tx.type, '').toLowerCase()
   const credit = type === 'deposit'
   const asset = asText(tx.asset, '')
-  const formatted = formatCryptoAmount(tx.amount, asset, masked)
+  const formatted = formatCryptoAmountWithUsd(tx.amount, asset, { masked, usdRate })
   const network = formatNetworkLabel(asText(tx.network, ''))
   const method = !network || network === '—' ? 'On-chain' : network
   const status = normalizeCryptoStatus(tx.status)
@@ -192,8 +193,8 @@ function AssetsPageInner() {
   }, [cryptoTransactions, assetTab])
 
   const visibleTransactions = useMemo(
-    () => filteredCryptoTxs.map(tx => mapCryptoRow(tx, !balanceVisible)),
-    [filteredCryptoTxs, balanceVisible],
+    () => filteredCryptoTxs.map(tx => mapCryptoRow(tx, !balanceVisible, btcUsdRate)),
+    [filteredCryptoTxs, balanceVisible, btcUsdRate],
   )
 
   const selectedTx = useMemo(() => {
@@ -214,8 +215,8 @@ function AssetsPageInner() {
       sameAssetTxs,
       wallet?.balance,
     )
-    return mapCryptoTransaction(enriched)
-  }, [filteredCryptoTxs, orderedWallets, selectedTxId])
+    return mapCryptoTransaction(enriched, { usdRate: btcUsdRate })
+  }, [filteredCryptoTxs, orderedWallets, selectedTxId, btcUsdRate])
 
   const txTotalPages = Math.max(1, Math.ceil(visibleTransactions.length / PAGE_SIZE))
   const txCurrentPage = Math.min(txPage, txTotalPages)

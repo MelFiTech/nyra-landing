@@ -4,7 +4,7 @@ import {
   type TransactionDetailField,
   type TransactionParty,
 } from '../components/treasury/TransactionDrawer'
-import { formatCryptoAmount, formatNetworkLabel } from './cryptoFloat'
+import { formatCryptoAmountWithUsd, formatNetworkLabel } from './cryptoFloat'
 
 type MetaParty = {
   name?: string
@@ -444,6 +444,7 @@ function formatCryptoLedgerBalance(
   value: unknown,
   asset: string,
   asUsd: boolean,
+  usdRate?: number | null,
 ): string {
   if (value == null || value === '') return '—'
   if (typeof value === 'object') return '—'
@@ -452,7 +453,7 @@ function formatCryptoLedgerBalance(
   if (asUsd) {
     return `USD ${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   }
-  return formatCryptoAmount(n, asset, false)
+  return formatCryptoAmountWithUsd(n, asset, { usdRate })
 }
 
 /** Backfill deposit ledger balances when API rows predate balance metadata. */
@@ -499,17 +500,22 @@ export function enrichCryptoTransactionBalances(
   return hit ? { ...tx, ...hit } : tx
 }
 
-export function mapCryptoTransaction(tx: CryptoTransaction): Transaction {
+export function mapCryptoTransaction(
+  tx: CryptoTransaction,
+  opts?: { usdRate?: number | null },
+): Transaction {
   const type = String(tx.type ?? '').toLowerCase()
   const credit = type === 'deposit'
   const asset = String(tx.asset ?? '').toUpperCase() || '—'
   const network = formatNetworkLabel(tx.network)
   const method = !network || network === '—' ? 'On-chain' : network
   const status = cryptoStatus(tx.status)
-  const amountRaw = formatCryptoAmount(tx.amount, asset, false)
+  const amountRaw = formatCryptoAmountWithUsd(tx.amount, asset, { usdRate: opts?.usdRate })
   const feeAsset = String(tx.fee_asset ?? asset)
   const fee = tx.fee != null && tx.fee !== ''
-    ? formatCryptoAmount(tx.fee, feeAsset, false)
+    ? formatCryptoAmountWithUsd(tx.fee, feeAsset, {
+        usdRate: feeAsset.toUpperCase() === 'BTC' ? opts?.usdRate : undefined,
+      })
     : '—'
   const processedAt = formatTxDateTime(tx.created_at)
   const date = formatTxDateShort(tx.created_at) || '—'
@@ -521,6 +527,7 @@ export function mapCryptoTransaction(tx: CryptoTransaction): Transaction {
       : type === 'swap'
         ? 'Crypto swap'
         : titleCase(type || 'Crypto transaction')
+  const customerName = String(tx.customer_name ?? '').trim() || undefined
 
   const detailFields: TransactionDetailField[] = []
   if (tx.tx_hash) {
@@ -536,8 +543,8 @@ export function mapCryptoTransaction(tx: CryptoTransaction): Transaction {
   if (network && network !== '—') {
     detailFields.push({ label: 'Network', value: network })
   }
-  if (tx.wallet_id) {
-    detailFields.push({ label: 'Wallet ID', value: tx.wallet_id, copyable: true })
+  if (customerName) {
+    detailFields.push({ label: 'Customer name', value: customerName })
   }
 
   const counterparty = tx.counterparty_address
@@ -545,8 +552,8 @@ export function mapCryptoTransaction(tx: CryptoTransaction): Transaction {
     : '—'
 
   const ledgerAsUsd = type === 'transfer'
-  const prevBalance = formatCryptoLedgerBalance(tx.balance_before, asset, ledgerAsUsd)
-  const currBalance = formatCryptoLedgerBalance(tx.balance_after, asset, ledgerAsUsd)
+  const prevBalance = formatCryptoLedgerBalance(tx.balance_before, asset, ledgerAsUsd, opts?.usdRate)
+  const currBalance = formatCryptoLedgerBalance(tx.balance_after, asset, ledgerAsUsd, opts?.usdRate)
 
   return {
     id: String(tx.transaction_id || tx.reference || `${asset}-${date}`),
@@ -569,6 +576,7 @@ export function mapCryptoTransaction(tx: CryptoTransaction): Transaction {
     category: asset,
     channel: 'On-chain',
     transactionType: credit ? 'credit' : 'debit',
+    customerName,
     party: tx.counterparty_address
       ? {
           label: credit ? 'Received from' : 'Sent to',
