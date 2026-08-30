@@ -5,7 +5,7 @@ export const DOC_WEBHOOK_EVENT_SAMPLES: DocWebhookSample[] = [
   {
     event: 'managed_wallet.funded',
     label: 'Wallet funded',
-    description: 'NGN credited to a managed customer wallet or business float. `transaction_type` is `CREDIT` for normal inflows (including DVA pay-ins).',
+    description: 'NGN credited to a managed customer wallet or business float. `transaction_type` is `CREDIT` for normal inflows (including collection account pay-ins).',
     body: `{
   "event": "managed_wallet.funded",
   "data": {
@@ -25,8 +25,7 @@ export const DOC_WEBHOOK_EVENT_SAMPLES: DocWebhookSample[] = [
     "sender_bank": "GTBank",
     "business_id": "biz_4k2m9p1q7r3s",
     "transaction_date": "2026-07-22T14:30:00.000Z",
-    "credit_account_name": "Ada Okonkwo",
-    "is_dva_polaris": false
+    "credit_account_name": "Ada Okonkwo"
   }
 }`,
   },
@@ -54,8 +53,7 @@ export const DOC_WEBHOOK_EVENT_SAMPLES: DocWebhookSample[] = [
     "sender_bank": "GTBank",
     "business_id": "biz_4k2m9p1q7r3s",
     "transaction_date": "2026-07-23T09:15:00.000Z",
-    "credit_account_name": "Ada Okonkwo",
-    "is_dva_polaris": false
+    "credit_account_name": "Ada Okonkwo"
   }
 }`,
   },
@@ -82,7 +80,6 @@ export const DOC_WEBHOOK_EVENT_SAMPLES: DocWebhookSample[] = [
     "reference": "COL-20260722-XYZ789",
     "sessionId": "sess_a1b2c3d4e5f6",
     "external_reference": "order_8821",
-    "provider": "NYRA WALLET",
     "sender_name": "CHIDI NWANKWO",
     "sender_account_number": "0011223344",
     "sender_bank": "Access Bank",
@@ -167,7 +164,7 @@ export const DOC_WEBHOOK_EVENT_SAMPLES: DocWebhookSample[] = [
     "token": "1234-5678-9012-3456-7890",
     "number_of_units": "42.5",
     "is_token": true,
-    "provider": "IKEDC",
+    "biller_name": "Eko Electric",
     "status": "delivered"
   }
 }`,
@@ -185,8 +182,8 @@ export const DOC_WEBHOOK_EVENT_SAMPLES: DocWebhookSample[] = [
     "amount": 5000,
     "status": "failed",
     "refunded": true,
-    "reason": "Provider timeout while vending token",
-    "provider": "IKEDC",
+    "reason": "Vending timeout while issuing token",
+    "biller_name": "Eko Electric",
     "meter_number": "04123456789"
   }
 }`,

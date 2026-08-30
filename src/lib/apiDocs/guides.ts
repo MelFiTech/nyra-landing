@@ -178,7 +178,7 @@ export const DOC_GUIDES: DocGuide[] = [
           {
             heading: 'Identity verification',
             paragraphs: [
-              'BVN and NIN checks bill your business float per successful lookup. Failed lookups are not charged when the provider does not return a match.',
+              'BVN and NIN checks bill your business float per successful lookup. Failed lookups are not charged when verification does not return a match.',
             ],
             table: {
               headers: ['Check', 'Fee per successful lookup'],
@@ -222,8 +222,8 @@ export const DOC_GUIDES: DocGuide[] = [
           {
             heading: 'How cashback is calculated',
             paragraphs: [
-              'Nyra shares 30% of the wholesale commission we receive from our bill-payment provider with your business. Your cashback is approximately:',
-              'transaction amount × provider commission rate × 30%',
+              'Nyra shares 30% of the wholesale commission we receive on bill payments with your business. Your cashback is approximately:',
+              'transaction amount × wholesale commission rate × 30%',
               'Some billers have a commission cap on large payments; in those cases cashback is based on the capped commission, not the full percentage of amount.',
             ],
           },
@@ -243,7 +243,7 @@ export const DOC_GUIDES: DocGuide[] = [
           {
             heading: 'Cable TV',
             table: {
-              headers: ['Provider (examples)', 'Cashback on payment amount'],
+              headers: ['Biller (examples)', 'Cashback on payment amount'],
               rows: [
                 ['DStv / GOtv', '0.48%'],
                 ['StarTimes', '0.36%'],
@@ -260,7 +260,7 @@ export const DOC_GUIDES: DocGuide[] = [
               headers: ['DisCo (examples)', 'Cashback on payment amount'],
               rows: [
                 ['IKEDC (Ikeja)', '0.24%'],
-                ['EKEDC (Eko)', '0.30% (provider cap may apply)'],
+                ['EKEDC (Eko)', '0.30% (commission cap may apply)'],
                 ['AEDC / EEDC / PHEDC', '0.36%'],
                 ['IBEDC / JEDC', '0.30%'],
               ],
@@ -394,16 +394,39 @@ export const DOC_GUIDES: DocGuide[] = [
       {
         heading: 'Static',
         paragraphs: [
-          'POST /business/wallets/static-virtual-accounts creates a reusable Static account. Send external_reference and any meta fields your integration needs.',
+          'POST /business/wallets/static-virtual-accounts creates a reusable static collection account. The same account number can receive multiple payments. Nyra issues the account on whatever collection rail is active for your business — you do not choose or pass a provider name.',
+          'Send `external_reference` (10–26 characters) and normalized customer details in `meta`. Minimum typical payload: `customer_name` plus `bvn` or `nin` (11 digits each). Some dedicated bank setups also require `customer_email`, `phone_number` (E.164), `dob` (ISO date), and `gender`. If required fields are missing, the API returns a single error message with no provider names.',
+          'Alternative (same behaviour): POST /business/wallets/funding-accounts with `"account_kind": "static"`.',
           'Subscribe to `managed_wallet.temporary_account_funded` (and optionally `managed_wallet.funded`) when a customer pays in. See the Settlement guide for T+1 timing when settlement is enabled.',
+        ],
+        bullets: [
+          'GET /business/wallets/static-virtual-accounts — list static accounts',
+          'GET /business/wallets/static-virtual-accounts/{id} — fetch one account',
+          'GET /business/wallets/static-virtual-accounts/{sessionId}/status — pay-in status from webhook sessionId',
         ],
       },
       {
         heading: 'Dynamic',
         paragraphs: [
-          'POST /business/wallets/single-use-virtual-accounts creates a Dynamic account for a single payment. You must send amount (minimum ₦300). Optional expiresIn sets how long the account stays open.',
+          'POST /business/wallets/single-use-virtual-accounts creates a dynamic (single-use) collection account for one payment at a fixed amount. Nyra issues the account on whatever collection rail is active for your business — send normalized customer details in `meta` the same way as static accounts.',
+          'You must send `amount` (minimum ₦300). Optional `expiresIn` sets how long the account stays open unpaid.',
+          'Alternative (same behaviour): POST /business/wallets/funding-accounts with `"account_kind": "dynamic"`.',
           'Subscribe to `managed_wallet.temporary_account_funded` for pay-in notifications. To poll without webhooks, GET /business/wallets/single-use-virtual-accounts/{id} using `data.id` from the create response and read `status`. For full transfer details after payment, GET .../single-use-virtual-accounts/{sessionId}/status with `sessionId` from the webhook payload.',
-          'Pricing is under Pricing & Cashback → Dynamic.',
+        ],
+        bullets: [
+          'GET /business/wallets/single-use-virtual-accounts — list dynamic accounts',
+          'GET /business/wallets/funding-accounts — unified list for static and dynamic accounts',
+        ],
+      },
+      {
+        heading: 'Unified funding accounts',
+        paragraphs: [
+          'POST /business/wallets/funding-accounts is the recommended unified route for both static and dynamic collection accounts. Set `account_kind` to `"static"` or `"dynamic"` and send the same normalized `meta` fields.',
+        ],
+        bullets: [
+          'GET /business/wallets/funding-accounts — list with optional account_kind filter',
+          'GET /business/wallets/funding-accounts/{id} — fetch one account',
+          'GET /business/wallets/funding-accounts/{sessionId}/status — pay-in status from webhook sessionId',
         ],
       },
     ],
@@ -521,7 +544,13 @@ export const DOC_GUIDES: DocGuide[] = [
     sections: [
       {
         paragraphs: [
-          'Verify end-users before onboarding or payouts. Use BVN basic for a lightweight match, BVN advanced for the full identity record, or NIN for national ID. All checks use query parameters and bill your business float per successful lookup.',
+          'Verify end-users before onboarding or payouts. Use BVN basic for a lightweight match, BVN advanced for the full identity record, or NIN for national ID. CAC endpoints verify registered businesses. All checks bill your business float per successful lookup.',
+        ],
+        bullets: [
+          'POST /business/identities/bvn and POST /business/identities/bvn/advance — BVN (query param bvn)',
+          'GET /business/identities/nin — NIN (query param nin)',
+          'POST /business/identities/cac and POST /business/identities/cac/advance — CAC (body: rc_number, company_type)',
+          'POST /business/identities/document/utility_bill — utility bill address verification (body: input_type, document_image, document_country)',
         ],
       },
     ],
@@ -534,7 +563,7 @@ export const DOC_GUIDES: DocGuide[] = [
       {
         paragraphs: [
           'Bill payments debit your business float. Start with GET /business/vas/services and GET /business/vas/{service_id}/billers to discover products.',
-          'Airtime and data: list data plans, then POST airtime/purchase or data/purchase. Electricity and TV: list items, validate the customer account, then POST pay.',
+          'Airtime and data: list data plans, then POST airtime/purchase or data/purchase. Electricity and TV: list items, validate the customer account, then POST pay. Betting: list items, validate user_id and package_id, then POST pay.',
         ],
       },
     ],
@@ -571,7 +600,8 @@ export const DOC_GUIDES: DocGuide[] = [
           'GET /business/cards/cost-preview: confirm total USD debit before issuing',
           'POST /business/cards/wallet-customers/{walletId}/cards: issue a VISA or MASTERCARD with initial USD load 0-10 (always include state, id_type, and id_number)',
           'POST /business/cards/topup: add USD to an existing card from program balance',
-          'GET /business/cards/transactions: reconcile monthly card activity',
+          'GET /business/cards/transactions: cursor-paginated card activity (card_id required; optional cursor, limit, type, status)',
+          'POST /business/cards/terminate: permanently close a card',
         ],
       },
       {
@@ -615,7 +645,7 @@ export const DOC_GUIDES: DocGuide[] = [
         heading: 'Managing cards',
         paragraphs: [
           'After issuance via API, cards appear in the dashboard under Virtual card. Operators can fund cards, freeze or unfreeze, reveal PAN/CVV, withdraw back to program balance, or terminate cards from the dashboard UI.',
-          'The Business API exposes the same freeze, unfreeze, details, and withdraw actions without wallet_pin — your client credentials authenticate the request. Never call card details from client-side code; keep PAN/CVV retrieval on your backend only.',
+          'The Business API exposes freeze, unfreeze, details, withdraw, and terminate without wallet_pin — your client credentials authenticate the request. Never call card details from client-side code; keep PAN/CVV retrieval on your backend only.',
         ],
       },
       {
@@ -655,6 +685,7 @@ export const DOC_GUIDES: DocGuide[] = [
             ['managed_wallet.temporary_account_funded', 'Customer pays a Static or Dynamic collection account'],
             ['managed_wallet.transfer', 'Outbound bank transfer after a successful API transfer'],
             ['managed_wallet.debited', 'Wallet or float debited'],
+            ['business.card.withdrawal', 'USD withdrawn from a virtual card back to card-program balance'],
             ['vas.electricity.completed', 'Electricity token ready after async vending'],
             ['vas.payment.failed', 'VAS bill failed (always subscribed; refunds when applicable)'],
             ['crypto.wallet.funded', 'Stablecoin deposit credited to a customer or treasury crypto wallet'],
@@ -694,7 +725,7 @@ export const DOC_GUIDES: DocGuide[] = [
     sections: [
       {
         paragraphs: [
-          'Crypto collections must be enabled for your business (crypto_float_enabled) before you can issue deposit addresses, manage treasury float wallets, or send on-chain withdrawals. The Business API also requires provider credentials to be configured server-side; otherwise crypto routes return HTTP 503.',
+          'Crypto collections must be enabled for your business (crypto_float_enabled) before you can issue deposit addresses, manage treasury float wallets, or send on-chain withdrawals. If crypto is not fully configured for your business, crypto routes may return HTTP 503.',
         ],
       },
       {
@@ -710,7 +741,11 @@ export const DOC_GUIDES: DocGuide[] = [
           'POST /business/crypto/fees/quote: preview network fees before a withdrawal',
           'POST /business/crypto/transfers: withdraw from business treasury (chain required)',
           'GET /business/crypto/transfers/{reference}: poll withdrawal status',
-          'GET /business/crypto/transactions: reconcile deposits, transfers, and swaps (includes balance_before and balance_after when recorded)',
+          'GET /business/crypto/transactions: reconcile deposits, transfers, and swaps (includes customer_name, balance_before, and balance_after when recorded)',
+          'GET /business/crypto/rates: FX execution rates (also at GET /business/rates)',
+          'GET /business/crypto/customers and GET /business/crypto/customers/{customerId}: list and fetch crypto customers',
+          'GET /business/crypto/wallets/{walletId}: fetch a single crypto wallet',
+          'POST /business/crypto/quotes/swap, POST /business/crypto/payouts, POST /business/crypto/onramp/virtual-accounts: advanced flows when enabled for your business',
         ],
       },
       {

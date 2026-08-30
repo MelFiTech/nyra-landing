@@ -3,6 +3,7 @@ import { DOC_WEBHOOK_EVENT_SAMPLES } from './webhookSamples'
 
 export const DOC_GROUPS: DocGroup[] = [
   { id: 'customers', label: 'Customers' },
+  { id: 'transactions', label: 'Transactions' },
   { id: 'transfers', label: 'Transfers' },
   { id: 'verification', label: 'Verification' },
   { id: 'bills', label: 'Bill payments' },
@@ -77,16 +78,93 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
     method: 'POST',
     path: '/business/wallets/static-virtual-accounts',
     description:
-      'Create a Static (reusable) virtual account for customer pay-ins. The same account number can receive multiple payments. Subscribe to `managed_wallet.temporary_account_funded` (and optionally `managed_wallet.funded`) for pay-in notifications.',
+      'Create a static (reusable) collection account for an end-user. The same account number can receive multiple payments. Nyra issues the account on whatever collection rail is active for your business at request time — send normalized customer details in `meta`; you do not choose or pass a collection rail or provider name. Subscribe to `managed_wallet.temporary_account_funded` (and optionally `managed_wallet.funded`) for pay-in notifications. Alternative (same behaviour): POST /business/wallets/funding-accounts with `"account_kind": "static"`. Returns 400 if required customer details are missing or if `external_reference` is already in use. Responses include `bank_name` and `bank_code` for the pay-in bank only — there is no provider field.',
     params: [
-      { name: 'external_reference', location: 'body', type: 'string', required: true, description: 'Your unique reference for this account.' },
-      { name: 'amount', location: 'body', type: 'number', required: false, description: 'Optional expected amount (minimum 300 NGN if set).' },
-      { name: 'expiresIn', location: 'body', type: 'number', required: false, description: 'Optional TTL in seconds.' },
-      { name: 'meta.bvn', location: 'body', type: 'string', required: false, description: 'End-user BVN when required for the account.' },
-      { name: 'meta.palmpay.customerName', location: 'body', type: 'string', required: false, description: 'Display name on the virtual account.' },
-      { name: 'meta.flutterwave.email', location: 'body', type: 'string', required: false, description: 'Customer email (meta.flutterwave block).' },
-      { name: 'meta.flutterwave.firstname', location: 'body', type: 'string', required: false, description: 'Customer first name.' },
-      { name: 'meta.flutterwave.lastname', location: 'body', type: 'string', required: false, description: 'Customer last name.' },
+      {
+        name: 'external_reference',
+        location: 'body',
+        type: 'string',
+        required: true,
+        description: 'Your unique reference for this customer/account (10–26 characters).',
+        example: 'cust-001-static',
+      },
+      {
+        name: 'amount',
+        location: 'body',
+        type: 'number',
+        required: false,
+        description: 'Optional expected amount. Minimum 300 NGN if set.',
+      },
+      {
+        name: 'expiresIn',
+        location: 'body',
+        type: 'number',
+        required: false,
+        description: 'Optional TTL in seconds (mainly used for dynamic accounts).',
+      },
+      {
+        name: 'meta.customer_name',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'End-user full name. Recommended for most static account setups.',
+        example: 'John Doe',
+      },
+      {
+        name: 'meta.bvn',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'End-user BVN — 11 digits. Required for most static setups unless meta.nin is supplied.',
+        example: '22334455667',
+      },
+      {
+        name: 'meta.nin',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'End-user NIN — 11 digits. Accepted instead of BVN where supported.',
+        example: '12345678901',
+      },
+      {
+        name: 'meta.customer_email',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'End-user email. Required for some dedicated bank account setups.',
+        example: 'john@example.com',
+      },
+      {
+        name: 'meta.phone_number',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'End-user phone (E.164). Required for some account setups and certain collection rails.',
+        example: '+2348012345678',
+      },
+      {
+        name: 'meta.dob',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'Date of birth (ISO date). Required for some dedicated bank account setups.',
+        example: '1990-01-15',
+      },
+      {
+        name: 'meta.gender',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'End-user gender. Required for some dedicated bank account setups.',
+        example: 'male',
+      },
+      {
+        name: 'meta.name_on_account',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'Optional pay-in label (used on dynamic accounts; rarely needed for static).',
+      },
     ],
     responses: [
       {
@@ -97,20 +175,337 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
   "message": "Static virtual account created successfully",
   "data": {
     "id": "01JZX23BB1GX4RR8CZDCG26T1G",
-    "business": "biz_8f3c2a1b9d4e",
+    "business": "69e22ee84bfa89103dd2850b",
     "account_number": "0123456789",
-    "account_name": "ACME/JOHN DOE",
-    "bank_name": "…",
-    "bank_code": "…",
+    "account_name": "John Doe/Acme",
+    "bank_name": "Wema Bank",
+    "bank_code": "035",
     "amount": 0,
     "external_reference": "cust-001-static",
     "account_kind": "static",
     "funding_account_kind": "static",
     "status": "pending",
-    "expiresIn": 900,
-    "expiry_date": "2026-07-22T11:00:00.000Z",
+    "expiresIn": null,
+    "expiry_date": "2036-07-22T11:00:00.000Z",
     "created_at": "2026-07-22T10:00:00.000Z",
-    "meta": {}
+    "meta": {
+      "customer_name": "John Doe"
+    }
+  }
+}`,
+      },
+      {
+        status: 400,
+        label: 'Bad request',
+        body: `{
+  "statusCode": 400,
+  "success": false,
+  "message": "Provide customer_name and bvn or nin (11 digits). Depending on your account setup, customer_email, phone_number, dob, and gender may also be required."
+}`,
+      },
+    ],
+  },
+  {
+    id: 'list-static-collection-accounts',
+    group: 'customers',
+    title: 'List Static accounts',
+    method: 'GET',
+    path: '/business/wallets/static-virtual-accounts',
+    description: 'List all static (reusable) collection accounts for your business.',
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Static virtual accounts fetched successfully",
+  "data": [
+    {
+      "id": "01JZX23BB1GX4RR8CZDCG26T1G",
+      "account_number": "0123456789",
+      "account_name": "John Doe/Acme",
+      "bank_name": "Wema Bank",
+      "bank_code": "035",
+      "external_reference": "cust-001-static",
+      "account_kind": "static",
+      "funding_account_kind": "static",
+      "status": "pending"
+    }
+  ]
+}`,
+      },
+    ],
+  },
+  {
+    id: 'create-funding-account',
+    group: 'customers',
+    title: 'Create funding account',
+    method: 'POST',
+    path: '/business/wallets/funding-accounts',
+    description:
+      'Unified route to create a static or dynamic collection account. Nyra selects the active collection rail for your business automatically. For a static account, set `account_kind` to `"static"` and send the same normalized `meta` fields as Create Static account. For dynamic, use `"dynamic"` and include `amount` (minimum 300 NGN). No provider or rail field appears in the request or response.',
+    params: [
+      {
+        name: 'external_reference',
+        location: 'body',
+        type: 'string',
+        required: true,
+        description: 'Your unique reference for this customer/account (10–26 characters).',
+        example: 'cust-001-static',
+      },
+      {
+        name: 'account_kind',
+        location: 'body',
+        type: 'string',
+        required: true,
+        description: 'Account type to create.',
+        enum: ['static', 'dynamic'],
+        example: 'static',
+      },
+      {
+        name: 'amount',
+        location: 'body',
+        type: 'number',
+        required: false,
+        description: 'Required for dynamic accounts (minimum 300 NGN). Optional for static.',
+      },
+      {
+        name: 'expiresIn',
+        location: 'body',
+        type: 'number',
+        required: false,
+        description: 'Optional TTL in seconds (mainly for dynamic accounts).',
+      },
+      {
+        name: 'meta.customer_name',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'End-user full name.',
+        example: 'John Doe',
+      },
+      {
+        name: 'meta.bvn',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'End-user BVN — 11 digits.',
+        example: '22334455667',
+      },
+      {
+        name: 'meta.nin',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'End-user NIN — 11 digits.',
+        example: '12345678901',
+      },
+      {
+        name: 'meta.customer_email',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'End-user email.',
+        example: 'john@example.com',
+      },
+      {
+        name: 'meta.phone_number',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'End-user phone (E.164).',
+        example: '+2348012345678',
+      },
+      {
+        name: 'meta.dob',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'Date of birth (ISO date).',
+        example: '1990-01-15',
+      },
+      {
+        name: 'meta.gender',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'End-user gender.',
+        example: 'male',
+      },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success (static)',
+        body: `{
+  "success": true,
+  "message": "Funding account created successfully",
+  "data": {
+    "id": "01JZX23BB1GX4RR8CZDCG26T1G",
+    "account_number": "0123456789",
+    "account_name": "John Doe/Acme",
+    "bank_name": "Wema Bank",
+    "bank_code": "035",
+    "external_reference": "cust-001-static",
+    "account_kind": "static",
+    "funding_account_kind": "static",
+    "status": "pending"
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'list-funding-accounts',
+    group: 'customers',
+    title: 'List funding accounts',
+    method: 'GET',
+    path: '/business/wallets/funding-accounts',
+    description:
+      'List static and dynamic collection accounts created via POST /business/wallets/funding-accounts. Filter by account_kind when needed.',
+    params: [
+      {
+        name: 'account_kind',
+        location: 'query',
+        type: 'string',
+        required: false,
+        description: 'Filter by account type.',
+        enum: ['static', 'dynamic'],
+      },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Funding accounts fetched successfully",
+  "data": [
+    {
+      "id": "01JZX23BB1GX4RR8CZDCG26T1G",
+      "account_number": "0123456789",
+      "external_reference": "cust-001-static",
+      "account_kind": "static",
+      "funding_account_kind": "static",
+      "status": "pending"
+    }
+  ]
+}`,
+      },
+    ],
+  },
+  {
+    id: 'get-funding-account',
+    group: 'customers',
+    title: 'Get funding account',
+    method: 'GET',
+    path: '/business/wallets/funding-accounts/{id}',
+    description: 'Fetch a static or dynamic funding account by `id` from the create response.',
+    params: [
+      { name: 'id', location: 'path', type: 'string', required: true, description: 'Funding account id from create response (`data.id`).' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Funding account fetched successfully",
+  "data": {
+    "id": "01JZX23BB1GX4RR8CZDCG26T1G",
+    "account_number": "0123456789",
+    "status": "pending",
+    "account_kind": "static",
+    "funding_account_kind": "static",
+    "external_reference": "cust-001-static"
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'funding-account-status',
+    group: 'customers',
+    title: 'Funding account transfer status',
+    method: 'GET',
+    path: '/business/wallets/funding-accounts/{sessionId}/status',
+    description:
+      'Detailed transfer status for a static or dynamic pay-in. Pass `sessionId` from the `managed_wallet.temporary_account_funded` webhook `data.sessionId`.',
+    params: [
+      { name: 'sessionId', location: 'path', type: 'string', required: true, description: 'Session id from webhook `data.sessionId`.' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Completed successfully",
+  "data": {
+    "id": "sess_a1b2c3d4e5f6",
+    "amount_paid": 5000,
+    "status": "successful",
+    "external_reference": "order-8821",
+    "currency": "NGN"
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'list-dynamic-collection-accounts',
+    group: 'customers',
+    title: 'List Dynamic accounts',
+    method: 'GET',
+    path: '/business/wallets/single-use-virtual-accounts',
+    description: 'List all dynamic (single-use) collection accounts for your business.',
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Single-use virtual accounts fetched successfully",
+  "data": [
+    {
+      "id": "01JZX24CC2HY5SS9DZEDH37U2H",
+      "account_number": "9876543210",
+      "amount": 5000,
+      "external_reference": "order-8821",
+      "account_kind": "single_use",
+      "funding_account_kind": "dynamic",
+      "status": "pending"
+    }
+  ]
+}`,
+      },
+    ],
+  },
+  {
+    id: 'get-customer-wallet',
+    group: 'customers',
+    title: 'Get customer wallet',
+    method: 'GET',
+    path: '/business/wallets/{walletId}',
+    description:
+      'Fetch a single managed customer wallet by wallet_id. Returns full KYC snapshot in customer_details for this route only.',
+    params: [
+      { name: 'walletId', location: 'path', type: 'string', required: true, description: 'Wallet customer ID from POST /business/wallets.' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Wallet fetched successfully",
+  "data": {
+    "wallet_id": "WLT-…",
+    "account_number": "0123456789",
+    "owners_fullname": "Jane Doe",
+    "bank_name": "…",
+    "external_reference": "cust-001",
+    "customer_details": { "first_name": "Jane", "last_name": "Doe", "bvn": "22*********" }
   }
 }`,
       },
@@ -123,14 +518,80 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
     method: 'POST',
     path: '/business/wallets/single-use-virtual-accounts',
     description:
-      'Create a Dynamic (single-use) virtual account for one payment at a fixed amount. The customer must pay the exact amount. Subscribe to `managed_wallet.temporary_account_funded` for pay-in notifications. Optionally poll GET /business/wallets/single-use-virtual-accounts/{id} using `data.id` from this response, or call the transfer status route with `sessionId` from the webhook payload.',
+      'Create a dynamic (single-use) collection account for one payment at a fixed amount. The customer must pay the exact amount. Nyra issues the account on whatever collection rail is active for your business — send normalized customer details in `meta`; you do not choose or pass a collection rail or provider name. Subscribe to `managed_wallet.temporary_account_funded` for pay-in notifications. Alternative (same behaviour): POST /business/wallets/funding-accounts with `"account_kind": "dynamic"`. Optionally poll GET /business/wallets/single-use-virtual-accounts/{id} using `data.id` from this response, or call the transfer status route with `sessionId` from the webhook payload.',
     params: [
-      { name: 'external_reference', location: 'body', type: 'string', required: true, description: 'Your unique reference for this payment.' },
+      {
+        name: 'external_reference',
+        location: 'body',
+        type: 'string',
+        required: true,
+        description: 'Your unique reference for this payment (10–26 characters).',
+        example: 'order-8821',
+      },
       { name: 'amount', location: 'body', type: 'number', required: true, description: 'Expected payment amount in NGN (minimum 300).' },
       { name: 'expiresIn', location: 'body', type: 'number', required: false, description: 'Optional TTL in seconds before the account expires unpaid.' },
-      { name: 'meta.bvn', location: 'body', type: 'string', required: false, description: 'End-user BVN when required for the account.' },
-      { name: 'meta.customer_name', location: 'body', type: 'string', required: false, description: 'Customer display name.' },
-      { name: 'meta.customer_email', location: 'body', type: 'string', required: false, description: 'Customer email.' },
+      {
+        name: 'meta.customer_name',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'End-user full name. Recommended for most setups.',
+        example: 'John Doe',
+      },
+      {
+        name: 'meta.bvn',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'End-user BVN — 11 digits. Required for most setups unless meta.nin is supplied.',
+        example: '22334455667',
+      },
+      {
+        name: 'meta.nin',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'End-user NIN — 11 digits. Accepted instead of BVN where supported.',
+        example: '12345678901',
+      },
+      {
+        name: 'meta.customer_email',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'End-user email. Required for some dedicated bank account setups.',
+      },
+      {
+        name: 'meta.phone_number',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'End-user phone (E.164). Required for some account setups.',
+        example: '+2348012345678',
+      },
+      {
+        name: 'meta.dob',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'Date of birth (ISO date). Required for some dedicated bank account setups.',
+        example: '1990-01-15',
+      },
+      {
+        name: 'meta.gender',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'End-user gender. Required for some dedicated bank account setups.',
+        example: 'male',
+      },
+      {
+        name: 'meta.name_on_account',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'Optional pay-in label shown on the account name.',
+      },
     ],
     responses: [
       {
@@ -217,7 +678,6 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
     "amount_paid": 5000,
     "external_reference": "order-8821",
     "currency": "NGN",
-    "provider": "NYRA WALLET",
     "narration": "Payment for order #8821",
     "paid_at": "2026-07-22T15:12:44.000Z",
     "sender_bank": "…",
@@ -288,8 +748,7 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
     "amount_paid": 10000,
     "status": "successful",
     "external_reference": "cust-001-static",
-    "currency": "NGN",
-    "provider": "NYRA WALLET"
+    "currency": "NGN"
   }
 }`,
       },
@@ -336,6 +795,121 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
     "available_balance": 850000.5,
     "unsettled_balance": 400000,
     "settlement_enabled": true
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'list-transactions',
+    group: 'transactions',
+    title: 'List transactions',
+    method: 'GET',
+    path: '/business/transactions/all',
+    description: 'Cursor-paginated ledger of business wallet transactions with optional filters.',
+    params: [
+      { name: 'type', location: 'query', type: 'string', required: false, description: 'Transaction direction.', enum: ['INFLOW', 'OUTFLOW', 'INTERNAL'] },
+      { name: 'method', location: 'query', type: 'string', required: false, description: 'How the transaction was initiated.', enum: ['API', 'DASHBOARD'] },
+      { name: 'status', location: 'query', type: 'string', required: false, description: 'Transaction status.', enum: ['successful', 'pending', 'failed'] },
+      { name: 'wallet_id', location: 'query', type: 'string', required: false, description: 'Filter by managed customer wallet ID.' },
+      { name: 'cursor', location: 'query', type: 'string', required: false, description: 'Pagination cursor.' },
+      { name: 'from', location: 'query', type: 'string', required: false, description: 'Start date (ISO).', example: '2026-01-01' },
+      { name: 'to', location: 'query', type: 'string', required: false, description: 'End date (ISO).', example: '2026-01-31' },
+      { name: 'page_size', location: 'query', type: 'number', required: false, description: 'Results per page.' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Transactions fetched successfully",
+  "data": {
+    "list": [
+      {
+        "id": "txn_01j6e076enk8",
+        "amount": 5000,
+        "transaction_type": "DEBIT",
+        "transaction_status": "successful",
+        "description": "Vendor payout #8821"
+      }
+    ],
+    "cursor": null,
+    "has_more": false
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'transaction-summary',
+    group: 'transactions',
+    title: 'Transaction summary',
+    method: 'GET',
+    path: '/business/transactions/summary',
+    description: 'High-level inflow and outflow totals for your business wallet.',
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Transaction summary fetched successfully",
+  "data": {
+    "total_inflow": 2500000,
+    "total_outflow": 1800000,
+    "net": 700000
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'transaction-summary-full',
+    group: 'transactions',
+    title: 'Transaction summary (full)',
+    method: 'GET',
+    path: '/business/transactions/summary/full',
+    description: 'Extended transaction summary with category breakdowns.',
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Transaction summary fetched successfully",
+  "data": {
+    "total_inflow": 2500000,
+    "total_outflow": 1800000,
+    "by_category": { "transfer": 1200000, "vas": 300000 }
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'get-transaction',
+    group: 'transactions',
+    title: 'Get transaction',
+    method: 'GET',
+    path: '/business/transactions/{id}',
+    description: 'Fetch a single business wallet transaction by ID.',
+    params: [
+      { name: 'id', location: 'path', type: 'string', required: true, description: 'Transaction ID.' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Transaction fetched successfully",
+  "data": {
+    "id": "txn_01j6e076enk8",
+    "amount": 5000,
+    "transaction_type": "DEBIT",
+    "transaction_status": "successful",
+    "description": "Vendor payout #8821"
   }
 }`,
       },
@@ -667,6 +1241,120 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
     ],
   },
   {
+    id: 'verify-cac',
+    group: 'verification',
+    title: 'Verify CAC (basic)',
+    method: 'POST',
+    path: '/business/identities/cac',
+    description:
+      'Basic CAC lookup for a registered business. Billed per successful check; debits your business float.',
+    params: [
+      { name: 'rc_number', location: 'body', type: 'string', required: true, description: 'RC or BN registration number.' },
+      {
+        name: 'company_type',
+        location: 'body',
+        type: 'string',
+        required: true,
+        description: 'Company registration type.',
+        enum: [
+          'BUSINESS_NAME',
+          'REGISTERED_COMPANY',
+          'INCORPORATED_TRUSTEES',
+          'LIMITED_PARTNERSHIP',
+          'LIMITED_LIABILITY_PARTNERSHIP',
+        ],
+      },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "CAC verification successful",
+  "data": {
+    "company_name": "Acme Stores Ltd",
+    "rc_number": "1234567",
+    "status": "ACTIVE"
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'verify-cac-advance',
+    group: 'verification',
+    title: 'Verify CAC (advanced)',
+    method: 'POST',
+    path: '/business/identities/cac/advance',
+    description:
+      'Extended CAC record including directors and address details. Higher fee than basic; debits your business float.',
+    params: [
+      { name: 'rc_number', location: 'body', type: 'string', required: true, description: 'RC or BN registration number.' },
+      {
+        name: 'company_type',
+        location: 'body',
+        type: 'string',
+        required: true,
+        description: 'Company registration type.',
+        enum: [
+          'BUSINESS_NAME',
+          'REGISTERED_COMPANY',
+          'INCORPORATED_TRUSTEES',
+          'LIMITED_PARTNERSHIP',
+          'LIMITED_LIABILITY_PARTNERSHIP',
+        ],
+      },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "CAC verification successful",
+  "data": {
+    "company_name": "Acme Stores Ltd",
+    "rc_number": "1234567",
+    "directors": [{ "name": "Jane Doe", "role": "Director" }],
+    "registered_address": "14 Admiralty Way, Lekki, Lagos"
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'verify-utility-bill',
+    group: 'verification',
+    title: 'Upload utility bill',
+    method: 'POST',
+    path: '/business/identities/document/utility_bill',
+    description: 'Submit a utility bill image for address verification. Billed per successful check.',
+    params: [
+      {
+        name: 'input_type',
+        location: 'body',
+        type: 'string',
+        required: true,
+        description: 'How the document is supplied.',
+        enum: ['url', 'base64_image'],
+      },
+      { name: 'document_image', location: 'body', type: 'string', required: true, description: 'Public URL or base64-encoded image of the utility bill.' },
+      { name: 'document_country', location: 'body', type: 'string', required: true, description: 'Country code for the document.', example: 'NG' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Utility Bill verification successful",
+  "data": { "verified": true }
+}`,
+      },
+    ],
+  },
+  {
     id: 'vas-services',
     group: 'bills',
     title: 'List VAS services',
@@ -810,7 +1498,7 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
   {
     id: 'vas-electricity-items',
     group: 'bills',
-    title: 'List electricity providers',
+    title: 'List electricity billers',
     method: 'GET',
     path: '/business/vas/electricity/items',
     description: 'Electricity discos and package IDs for validate and pay.',
@@ -823,7 +1511,7 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
         label: 'Success',
         body: `{
   "success": true,
-  "message": "Electricity provider items retrieved successfully",
+  "message": "Electricity biller items retrieved successfully",
   "data": [{ "package_id": "…", "name": "…" }]
 }`,
       },
@@ -892,7 +1580,7 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
         label: 'Success',
         body: `{
   "success": true,
-  "message": "TV provider items retrieved successfully",
+  "message": "TV biller items retrieved successfully",
   "data": [{ "package_id": "…", "name": "…", "amount": 2500 }]
 }`,
       },
@@ -918,6 +1606,75 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
   "success": true,
   "message": "TV payment successful",
   "data": { "reference": "…", "amount": 2500, "status": "delivered" }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'vas-betting-validate',
+    group: 'bills',
+    title: 'Validate betting account',
+    method: 'POST',
+    path: '/business/vas/betting/validate',
+    description: 'Validate a betting user ID and package before funding.',
+    params: [
+      { name: 'user_id', location: 'body', type: 'string', required: true, description: 'Betting account user ID.' },
+      { name: 'package_id', location: 'body', type: 'string', required: true, description: 'Package ID from list betting items.' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "betting input retrieved sucessfully",
+  "data": { "customer_name": "…" }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'vas-betting-items',
+    group: 'bills',
+    title: 'List betting packages',
+    method: 'GET',
+    path: '/business/vas/betting/items',
+    description: 'Betting packages for a biller.',
+    params: [
+      { name: 'biller_id', location: 'query', type: 'string', required: true, description: 'Betting biller ID from GET /business/vas/{service_id}/billers.' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "betting input retrieved sucessfully",
+  "data": [{ "package_id": "…", "name": "…", "amount": 1000 }]
+}`,
+      },
+    ],
+  },
+  {
+    id: 'vas-betting-pay',
+    group: 'bills',
+    title: 'Fund betting account',
+    method: 'POST',
+    path: '/business/vas/betting/pay',
+    description: 'Fund a betting wallet from business float.',
+    params: [
+      { name: 'user_id', location: 'body', type: 'string', required: true, description: 'Validated betting user ID.' },
+      { name: 'package_id', location: 'body', type: 'string', required: true, description: 'Package ID from list betting items.' },
+      { name: 'amount', location: 'body', type: 'number', required: true, description: 'Amount in NGN (minimum 100).' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Betting account funded successfully",
+  "data": { "reference": "…", "amount": 1000, "status": "delivered" }
 }`,
       },
     ],
@@ -1254,6 +2011,8 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
     description: 'Returns virtual cards issued to a specific wallet customer.',
     params: [
       { name: 'customerId', location: 'path', type: 'string', required: true, description: 'Wallet customer ID or customer reference.' },
+      { name: 'cursor', location: 'query', type: 'string', required: false, description: 'Pagination cursor from a previous response.' },
+      { name: 'limit', location: 'query', type: 'number', required: false, description: 'Results per page (1–100).', defaultValue: '20' },
     ],
     responses: [
       {
@@ -1303,12 +2062,27 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
     title: 'List card transactions',
     method: 'GET',
     path: '/business/cards/transactions',
-    description: 'Paginated spend and funding activity for a card in a given calendar month.',
+    description: 'Cursor-paginated spend and funding activity for a card.',
     params: [
       { name: 'card_id', location: 'query', type: 'string', required: true, description: 'Virtual card ID.' },
-      { name: 'page', location: 'query', type: 'number', required: true, description: 'Page number (1-based).', example: '1' },
-      { name: 'monthYear', location: 'query', type: 'string', required: true, description: 'Month in YYYY-MM format.', example: '2026-08' },
-      { name: 'page_size', location: 'query', type: 'number', required: false, description: 'Results per page.', defaultValue: '20' },
+      { name: 'cursor', location: 'query', type: 'string', required: false, description: 'Pagination cursor from a previous response.' },
+      { name: 'limit', location: 'query', type: 'number', required: false, description: 'Results per page (1–100).', defaultValue: '20' },
+      {
+        name: 'type',
+        location: 'query',
+        type: 'string',
+        required: false,
+        description: 'Filter by transaction type.',
+        enum: ['fee', 'funding', 'purchase', 'refund', 'withdrawal'],
+      },
+      {
+        name: 'status',
+        location: 'query',
+        type: 'string',
+        required: false,
+        description: 'Filter by status.',
+        enum: ['pending', 'completed', 'failed'],
+      },
     ],
     responses: [
       {
@@ -1328,9 +2102,38 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
         "transaction_reference": "TXN-01HXYZ…"
       }
     ],
-    "page": 1,
-    "page_size": 20,
-    "total": 1
+    "cursor": null,
+    "has_more": false
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'virtual-cards-get-transaction',
+    group: 'virtual-cards',
+    title: 'Get card transaction',
+    method: 'GET',
+    path: '/business/cards/transactions/{transactionId}',
+    description: 'Fetch a single card transaction by reference. Requires card_id as a query parameter.',
+    params: [
+      { name: 'transactionId', location: 'path', type: 'string', required: true, description: 'Transaction reference from list transactions.' },
+      { name: 'card_id', location: 'query', type: 'string', required: true, description: 'Virtual card ID.' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Card transaction retrieved",
+  "data": {
+    "transaction_type": "DEBIT",
+    "transaction_status": "successful",
+    "amount": 8.0,
+    "currency": "USD",
+    "description": "Authorization at MERCHANT",
+    "transaction_reference": "TXN-01HXYZ…"
   }
 }`,
       },
@@ -1429,6 +2232,30 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
     ],
   },
   {
+    id: 'virtual-cards-terminate',
+    group: 'virtual-cards',
+    title: 'Terminate card',
+    method: 'POST',
+    path: '/business/cards/terminate',
+    description:
+      'Permanently close a virtual card and return remaining balance to your card-program balance (minus fees where applicable). Business API client auth only — no wallet PIN required.',
+    params: [
+      { name: 'card_id', location: 'body', type: 'string', required: true, description: 'Virtual card ID.' },
+      { name: 'reason', location: 'body', type: 'string', required: true, description: 'Reason for termination.', example: 'Customer requested closure' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Card terminated successfully",
+  "data": { "success": true }
+}`,
+      },
+    ],
+  },
+  {
     id: 'crypto-list-assets',
     group: 'crypto',
     title: 'List supported assets',
@@ -1482,6 +2309,20 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
         required: false,
         description: 'Optional link to wallet_id from POST /business/wallets.',
       },
+      {
+        name: 'customer_type',
+        location: 'body',
+        type: 'string',
+        required: false,
+        description: 'Customer type. business requires business_name.',
+        enum: ['individual', 'business'],
+      },
+      { name: 'business_name', location: 'body', type: 'string', required: false, description: 'Required when customer_type is business.' },
+      { name: 'country', location: 'body', type: 'string', required: false, description: 'Country code.', defaultValue: 'NG' },
+      { name: 'kyc_type', location: 'body', type: 'string', required: false, description: 'Identity type.', enum: ['bvn', 'nin'] },
+      { name: 'kyc_value', location: 'body', type: 'string', required: false, description: 'BVN or NIN value matching kyc_type.' },
+      { name: 'dob', location: 'body', type: 'string', required: false, description: 'Date of birth (DD-MM-YYYY). Required with phone and address before deposit addresses can be issued.' },
+      { name: 'identification_number', location: 'body', type: 'string', required: false, description: 'Government ID when not using kyc_value.' },
     ],
     responses: [
       {
@@ -1615,9 +2456,9 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
       { name: 'amount', location: 'body', type: 'string', required: true, description: 'Amount to withdraw in major units.', example: '75.5' },
       { name: 'reference', location: 'body', type: 'string', required: false, description: 'Optional idempotency reference; Nyra generates one if omitted.' },
       { name: 'reason', location: 'body', type: 'string', required: false, description: 'Optional internal reason.' },
-      { name: 'narration', location: 'body', type: 'string', required: false, description: 'Optional narration shown to providers where supported.' },
+      { name: 'narration', location: 'body', type: 'string', required: false, description: 'Optional narration for the transfer.' },
       { name: 'memo', location: 'body', type: 'string', required: false, description: 'Optional destination memo/tag for chains that require it.' },
-      { name: 'funding_source', location: 'body', type: 'string', required: false, description: 'Funding source for provider routing. Currently USD when supported.', enum: ['USD'] },
+      { name: 'funding_source', location: 'body', type: 'string', required: false, description: 'Optional funding source when multiple treasury pools are supported.', enum: ['USD'] },
     ],
     responses: [
       {
@@ -1748,7 +2589,7 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
         label: 'Success',
         body: `{
   "success": true,
-  "message": "Master crypto wallets fetched successfully",
+  "message": "Business crypto float wallets fetched successfully",
   "data": [
     {
       "master_wallet_id": "BCM-…",
@@ -1758,6 +2599,7 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
       "deposit_addresses": { "trc20": { "address": "T…", "network": "trc20" } },
       "networks": ["trc20", "erc20"],
       "balance": "1250.50",
+      "balance_usd": "1250.50",
       "offramp": false,
       "is_active": true
     }
@@ -1785,7 +2627,7 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
         label: 'Created',
         body: `{
   "success": true,
-  "message": "Master crypto wallet created successfully",
+  "message": "Business crypto float wallet created successfully",
   "data": {
     "master_wallet_id": "BCM-…",
     "asset": "USDT",
@@ -1829,6 +2671,8 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
       "network": "trc20",
       "amount": "150.25",
       "reference": "dep_abc123",
+      "customer_id": "BCC-…",
+      "customer_name": "Jane Doe",
       "wallet_id": "BCM-…",
       "tx_hash": "0x…",
       "balance_before": "1100.25",
@@ -1836,6 +2680,211 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
       "created_at": "2026-07-22T18:22:01.000Z"
     }
   ]
+}`,
+      },
+    ],
+  },
+  {
+    id: 'crypto-list-customers',
+    group: 'crypto',
+    title: 'List crypto customers',
+    method: 'GET',
+    path: '/business/crypto/customers',
+    description: 'All crypto customers registered for your business.',
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Crypto customers fetched successfully",
+  "data": [
+    {
+      "customer_id": "BCC-…",
+      "customer_reference": "user_123",
+      "first_name": "Jane",
+      "last_name": "Doe",
+      "email": "jane@example.com",
+      "managed_wallet_id": "M-WAL-…"
+    }
+  ]
+}`,
+      },
+    ],
+  },
+  {
+    id: 'crypto-get-customer',
+    group: 'crypto',
+    title: 'Get crypto customer',
+    method: 'GET',
+    path: '/business/crypto/customers/{customerId}',
+    description: 'Fetch a crypto customer by customer_id, customer_reference, or managed wallet_id.',
+    params: [
+      { name: 'customerId', location: 'path', type: 'string', required: true, description: 'Crypto customer_id, customer_reference, or managed wallet_id.' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Crypto customer fetched successfully",
+  "data": {
+    "customer_id": "BCC-…",
+    "customer_reference": "user_123",
+    "first_name": "Jane",
+    "last_name": "Doe",
+    "email": "jane@example.com"
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'crypto-get-wallet',
+    group: 'crypto',
+    title: 'Get crypto wallet',
+    method: 'GET',
+    path: '/business/crypto/wallets/{walletId}',
+    description: 'Fetch a single customer or treasury crypto wallet by wallet_id.',
+    params: [
+      { name: 'walletId', location: 'path', type: 'string', required: true, description: 'Crypto wallet ID from issue wallet or list wallets.' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Crypto wallet fetched successfully",
+  "data": {
+    "wallet_id": "BCW-…",
+    "customer_id": "BCC-…",
+    "asset": "USDT",
+    "network": "trc20",
+    "deposit_address": "T…",
+    "balance": "150.25",
+    "is_active": true
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'crypto-rates',
+    group: 'crypto',
+    title: 'List FX rates',
+    method: 'GET',
+    path: '/business/crypto/rates',
+    description:
+      'Execution rates for supported crypto and fiat pairs (for example BTC/USDT, USDT/NGN). Same data is also available at GET /business/rates.',
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Business rates fetched successfully",
+  "data": [
+    { "source": "BTC", "target": "USDT", "mid_rate": "95000.00" },
+    { "source": "USDT", "target": "NGN", "mid_rate": "1550.00" }
+  ]
+}`,
+      },
+    ],
+  },
+  {
+    id: 'crypto-swap-quote',
+    group: 'crypto',
+    title: 'Create swap quote',
+    method: 'POST',
+    path: '/business/crypto/quotes/swap',
+    description: 'Request a swap quote between two assets for a crypto customer.',
+    params: [
+      { name: 'customer_id', location: 'body', type: 'string', required: true, description: 'Crypto customer ID.' },
+      { name: 'from_asset', location: 'body', type: 'string', required: true, description: 'Source asset.', example: 'USDT' },
+      { name: 'to_asset', location: 'body', type: 'string', required: true, description: 'Destination asset.', example: 'USDC' },
+      { name: 'amount', location: 'body', type: 'string', required: true, description: 'Amount to swap in major units.', example: '100' },
+      { name: 'destination_wallet_id', location: 'body', type: 'string', required: false, description: 'Optional destination wallet ID.' },
+      { name: 'destination_address', location: 'body', type: 'string', required: false, description: 'Optional external destination address.' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Swap quote created successfully",
+  "data": {
+    "quote_id": "SQ-…",
+    "from_asset": "USDT",
+    "to_asset": "USDC",
+    "amount": "100",
+    "rate": "0.999",
+    "expires_at": "2026-07-22T10:05:00.000Z"
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'crypto-payout',
+    group: 'crypto',
+    title: 'Crypto payout',
+    method: 'POST',
+    path: '/business/crypto/payouts',
+    description: 'Initiate a fiat or on-chain payout for a crypto customer.',
+    params: [
+      { name: 'customer_id', location: 'body', type: 'string', required: true, description: 'Crypto customer ID.' },
+      { name: 'amount', location: 'body', type: 'string', required: true, description: 'Payout amount.', example: '50000' },
+      { name: 'currency', location: 'body', type: 'string', required: true, description: 'Payout currency (for example NGN, USD).', example: 'NGN' },
+      { name: 'account_number', location: 'body', type: 'string', required: false, description: 'Bank account number for fiat payouts.' },
+      { name: 'bank_code', location: 'body', type: 'string', required: false, description: 'Bank code for fiat payouts.' },
+      { name: 'narration', location: 'body', type: 'string', required: false, description: 'Optional payout narration.' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Crypto payout initiated successfully",
+  "data": {
+    "reference": "PAY-…",
+    "status": "pending",
+    "amount": "50000",
+    "currency": "NGN"
+  }
+}`,
+      },
+    ],
+  },
+  {
+    id: 'crypto-onramp-account',
+    group: 'crypto',
+    title: 'Create onramp virtual account',
+    method: 'POST',
+    path: '/business/crypto/onramp/virtual-accounts',
+    description: 'Create a fiat collection account that credits a crypto customer balance on pay-in.',
+    params: [
+      { name: 'customer_id', location: 'body', type: 'string', required: true, description: 'Crypto customer ID.' },
+      { name: 'source_currency', location: 'body', type: 'string', required: true, description: 'Fiat currency the customer pays in.', example: 'NGN' },
+      { name: 'target_asset', location: 'body', type: 'string', required: false, description: 'Crypto asset to credit.', example: 'USDT' },
+    ],
+    responses: [
+      {
+        status: 200,
+        label: 'Success',
+        body: `{
+  "success": true,
+  "message": "Onramp account created successfully",
+  "data": {
+    "account_number": "0123456789",
+    "bank_name": "…",
+    "source_currency": "NGN",
+    "target_asset": "USDT",
+    "status": "pending"
+  }
 }`,
       },
     ],
