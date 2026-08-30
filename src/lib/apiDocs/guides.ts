@@ -394,15 +394,13 @@ export const DOC_GUIDES: DocGuide[] = [
       {
         heading: 'Static',
         paragraphs: [
-          'POST /business/wallets/static-virtual-accounts creates a reusable static collection account. The same account number can receive multiple payments. Nyra issues the account on whatever collection rail is active for your business — you do not choose or pass a provider name.',
-          'Send `external_reference` (10–26 characters) and normalized customer details in `meta`. Minimum typical payload: `customer_name` plus `bvn` or `nin` (11 digits each). Some dedicated bank setups also require `customer_email`, `phone_number` (E.164), `dob` (ISO date), and `gender`. If required fields are missing, the API returns a single error message with no provider names.',
-          'Alternative (same behaviour): POST /business/wallets/funding-accounts with `"account_kind": "static"`.',
-          'Subscribe to `managed_wallet.temporary_account_funded` (and optionally `managed_wallet.funded`) when a customer pays in. See the Settlement guide for T+1 timing when settlement is enabled.',
+          'POST /business/wallets/static-virtual-accounts creates a reusable collection account. Send `external_reference` and customer details in `meta` (typically `customer_name` plus `bvn` or `nin`).',
+          'Subscribe to `managed_wallet.temporary_account_funded` when a customer pays in.',
         ],
         bullets: [
-          'GET /business/wallets/static-virtual-accounts — list static accounts',
-          'GET /business/wallets/static-virtual-accounts/{id} — fetch one account',
-          'GET /business/wallets/static-virtual-accounts/{sessionId}/status — pay-in status from webhook sessionId',
+          'GET /business/wallets/static-virtual-accounts: list static accounts',
+          'GET /business/wallets/static-virtual-accounts/{id}: fetch one account',
+          'GET /business/wallets/static-virtual-accounts/{sessionId}/status: pay-in status',
         ],
       },
       {

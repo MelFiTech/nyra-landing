@@ -78,14 +78,14 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
     method: 'POST',
     path: '/business/wallets/static-virtual-accounts',
     description:
-      'Create a static (reusable) collection account for an end-user. The same account number can receive multiple payments. Nyra issues the account on whatever collection rail is active for your business at request time — send normalized customer details in `meta`; you do not choose or pass a collection rail or provider name. Subscribe to `managed_wallet.temporary_account_funded` (and optionally `managed_wallet.funded`) for pay-in notifications. Alternative (same behaviour): POST /business/wallets/funding-accounts with `"account_kind": "static"`. Returns 400 if required customer details are missing or if `external_reference` is already in use. Responses include `bank_name` and `bank_code` for the pay-in bank only — there is no provider field.',
+      'Create a reusable collection account for an end-user. Send `external_reference` and customer details in `meta`. Subscribe to `managed_wallet.temporary_account_funded` for pay-in notifications.',
     params: [
       {
         name: 'external_reference',
         location: 'body',
         type: 'string',
         required: true,
-        description: 'Your unique reference for this customer/account (10–26 characters).',
+        description: 'Your unique reference (10-26 characters).',
         example: 'cust-001-static',
       },
       {
@@ -100,14 +100,14 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
         location: 'body',
         type: 'number',
         required: false,
-        description: 'Optional TTL in seconds (mainly used for dynamic accounts).',
+        description: 'Optional TTL in seconds.',
       },
       {
         name: 'meta.customer_name',
         location: 'body',
         type: 'string',
         required: false,
-        description: 'End-user full name. Recommended for most static account setups.',
+        description: 'End-user full name.',
         example: 'John Doe',
       },
       {
@@ -115,7 +115,7 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
         location: 'body',
         type: 'string',
         required: false,
-        description: 'End-user BVN — 11 digits. Required for most static setups unless meta.nin is supplied.',
+        description: '11-digit BVN. Required unless meta.nin is supplied.',
         example: '22334455667',
       },
       {
@@ -123,7 +123,7 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
         location: 'body',
         type: 'string',
         required: false,
-        description: 'End-user NIN — 11 digits. Accepted instead of BVN where supported.',
+        description: '11-digit NIN. Use instead of BVN where supported.',
         example: '12345678901',
       },
       {
@@ -131,7 +131,7 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
         location: 'body',
         type: 'string',
         required: false,
-        description: 'End-user email. Required for some dedicated bank account setups.',
+        description: 'End-user email.',
         example: 'john@example.com',
       },
       {
@@ -139,7 +139,7 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
         location: 'body',
         type: 'string',
         required: false,
-        description: 'End-user phone (E.164). Required for some account setups and certain collection rails.',
+        description: 'End-user phone (E.164).',
         example: '+2348012345678',
       },
       {
@@ -147,7 +147,7 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
         location: 'body',
         type: 'string',
         required: false,
-        description: 'Date of birth (ISO date). Required for some dedicated bank account setups.',
+        description: 'Date of birth (ISO date, e.g. 1990-01-15).',
         example: '1990-01-15',
       },
       {
@@ -155,7 +155,7 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
         location: 'body',
         type: 'string',
         required: false,
-        description: 'End-user gender. Required for some dedicated bank account setups.',
+        description: 'End-user gender.',
         example: 'male',
       },
       {
@@ -163,7 +163,7 @@ export const DOC_ENDPOINTS: DocEndpoint[] = [
         location: 'body',
         type: 'string',
         required: false,
-        description: 'Optional pay-in label (used on dynamic accounts; rarely needed for static).',
+        description: 'Optional pay-in label.',
       },
     ],
     responses: [
