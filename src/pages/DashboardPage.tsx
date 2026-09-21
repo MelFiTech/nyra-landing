@@ -10,7 +10,7 @@ import PinSetupModal from '../components/dashboard/PinSetupModal'
 import TransactionDrawer, { type Transaction } from '../components/treasury/TransactionDrawer'
 import { useBalance } from '../context/BalanceContext'
 import { useBusiness, usePermissions } from '../context/BusinessContext'
-import { useBusinessWallet, useCardSummary, useTransactions, useUsdCryptoDeposit } from '../hooks/useAppData'
+import { useBusinessWallet, useCardSummary, useTransactionCount, useTransactions, useUsdCryptoDeposit } from '../hooks/useAppData'
 import { mapApiTransaction } from '../lib/mapTransaction'
 import { queryKeys } from '../lib/queryKeys'
 import type { Transaction as ApiTransaction } from '../lib/api'
@@ -59,7 +59,15 @@ function compactUsd(value: number | string | undefined | null) {
   return usd(n)
 }
 
-type WalletTab = 'NGN' | 'USD'
+function formatCount(value: number | string | undefined | null) {
+  const n = Math.max(0, Math.floor(Number(value ?? 0) || 0))
+  if (n >= 1_000_000) {
+    const m = n / 1_000_000
+    const formatted = m >= 100 ? m.toFixed(0) : m >= 10 ? m.toFixed(1) : m.toFixed(2)
+    return `${formatted.replace(/\.0+$/, '').replace(/(\.\d)0$/, '$1')}M`
+  }
+  return n.toLocaleString('en-US')
+}
 
 function txCurrency(tx: ApiTransaction) {
   return (tx.currency ?? 'NGN').toUpperCase()
@@ -152,6 +160,27 @@ export default function DashboardPage() {
   const { data: cardSummary, isLoading: cardSummaryLoading, isError: cardSummaryError } = useCardSummary()
   const { data: usdCryptoDeposit = null, isLoading: usdCryptoLoading } = useUsdCryptoDeposit()
   const { data: transactions = [], isLoading: txLoading } = useTransactions({ page_size: 50 })
+  const { data: transactionStats } = useTransactionCount()
+  const transactionCount = transactionStats?.transaction_count ?? 0
+  const categoryBreakdown = transactionStats?.by_category ?? {
+    Transfer: 0,
+    Inflow: 0,
+    Airtime: 0,
+    Data: 0,
+    Bills: 0,
+    Other: 0,
+  }
+  const categoryInfo = [
+    { label: 'Transfer', value: formatCount(categoryBreakdown.Transfer) },
+    { label: 'Inflow', value: formatCount(categoryBreakdown.Inflow) },
+    { label: 'Airtime', value: formatCount(categoryBreakdown.Airtime) },
+    { label: 'Data', value: formatCount(categoryBreakdown.Data) },
+    { label: 'Bills', value: formatCount(categoryBreakdown.Bills) },
+    { label: 'Other', value: formatCount(categoryBreakdown.Other) },
+    ...(business?.crypto_float_enabled === true || transactionStats?.crypto_count != null
+      ? [{ label: 'Crypto', value: formatCount(transactionStats?.crypto_count ?? 0) }]
+      : []),
+  ]
   const dashboardLoading =
     businessesLoading ||
     (!wallet && !walletError && walletLoading) ||
@@ -194,17 +223,34 @@ export default function DashboardPage() {
   const usdUnsettled = 0
   const usdTotal = usdAvailable + usdUnsettled
   const isNgnWallet = walletTab === 'NGN'
+  const transactionCountLabel = formatCount(transactionCount)
 
   const metrics = isNgnWallet
     ? [
-        { label: 'Total Inflow', trend: 'up' as const, value: compactNaira(wallet?.total_credit), data: [3, 5, 4, 7, 6, 9, 11], masked: true },
-        { label: 'Total Outflow', trend: 'down' as const, value: compactNaira(wallet?.total_debit), data: [9, 8, 10, 7, 6, 5, 4], masked: true },
-        { label: 'Transactions', trend: 'up' as const, value: String(ngnTransactions.length), data: [0, 0, 0, 0, 0, 0, 0], masked: false },
+        { label: 'Total Inflow', trend: 'up' as const, value: compactNaira(wallet?.total_credit), data: [3, 5, 4, 7, 6, 9, 11], masked: true, showChart: true },
+        { label: 'Total Outflow', trend: 'down' as const, value: compactNaira(wallet?.total_debit), data: [9, 8, 10, 7, 6, 5, 4], masked: true, showChart: true },
+        {
+          label: 'Transactions',
+          trend: 'up' as const,
+          value: transactionCountLabel,
+          data: [] as number[],
+          masked: false,
+          showChart: false,
+          info: categoryInfo,
+        },
       ]
     : [
-        { label: 'Total Inflow', trend: 'up' as const, value: compactUsd(usdInflow), data: [2, 4, 3, 6, 5, 7, 8], masked: true },
-        { label: 'Total Outflow', trend: 'down' as const, value: compactUsd(usdOutflow), data: [9, 8, 10, 7, 6, 5, 4], masked: true },
-        { label: 'Transactions', trend: 'up' as const, value: String(usdTransactions.length), data: [0, 0, 0, 0, 0, 0, 0], masked: false },
+        { label: 'Total Inflow', trend: 'up' as const, value: compactUsd(usdInflow), data: [2, 4, 3, 6, 5, 7, 8], masked: true, showChart: true },
+        { label: 'Total Outflow', trend: 'down' as const, value: compactUsd(usdOutflow), data: [9, 8, 10, 7, 6, 5, 4], masked: true, showChart: true },
+        {
+          label: 'Transactions',
+          trend: 'up' as const,
+          value: transactionCountLabel,
+          data: [] as number[],
+          masked: false,
+          showChart: false,
+          info: categoryInfo,
+        },
       ]
 
   const [leftPct, setLeftPct] = useState(62)
@@ -453,6 +499,22 @@ export default function DashboardPage() {
                 <div key={metric.label} className={styles.metricCard}>
                   <div className={styles.metricHeader}>
                     <span className={styles.metricLabel}>{metric.label}</span>
+                    {metric.info ? (
+                      <span className={styles.metricInfo}>
+                        <span className={styles.metricInfoIcon} aria-label={`${metric.label} breakdown`}>
+                          <InfoIcon />
+                        </span>
+                        <span className={styles.metricInfoTooltip} role="tooltip">
+                          <span className={styles.metricInfoTitle}>By category</span>
+                          {metric.info.map(row => (
+                            <span key={row.label} className={styles.metricInfoRow}>
+                              <span>{row.label}</span>
+                              <strong>{row.value}</strong>
+                            </span>
+                          ))}
+                        </span>
+                      </span>
+                    ) : null}
                   </div>
                   <div className={styles.metricBody}>
                     <span className={styles.metricValue}>
@@ -460,14 +522,16 @@ export default function DashboardPage() {
                         ? (isNgnWallet ? '₦ ••••' : '$ ••••')
                         : metric.value}
                     </span>
-                    <span className={styles.metricChart}>
-                      <TrendSparkline
-                        data={metric.data}
-                        trend={metric.trend}
-                        width={METRIC_CHART.width}
-                        height={METRIC_CHART.height}
-                      />
-                    </span>
+                    {metric.showChart ? (
+                      <span className={styles.metricChart}>
+                        <TrendSparkline
+                          data={metric.data}
+                          trend={metric.trend}
+                          width={METRIC_CHART.width}
+                          height={METRIC_CHART.height}
+                        />
+                      </span>
+                    ) : null}
                   </div>
                 </div>
               ))}

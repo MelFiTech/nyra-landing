@@ -3,6 +3,8 @@ export const queryKeys = {
   wallet: (businessId: string) => ['wallet', businessId] as const,
   transactions: (businessId: string, params?: Record<string, unknown>) =>
     ['transactions', businessId, params ?? {}] as const,
+  transactionCount: (businessId: string) =>
+    ['transaction-count', businessId] as const,
   customers: (businessId: string) => ['customers', businessId] as const,
   customer: (businessId: string, walletId: string) =>
     ['customer', businessId, walletId] as const,

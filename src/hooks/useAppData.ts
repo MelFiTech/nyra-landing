@@ -36,6 +36,16 @@ export function useTransactions(params?: TransactionListParams) {
   })
 }
 
+export function useTransactionCount() {
+  const { businessId, business } = useBusiness()
+  const approved = business?.verification_status === 'VERIFIED'
+  return useQuery({
+    queryKey: queryKeys.transactionCount(businessId ?? ''),
+    queryFn: () => transactionsApi.count(businessId!),
+    enabled: !!businessId && approved,
+  })
+}
+
 /** Cursor-paginated fetch so the transactions page can load full wallet history. */
 export function useAllTransactions(
   params?: Omit<TransactionListParams, 'cursor' | 'page_size'>,

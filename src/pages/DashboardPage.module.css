@@ -316,6 +316,72 @@
   color: var(--text-muted);
 }
 
+.metricInfo {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.metricInfoIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+  cursor: help;
+}
+
+.metricInfoIcon:hover,
+.metricInfo:focus-within .metricInfoIcon {
+  color: var(--text-1);
+}
+
+.metricInfoTooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  min-width: 168px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.metricInfo:hover .metricInfoTooltip,
+.metricInfo:focus-within .metricInfoTooltip {
+  display: flex;
+}
+
+.metricInfoTitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.metricInfoRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.metricInfoRow strong {
+  font-weight: 700;
+  color: var(--text-1);
+  font-variant-numeric: tabular-nums;
+}
+
 .metricTrend {
   display: inline-flex;
   align-items: center;

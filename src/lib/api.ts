@@ -1275,6 +1275,36 @@ export const transactionsApi = {
     return unwrapList<Transaction>(res)
   },
 
+  async count(businessId?: string): Promise<{
+    transaction_count: number
+    by_category: Record<string, number>
+    crypto_count?: number
+  }> {
+    const id = businessId ?? activeBusinessId()
+    const res = await request<{
+      data: {
+        transaction_count: number
+        by_category?: Record<string, number>
+        crypto_count?: number
+      }
+    }>(`/business/${id}/transactions/count`)
+    const defaults = {
+      Transfer: 0,
+      Inflow: 0,
+      Airtime: 0,
+      Data: 0,
+      Bills: 0,
+      Other: 0,
+    }
+    return {
+      transaction_count: Number(res.data?.transaction_count) || 0,
+      by_category: { ...defaults, ...(res.data?.by_category ?? {}) },
+      ...(res.data?.crypto_count != null
+        ? { crypto_count: Number(res.data.crypto_count) || 0 }
+        : {}),
+    }
+  },
+
   async get(transactionId: string, businessId?: string): Promise<Transaction> {
     const id = businessId ?? activeBusinessId()
     const res = await request<{ data: Transaction }>(
