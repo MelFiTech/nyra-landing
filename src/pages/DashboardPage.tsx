@@ -59,6 +59,8 @@ function compactUsd(value: number | string | undefined | null) {
   return usd(n)
 }
 
+type WalletTab = 'NGN' | 'USD'
+
 function formatCount(value: number | string | undefined | null) {
   const n = Math.max(0, Math.floor(Number(value ?? 0) || 0))
   if (n >= 1_000_000) {
