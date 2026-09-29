@@ -93,8 +93,8 @@ export const DEV_CARDS = [
 
 export const SECURITY = [
   {
-    title: 'Regulated',
-    body: 'We work within applicable financial regulations and banking partnerships so your business operates with confidence.',
+    title: 'Regulated partners',
+    body: 'We operate through licensed banking and payment partners, so your business runs on regulated rails.',
   },
   {
     title: 'Fully compliant',

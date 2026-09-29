@@ -4,7 +4,6 @@
   padding: 3px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.82);
-  border: 1px solid hsl(var(--lp-border));
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }

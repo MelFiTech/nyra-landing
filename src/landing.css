@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @plugin "tailwindcss-animate";
@@ -37,13 +37,106 @@
   --lp-border: 0 0% 90%;
   --ring: 239 84% 67%;
   --radius: 0.5rem;
-  --font-display-var: 'Instrument Serif', serif;
+  --font-display-var: 'Anton', 'Haettenschweiler', 'Arial Narrow', sans-serif;
+  --font-serif-var: 'Instrument Serif', serif;
   --font-body-var: 'Inter', sans-serif;
   --shadow-dashboard: 0 25px 80px -12px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06);
   --glass-radius: 1rem;
+
+  /* Brand anchors */
+  --brand-mint: #00dd79;
+  --brand-mint-deep: #05b466;
+  --brand-indigo: #6366f1;
+
+  /* Veeza-style panel palette, derived from the Nyra brand so the multi-color
+     sections still blend. Each panel ships a background + its text ink. */
+  --panel-indigo-bg: #4b46e5;
+  --panel-indigo-ink: #ffffff;
+  --panel-green-bg: #0a3f30;
+  --panel-green-ink: #eafff4;
+  --panel-cream-bg: #f4eee2;
+  --panel-cream-ink: #14181f;
+  --panel-ink-bg: #0d1117;
+  --panel-ink-ink: #ffffff;
+  --panel-mint-bg: #d6f7e6;
+  --panel-mint-ink: #0a3f30;
+
+  /* Subtle paper grain reused across colored panels for the tactile look. */
+  --panel-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
 }
 
 @layer components {
+  /* ---- Marketing design system (Veeza-inspired, Nyra-branded) ---- */
+
+  /* Small tracked uppercase kicker above headlines. */
+  .mkt-eyebrow {
+    display: inline-block;
+    font-family: var(--font-body-var);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Oversized display headline. Defaults to title case; add .mkt-display--caps
+     for the punchy uppercase Veeza treatment on section headers. */
+  .mkt-display {
+    font-family: var(--font-display-var);
+    font-weight: 400;
+    text-transform: uppercase;
+    line-height: 0.9;
+    letter-spacing: -0.005em;
+    color: hsl(var(--foreground));
+    text-wrap: balance;
+  }
+
+  /* Emphasis word inside any marketing headline keeps Nyra's serif italic —
+     lowercase, so it reads as a warm accent against the condensed caps. */
+  .mkt-display em,
+  .mkt-em {
+    font-family: var(--font-serif-var);
+    font-style: italic;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  /* Colored, grain-textured section panel. Pair with a modifier below. */
+  .mkt-panel {
+    position: relative;
+    isolation: isolate;
+    border-radius: 28px;
+    overflow: hidden;
+    color: var(--panel-ink, #fff);
+    background-color: var(--panel-bg, #0d1117);
+  }
+
+  .mkt-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: var(--panel-grain);
+    background-size: 180px 180px;
+    mix-blend-mode: overlay;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .mkt-panel--indigo { --panel-bg: var(--panel-indigo-bg); --panel-ink: var(--panel-indigo-ink); }
+  .mkt-panel--green  { --panel-bg: var(--panel-green-bg);  --panel-ink: var(--panel-green-ink); }
+  .mkt-panel--cream  { --panel-bg: var(--panel-cream-bg);  --panel-ink: var(--panel-cream-ink); }
+  .mkt-panel--ink    { --panel-bg: var(--panel-ink-bg);    --panel-ink: var(--panel-ink-ink); }
+  .mkt-panel--mint   { --panel-bg: var(--panel-mint-bg);   --panel-ink: var(--panel-mint-ink); }
+
+  /* Eyebrow contrast auto-adjusts on dark panels. */
+  .mkt-panel--indigo .mkt-eyebrow,
+  .mkt-panel--green .mkt-eyebrow,
+  .mkt-panel--ink .mkt-eyebrow {
+    color: color-mix(in srgb, var(--panel-ink) 72%, transparent);
+  }
+
   .liquid-glass {
     position: relative;
     overflow: hidden;
@@ -51,7 +144,6 @@
     background-blend-mode: luminosity;
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
   }
 
   .liquid-glass::before {
@@ -87,9 +179,6 @@
     background-blend-mode: luminosity;
     backdrop-filter: blur(50px);
     -webkit-backdrop-filter: blur(50px);
-    box-shadow:
-      4px 4px 4px rgba(0, 0, 0, 0.05),
-      inset 0 1px 1px rgba(255, 255, 255, 0.15);
   }
 
   .liquid-glass-strong::before {

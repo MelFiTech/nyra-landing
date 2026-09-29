@@ -1,8 +1,18 @@
 .header {
-  position: relative;
-  z-index: 20;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
   width: 100%;
   flex-shrink: 0;
+  padding: 8px 0;
+  transition: padding 0.7s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+/* Scrolled past the hero: ease into a gently inset floating pill. */
+.header.stuck {
+  padding: 12px 20px;
 }
 
 .navBar {
@@ -11,9 +21,28 @@
   align-items: center;
   column-gap: 24px;
   width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
   min-height: 72px;
   padding: 16px 32px;
   box-sizing: border-box;
+  border-radius: 999px;
+  /* transparent → soft glass; slow gentle ease so the change is barely noticed */
+  background: rgba(255, 255, 255, 0);
+  backdrop-filter: saturate(1) blur(0);
+  -webkit-backdrop-filter: saturate(1) blur(0);
+  transition: max-width 0.7s cubic-bezier(0.33, 1, 0.68, 1),
+    padding 0.7s cubic-bezier(0.33, 1, 0.68, 1),
+    background-color 0.7s ease, backdrop-filter 0.7s ease;
+}
+
+.header.stuck .navBar {
+  max-width: min(1280px, calc(100% - 8px));
+  min-height: 62px;
+  padding: 10px 12px 10px 24px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: saturate(1.6) blur(16px);
+  -webkit-backdrop-filter: saturate(1.6) blur(16px);
 }
 
 .zoneLeft {
@@ -136,7 +165,6 @@
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.98);
   border: 1px solid hsl(var(--lp-border, 0 0% 90%));
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -177,7 +205,7 @@
   padding: 10px 20px;
   font-size: 14px;
   font-weight: 600;
-  color: hsl(var(--primary-foreground));
+  color: #14181f;
   background: hsl(var(--primary));
   border: none;
   border-radius: 999px;
@@ -216,7 +244,6 @@
   height: 100%;
   background: #fff;
   border-left: 1px solid hsl(var(--lp-border, 0 0% 90%));
-  box-shadow: -20px 0 48px rgba(15, 23, 42, 0.14);
 }
 
 .mobileDrawerHeader {
@@ -338,7 +365,7 @@
   font-family: inherit;
   font-size: 15px;
   font-weight: 600;
-  color: hsl(var(--primary-foreground));
+  color: #14181f;
   cursor: pointer;
 }
 

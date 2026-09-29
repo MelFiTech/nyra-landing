@@ -1,7 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import NyraLogo from '../ui/NyraLogo'
+import { APP_STORE_URL, PLAY_STORE_URL } from './AppStoreButtons'
 import styles from './LandingNav.module.css'
+
+/** Personal is app-only (no web dashboard): send people to the right store. */
+function appStoreHref() {
+  if (typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent)) {
+    return PLAY_STORE_URL
+  }
+  return APP_STORE_URL
+}
 
 type NavLink = {
   label: string
@@ -36,19 +45,31 @@ function NavMenuLink({
   )
 }
 
-const PRODUCTS_LINKS: NavLink[] = [
-  { label: 'Joint account', href: '#' },
-  { label: 'Cards', href: '#' },
-  { label: 'Accounts', href: '#' },
-  { label: 'Identity', href: '#' },
-]
+type Audience = 'personal' | 'business'
 
-const LEARN_LINKS: NavLink[] = [
-  { label: 'Pricing', href: '/pricing' },
-  { label: 'Blog', href: '#' },
-  { label: 'Developer docs', href: '/docs?view=guides' },
-  { label: 'Why Nyra', href: '#' },
-]
+// The nav adapts to the product the visitor is on: different product links and,
+// most importantly, a different primary CTA.
+const PRODUCTS_BY_AUDIENCE: Record<Audience, NavLink[]> = {
+  personal: [
+    { label: 'Joint account', href: '#' },
+    { label: 'Cards', href: '#' },
+    { label: 'Savings', href: '#' },
+    { label: 'Payments', href: '#' },
+  ],
+  business: [
+    { label: 'Accounts', href: '#' },
+    { label: 'Payouts', href: '#' },
+    { label: 'Identity', href: '#' },
+    { label: 'Developer API', href: '/docs?view=guides' },
+  ],
+}
+
+// Personal has no web dashboard, so its CTA points to the app store (handled at
+// click time for device detection); business goes to the dashboard sign-up.
+const CTA_BY_AUDIENCE: Record<Audience, { label: string; href?: string }> = {
+  personal: { label: 'Get the app' },
+  business: { label: 'Start building', href: '/app/signup' },
+}
 
 function Chevron({ open }: { open?: boolean }) {
   return (
@@ -186,9 +207,18 @@ function MobileAccordion({ label, links, onNavigate }: DropdownProps) {
   )
 }
 
-export default function LandingNav() {
+export default function LandingNav({ audience = 'personal' }: { audience?: Audience }) {
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [stuck, setStuck] = useState(false)
+
+  const products = PRODUCTS_BY_AUDIENCE[audience]
+  const cta = CTA_BY_AUDIENCE[audience]
+
+  function goCta() {
+    if (cta.href) navigate(cta.href)
+    else window.location.href = appStoreHref()
+  }
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : ''
@@ -197,12 +227,21 @@ export default function LandingNav() {
     }
   }, [mobileOpen])
 
+  // Past the hero, the bar condenses into a floating pill; back at the top it
+  // returns to the full-width transparent nav.
+  useEffect(() => {
+    const onScroll = () => setStuck(window.scrollY > 80)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   function closeMobile() {
     setMobileOpen(false)
   }
 
   return (
-    <header className={styles.header}>
+    <header className={`${styles.header} ${stuck ? styles.stuck : ''}`}>
       <div className={styles.navBar}>
         <div className={styles.zoneLeft}>
           <Link to="/" className={styles.logoLink} aria-label="Nyra home">
@@ -211,20 +250,24 @@ export default function LandingNav() {
         </div>
 
         <nav className={styles.zoneCenter} aria-label="Site">
-          <DesktopDropdown label="Products" links={PRODUCTS_LINKS} />
+          <DesktopDropdown label="Products" links={products} />
           <Link to="/company/about" className={styles.navLink}>
             About us
           </Link>
-          <DesktopDropdown label="Learn" links={LEARN_LINKS} />
+          <Link to="/pricing" className={styles.navLink}>
+            Pricing
+          </Link>
         </nav>
 
         <div className={styles.zoneRight}>
           <div className={styles.navActions}>
-            <button type="button" className={styles.signIn} onClick={() => navigate('/app/login')}>
-              Sign in
-            </button>
-            <button type="button" className={styles.getStarted} onClick={() => navigate('/app/signup')}>
-              Get started
+            {audience !== 'personal' && (
+              <button type="button" className={styles.signIn} onClick={() => navigate('/app/login')}>
+                Sign in
+              </button>
+            )}
+            <button type="button" className={styles.getStarted} onClick={goCta}>
+              {cta.label}
             </button>
           </div>
 
@@ -257,19 +300,23 @@ export default function LandingNav() {
             </div>
 
             <div className={styles.mobileDrawerBody}>
-              <MobileAccordion label="Products" links={PRODUCTS_LINKS} onNavigate={closeMobile} />
+              <MobileAccordion label="Products" links={products} onNavigate={closeMobile} />
               <Link to="/company/about" className={styles.mobileLink} onClick={closeMobile}>
                 About us
               </Link>
-              <MobileAccordion label="Learn" links={LEARN_LINKS} onNavigate={closeMobile} />
+              <Link to="/pricing" className={styles.mobileLink} onClick={closeMobile}>
+                Pricing
+              </Link>
             </div>
 
             <div className={styles.mobileDrawerFooter}>
-              <button type="button" className={styles.mobileSignIn} onClick={() => { closeMobile(); navigate('/app/login') }}>
-                Sign in
-              </button>
-              <button type="button" className={styles.mobileGetStarted} onClick={() => { closeMobile(); navigate('/app/signup') }}>
-                Get started
+              {audience !== 'personal' && (
+                <button type="button" className={styles.mobileSignIn} onClick={() => { closeMobile(); navigate('/app/login') }}>
+                  Sign in
+                </button>
+              )}
+              <button type="button" className={styles.mobileGetStarted} onClick={() => { closeMobile(); goCta() }}>
+                {cta.label}
               </button>
             </div>
           </aside>

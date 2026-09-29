@@ -2,9 +2,10 @@ import { type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import '../../landing.css'
-import BackgroundVideo from './BackgroundVideo'
+import CloudSky from './CloudSky'
 import LandingNav from './LandingNav'
 import AudienceSwitch from './AudienceSwitch'
+import { lineWipe } from '../../lib/motion'
 import styles from './LandingShell.module.css'
 
 const ease = [0.22, 1, 0.36, 1] as const
@@ -24,6 +25,8 @@ type Props = {
   /** @deprecated badge pill removed from the hero; kept optional for callers */
   badge?: string
   title: ReactNode
+  /** When set, the headline renders as clip-masked lines that wipe up (Veeza). */
+  titleLines?: ReactNode[]
   subtitle: string
   /** Allow scrolling with sections below the hero (business landing). */
   scrollable?: boolean
@@ -41,6 +44,7 @@ export default function LandingShell({
   onCtaClick,
   ctaSlot,
   title,
+  titleLines,
   subtitle,
   scrollable = false,
   sections,
@@ -55,21 +59,27 @@ export default function LandingShell({
     navigate(ctaHref ?? '/app/signup')
   }
 
+  const isPersonal = audience === 'personal'
+
+  // Nav lives at the page root (not inside the hero's stacking context) so the
+  // fixed pill always paints above the sections that scroll under it.
+  const nav = (
+    <motion.div
+      className={styles.navSlot}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <LandingNav audience={audience} />
+    </motion.div>
+  )
+
   const hero = (
     <>
-      <BackgroundVideo />
-      <div className={styles.overlay} />
+      <CloudSky />
+      <div className={styles.overlayLight} />
 
       <div className={styles.content}>
-        <motion.div
-          className={styles.navSlot}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <LandingNav />
-        </motion.div>
-
         <div className={styles.heroSection}>
           <div className={styles.heroCopy}>
             <motion.div
@@ -81,16 +91,34 @@ export default function LandingShell({
               <AudienceSwitch active={audience} />
             </motion.div>
 
-            <div className={styles.hero}>
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease, delay: 0.2 }}
-                className={styles.title}
-                style={{ fontFamily: 'var(--font-display-var)' }}
-              >
-                {title}
-              </motion.h1>
+            <div className={`${styles.hero} ${isPersonal ? '' : styles.heroWide}`}>
+              {titleLines ? (
+                <motion.h1
+                  className={styles.title}
+                  style={{ fontFamily: 'var(--font-display-var)' }}
+                  initial="hidden"
+                  animate="show"
+                  variants={{ show: { transition: { staggerChildren: 0.1, delayChildren: 0.2 } } }}
+                >
+                  {titleLines.map((line, i) => (
+                    <span className={styles.titleLine} key={i}>
+                      <motion.span style={{ display: 'block' }} variants={lineWipe}>
+                        {line}
+                      </motion.span>
+                    </span>
+                  ))}
+                </motion.h1>
+              ) : (
+                <motion.h1
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, ease, delay: 0.2 }}
+                  className={styles.title}
+                  style={{ fontFamily: 'var(--font-display-var)' }}
+                >
+                  {title}
+                </motion.h1>
+              )}
 
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
@@ -137,8 +165,40 @@ export default function LandingShell({
               </div>
             </motion.div>
           )}
+
+          {isPersonal && (
+            <motion.div
+              className={styles.heroHandsWrap}
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, ease, delay: 0.6 }}
+            >
+              <img
+                className={styles.heroHands}
+                src="/assets/hands-nyra-straight.png"
+                alt=""
+                aria-hidden
+              />
+            </motion.div>
+          )}
         </div>
       </div>
+
+      {isPersonal && <div className={styles.heroFade} aria-hidden />}
+
+      {/* Clouds tucked at the bottom corners of the business dashboard preview
+          so its edges fade softly into the sky. */}
+      {!isPersonal && preview && (
+        <>
+          <img className={styles.previewCloudLeft} src="/assets/hero-cloud.png" alt="" aria-hidden />
+          <img
+            className={styles.previewCloudRight}
+            src="/assets/hero-cloud.png"
+            alt=""
+            aria-hidden
+          />
+        </>
+      )}
     </>
   )
 
@@ -148,7 +208,10 @@ export default function LandingShell({
         className={styles.pageScroll}
         style={{ fontFamily: 'var(--font-body-var)' }}
       >
-        <div className={styles.heroBlock}>{hero}</div>
+        {nav}
+        <div className={`${styles.heroBlock} ${isPersonal ? styles.heroBlockPersonal : ''}`}>
+          {hero}
+        </div>
         {sections}
       </div>
     )
@@ -156,6 +219,7 @@ export default function LandingShell({
 
   return (
     <div className={styles.page} style={{ fontFamily: 'var(--font-body-var)' }}>
+      {nav}
       {hero}
     </div>
   )

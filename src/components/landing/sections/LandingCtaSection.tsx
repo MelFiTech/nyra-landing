@@ -1,54 +1,73 @@
+import { useRef } from 'react'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { Download } from 'lucide-react'
+import { ease, lineWipe, rise } from '../../../lib/motion'
 import styles from './LandingCtaSection.module.css'
-
-const CTA_VIDEO =
-  'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260315_073750_51473149-4350-4920-ae24-c8214286f323.mp4'
 
 export default function LandingCtaSection() {
   const navigate = useNavigate()
+  const ref = useRef<HTMLElement>(null)
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
+  const bgY = useTransform(scrollYProgress, [0, 1], ['-5%', '6%'])
+  const bgScale = useTransform(scrollYProgress, [0, 1], [1.06, 1.16])
 
   return (
-    <section className={styles.shell} aria-label="Get started with Nyra">
-      <video
-        className={styles.video}
-        src={CTA_VIDEO}
-        autoPlay
-        loop
-        muted
-        playsInline
+    <section className={styles.shell} ref={ref} aria-label="Get started with Nyra">
+      <motion.img
+        className={styles.bg}
+        src="/assets/biz-cta-bg.png"
+        alt=""
         aria-hidden
+        style={{ y: bgY, scale: bgScale }}
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 1.4, ease }}
       />
-      <div className={styles.overlay} aria-hidden />
+      <div className={styles.grain} aria-hidden />
+      <div className={styles.vignette} aria-hidden />
 
-      <div className={styles.content}>
-        <div className={`liquid-glass-strong ${styles.panel}`}>
-          <div className={styles.heroCenter}>
-            <h2 className={styles.title}>
-              Ready to grow with <em>smarter</em> business banking
-            </h2>
-            <p className={styles.lead}>
-              Open a business account and start collecting, paying out, and scaling in minutes.
-            </p>
-            <button
-              type="button"
-              className={`liquid-glass-strong ${styles.ctaBtn}`}
-              onClick={() => navigate('/app/signup')}
-            >
-              Open an account
-              <span className={styles.ctaIconWrap}>
-                <Download size={14} strokeWidth={2} />
-              </span>
-            </button>
-            <div className={styles.pillRow}>
-              {['Accounts', 'Payouts', 'Identity'].map((label) => (
-                <span key={label} className={`liquid-glass ${styles.pill}`}>
-                  {label}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
+      <div className={styles.inner}>
+        <motion.h2
+          className={styles.title}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.1 } } }}
+        >
+          <span className={styles.titleLine}>
+            <motion.span style={{ display: 'block' }} variants={lineWipe}>
+              Ready to grow
+            </motion.span>
+          </span>
+          <span className={styles.titleLine}>
+            <motion.span style={{ display: 'block' }} variants={lineWipe}>
+              <em>with Nyra?</em>
+            </motion.span>
+          </span>
+        </motion.h2>
+
+        <motion.p
+          className={styles.lead}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.5 }}
+          variants={rise}
+        >
+          Collect payments, automate payouts, and move money at scale. Start building in minutes.
+        </motion.p>
+
+        <motion.div
+          className={styles.actions}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.5 }}
+          variants={rise}
+        >
+          <button type="button" className={styles.ctaBtn} onClick={() => navigate('/app/signup')}>
+            Start building
+          </button>
+        </motion.div>
       </div>
     </section>
   )

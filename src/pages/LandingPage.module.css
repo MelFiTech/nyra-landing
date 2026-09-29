@@ -89,7 +89,6 @@
   height: 7px;
   border-radius: 50%;
   background: var(--brand);
-  box-shadow: 0 0 0 3px rgba(0,221,121,0.2);
 }
 
 .heroTitle {
@@ -164,7 +163,6 @@
   gap: 12px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.18);
 }
 .mockCard::before {
   content: '';

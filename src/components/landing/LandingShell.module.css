@@ -8,7 +8,9 @@
 .pageScroll {
   position: relative;
   min-height: 100vh;
-  overflow-x: hidden;
+  /* clip (not hidden) so it stops horizontal overflow WITHOUT becoming a
+     scroll container — hidden here breaks position: sticky in the stack. */
+  overflow-x: clip;
   background: #fff;
 }
 
@@ -20,13 +22,38 @@
 }
 
 .heroBlock .heroCopy {
-  margin-top: clamp(48px, 10vh, 100px);
+  margin-top: clamp(128px, 22vh, 240px);
+}
+
+/* Personal hero is text-only, so the block is sized to its content (plus airy
+   padding) rather than a full viewport that would leave a void under the CTA. */
+.heroBlockPersonal {
+  min-height: auto;
+}
+
+.heroBlockPersonal .heroSection {
+  min-height: 0;
+  padding-bottom: clamp(96px, 16vh, 200px);
+}
+
+.heroBlockPersonal .heroCopy {
+  margin-top: clamp(104px, 20vh, 220px);
+  gap: 26px;
 }
 
 .overlay {
   position: absolute;
   inset: 0;
   background: rgba(255, 255, 255, 0.42);
+}
+
+/* Personal hero sits on the green cloud sky; only a whisper of wash so the
+   clouds stay visible while keeping text crisp. */
+.overlayLight {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%);
+  pointer-events: none;
 }
 
 .content {
@@ -40,7 +67,8 @@
 }
 
 .navSlot {
-  align-self: stretch;
+  position: relative;
+  z-index: 60;
   width: 100%;
 }
 
@@ -84,6 +112,21 @@
   margin-top: clamp(8px, 1.5vh, 20px);
 }
 
+/* Business headline is longer; give it a wider measure and a slightly smaller
+   ramp so it sits on two long lines instead of stacking. */
+.heroWide {
+  max-width: 1000px;
+}
+
+/* Business headline: "Financial Infrastructure" on one line with "for builders"
+   tucked to the right beneath it. inline-block so the h1 shrinks to the top
+   line's width, and the accent line right-aligns within it. */
+.heroWide .title {
+  display: inline-block;
+  text-align: left;
+  font-size: clamp(30px, 6.4vw, 82px);
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -101,19 +144,120 @@
 
 .title {
   margin: 0;
-  font-size: clamp(40px, 6vw, 64px);
-  line-height: 1.05;
-  letter-spacing: -1px;
+  font-family: var(--font-display-var);
+  font-size: clamp(52px, 9vw, 104px);
+  line-height: 0.9;
+  letter-spacing: -0.01em;
   font-weight: 400;
+  text-transform: uppercase;
   color: hsl(var(--foreground));
+  text-wrap: balance;
+}
+
+.title em {
+  font-family: var(--font-serif-var);
+  font-style: italic;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Clip mask for the line-wipe headline; extra bottom room so italic
+   descenders (g, y) aren't clipped while the line wipes up. */
+.titleLine {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+
+/* Two hands reaching toward the shared Nyra card, at the base of the hero. */
+.heroHandsWrap {
+  width: 100%;
+  /* Pull the hands up so the composition sits higher, closer to the copy. */
+  margin-top: clamp(-150px, -14vh, -60px);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  position: relative;
+  z-index: 1;
+}
+
+.heroHands {
+  width: 108vw;
+  max-width: 1700px;
+  height: auto;
+  /* Soft fade at the left and right so the arms taper off cleanly into the
+     sky instead of ending hard at the edges. */
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    #000 13%,
+    #000 87%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    #000 13%,
+    #000 87%,
+    transparent 100%
+  );
+}
+
+/* Shorter laptop screens: tighten the top spacing and pull the hands up more so
+   the composition stays high and in view rather than dropping below the fold. */
+@media (max-height: 900px) {
+  .heroBlockPersonal .heroCopy {
+    margin-top: clamp(52px, 8vh, 104px);
+  }
+  .heroHandsWrap {
+    margin-top: clamp(-280px, -26vh, -150px);
+  }
+}
+
+/* Green-tinted clouds hugging the bottom corners of the business dashboard
+   preview so it dissolves softly into the sky. */
+.previewCloudLeft,
+.previewCloudRight {
+  position: absolute;
+  bottom: -40px;
+  width: min(660px, 48vw);
+  height: auto;
+  z-index: 4;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.92;
+  filter: sepia(0.55) hue-rotate(58deg) saturate(1.7) brightness(1.04);
+}
+
+.previewCloudLeft {
+  left: -90px;
+}
+
+.previewCloudRight {
+  right: -90px;
+  transform: scaleX(-1);
+}
+
+/* Blends the green cloud hero down into the white sections below. */
+.heroFade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 200px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #ffffff 94%);
+  z-index: 2;
+  pointer-events: none;
 }
 
 .subtitle {
   margin: 0;
-  font-size: 15px;
-  line-height: 1.65;
-  color: hsl(var(--muted-foreground));
-  max-width: 480px;
+  font-size: clamp(15px, 1.4vw, 17px);
+  line-height: 1.6;
+  color: hsl(var(--foreground) / 0.62);
+  max-width: 500px;
 }
 
 .cta {

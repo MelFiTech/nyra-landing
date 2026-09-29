@@ -1,0 +1,820 @@
+.root {
+  position: relative;
+  background: #fff;
+  color: hsl(var(--foreground));
+  font-family: var(--font-body-var);
+}
+
+.container {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.containerNarrow {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ---------------- Growth stats ---------------- */
+.stats {
+  padding: clamp(56px, 8vw, 96px) 0;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(28px, 4vw, 56px);
+}
+
+.stat {
+  text-align: center;
+  position: relative;
+}
+
+/* Thin separators between the three figures. */
+.stat + .stat::before {
+  content: '';
+  position: absolute;
+  left: calc(clamp(28px, 4vw, 56px) / -2);
+  top: 12%;
+  height: 76%;
+  width: 1px;
+  background: hsl(var(--lp-border));
+}
+
+.statValue {
+  font-family: var(--font-display-var);
+  font-size: clamp(52px, 7.5vw, 92px);
+  line-height: 0.88;
+  letter-spacing: -0.01em;
+  color: hsl(var(--foreground));
+}
+
+.statLabel {
+  margin-top: 12px;
+  font-size: clamp(14px, 1.4vw, 16px);
+  font-weight: 500;
+  color: hsl(var(--muted-foreground));
+}
+
+@media (max-width: 700px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .stat + .stat::before {
+    display: none;
+  }
+}
+
+/* ---------------- Shared-expense band ---------------- */
+.band {
+  padding: clamp(64px, 10vw, 112px) 0;
+}
+
+.bandGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+  align-items: center;
+  gap: clamp(40px, 6vw, 88px);
+}
+
+.bandCopy {
+  max-width: 520px;
+}
+
+.bandTitle {
+  margin: 14px 0 18px;
+  font-size: clamp(34px, 4.8vw, 58px);
+}
+
+.bandLead {
+  margin: 0 0 28px;
+  font-size: 17px;
+  line-height: 1.6;
+  color: hsl(var(--muted-foreground));
+  max-width: 440px;
+}
+
+.tagRow {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tag {
+  padding: 9px 18px;
+  border-radius: 999px;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: hsl(var(--foreground) / 0.82);
+  background: #f4f6f5;
+}
+
+/* ---- Joint account card visual ---- */
+.bandVisual {
+  position: relative;
+  justify-self: center;
+  width: 100%;
+  max-width: 440px;
+  padding: 34px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Soft tinted surface behind the card, grounds the composition. */
+.bandVisual::before {
+  content: '';
+  position: absolute;
+  inset: 6% 4%;
+  border-radius: 34px;
+  background: linear-gradient(155deg, #d9f6e6 0%, #e7ecfc 100%);
+  transform: rotate(-6deg);
+  z-index: 0;
+}
+
+.jointCard {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 380px);
+  padding: 30px 30px 26px;
+  border-radius: 26px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.jointCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.jointCardBrand {
+  font-family: var(--font-display-var);
+  text-transform: uppercase;
+  font-size: 26px;
+  letter-spacing: 0.02em;
+}
+
+.jointCardTag {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.jointCardBalance {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.jointCardLabel {
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.jointCardAmount {
+  font-size: clamp(30px, 4.4vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.jointCardBottom {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.avatars {
+  display: flex;
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+  background: #d6f7e6;
+  border: 2px solid #4b46e5;
+}
+
+.avatarAlt {
+  margin-left: -12px;
+  color: #fff;
+  background: #0a3f30;
+}
+
+.jointCardNames {
+  font-size: 15px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.floatChip {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 18px 8px 8px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+/* Multicoloured: one mint, one yellow. Balanced on opposite corners. */
+.floatChipA {
+  top: 5%;
+  right: -3%;
+  background: #d6f7e6;
+  color: #0a3f30;
+  animation: floaty 5.5s ease-in-out infinite;
+}
+
+.floatChipB {
+  bottom: 5%;
+  left: -3%;
+  background: #ffbf00;
+  color: #14181f;
+  animation: floaty 6.5s ease-in-out infinite reverse;
+}
+
+/* Blinking eye avatar (replaces the plain dot). */
+.eyeAvatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex: none;
+  overflow: hidden;
+}
+
+.eyeAvatar_mint { background: #0a3f30; }
+.eyeAvatar_indigo { background: #4b46e5; }
+
+.eye {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  transform-origin: center;
+  animation: blink 4.2s ease-in-out infinite;
+}
+
+.pupil {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #14181f;
+  animation: glance 4.2s ease-in-out infinite;
+}
+
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+@keyframes blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  94% { transform: scaleY(0.12); }
+}
+
+@keyframes glance {
+  0%, 28% { transform: translateX(0); }
+  44%, 60% { transform: translateX(3px); }
+  76%, 100% { transform: translateX(-2px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floatChipA,
+  .floatChipB,
+  .eye,
+  .pupil {
+    animation: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .bandGrid {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+  .bandCopy {
+    max-width: none;
+  }
+  .bandVisual {
+    order: -1;
+    max-width: 420px;
+    aspect-ratio: 4 / 3;
+  }
+}
+
+/* ---------------- How it works: Veeza dealing pile (copied 1:1) ---------------- */
+.stackSection {
+  position: relative;
+  background: #fff;
+  padding-top: 60px;
+}
+
+.stackTitle {
+  margin: 12px 0 0;
+  font-size: clamp(34px, 5vw, 60px);
+}
+
+/* Scroll runway: one viewport step per card. */
+.stackTrack {
+  height: calc(var(--cards, 3) * var(--stack-step, 92vh));
+  margin-top: 44px;
+}
+
+.stackSticky {
+  position: sticky;
+  top: var(--stage-top, 116px);
+}
+
+.stackRel {
+  position: relative;
+}
+
+/* The fanned deck behind the top card, Veeza's Vector 21, exact dims. */
+.stackFan {
+  position: absolute;
+  left: -115.92px;
+  top: 0;
+  height: var(--stage-h, 570px);
+  width: 115.92px;
+  pointer-events: none;
+}
+
+.stackStage {
+  position: relative;
+  height: var(--stage-h, 570px);
+  /* Clips dealt / not-yet-arrived cards to the frame. Veeza's cards are
+     full-bleed rectangles, not rounded. */
+  overflow: hidden;
+}
+
+.stackCard {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0% 50%;
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  align-items: center;
+  gap: 32px;
+  padding: 72px 68px;
+  color: #fff;
+  overflow: hidden;
+  will-change: transform;
+}
+
+.tone_indigo { background: #4b46e5; }
+.tone_green { background: #0a3f30; }
+.tone_ink { background: #0d1117; }
+
+.stackCardCopy {
+  max-width: 505px;
+}
+
+.stepNumber {
+  display: inline-block;
+  font-family: var(--font-body-var);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.stackCardTitle {
+  margin: 14px 0 0;
+  font-family: var(--font-display-var);
+  font-weight: 400;
+  text-transform: uppercase;
+  font-size: clamp(40px, 7vw, 96px);
+  line-height: 0.9;
+  letter-spacing: -0.01em;
+  color: #fff;
+  max-width: 505px;
+}
+
+.stackTitleLine {
+  display: block;
+}
+
+.stackCardBody {
+  margin: 20px 0 24px;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.47;
+  color: #fff;
+  opacity: 0.9;
+  max-width: 505px;
+}
+
+.stepNote {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 18px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.stackCardGlyph {
+  justify-self: center;
+  font-family: var(--font-display-var);
+  font-size: clamp(200px, 26vw, 380px);
+  line-height: 0.72;
+  color: rgba(255, 255, 255, 0.14);
+  user-select: none;
+}
+
+/* Tablet: single column, drop the fan (Veeza's own breakpoint). */
+@media (max-width: 980px) {
+  .stackCard {
+    grid-template-columns: 1fr;
+    align-content: center;
+    padding: 48px;
+    gap: 18px;
+  }
+  .stackFan {
+    display: none;
+  }
+  .stackCardGlyph {
+    display: none;
+  }
+}
+
+/* Phone: shorten the runway and centre the pinned frame so the gap above and
+   below is even (Veeza's mobile treatment). */
+@media (max-width: 640px) {
+  .stackTrack {
+    --stack-step: 62vh;
+    --stage-h: min(560px, calc(100vh - 200px));
+    --stage-top: max(96px, calc((100vh - var(--stage-h)) / 2));
+    margin-top: 28px;
+  }
+  .stackCard {
+    padding: 30px 24px;
+  }
+}
+
+@supports (height: 100svh) {
+  @media (max-width: 640px) {
+    .stackTrack {
+      --stage-h: min(560px, calc(100svh - 200px));
+      --stage-top: max(96px, calc((100svh - var(--stage-h)) / 2));
+    }
+  }
+}
+
+/* ---------------- Section shared ---------------- */
+.sectionTitle {
+  margin: 12px 0 0;
+  font-size: clamp(32px, 4.6vw, 54px);
+}
+
+.sectionLead {
+  margin: 18px 0 0;
+  max-width: 560px;
+  font-size: 16px;
+  line-height: 1.65;
+  color: hsl(var(--muted-foreground));
+}
+
+/* ---------------- Trust ---------------- */
+.trustSection {
+  padding: clamp(64px, 10vw, 104px) 0;
+  background: #f8faf9;
+}
+
+.trustGrid {
+  margin-top: clamp(32px, 5vw, 56px);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.trustCard {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-height: 300px;
+  padding: 28px 26px;
+  border-radius: 20px;
+  background: #fff;
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.trustCard:hover {
+  transform: translateY(-6px);
+}
+
+.trustIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  flex: none;
+}
+
+.trustIcon_mint { background: #d6f7e6; color: #0a3f30; }
+.trustIcon_indigo { background: #e6e5fb; color: #4b46e5; }
+.trustIcon_green { background: #ddf3e6; color: #0a5236; }
+.trustIcon_ink { background: #e7e9ec; color: #14181f; }
+
+.trustCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.trustTitle {
+  margin: 0;
+  font-family: var(--font-body-var);
+  font-weight: 600;
+  font-size: 19px;
+  letter-spacing: -0.01em;
+  color: hsl(var(--foreground));
+}
+
+.trustBody {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: hsl(var(--muted-foreground));
+}
+
+@media (max-width: 1024px) {
+  .trustGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .trustGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------------- Features ---------------- */
+.featureSection {
+  padding: clamp(64px, 10vw, 104px) 0;
+}
+
+.featureGrid {
+  margin-top: clamp(32px, 5vw, 56px);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.featureCard {
+  position: relative;
+  padding: 32px 28px;
+  border-radius: 22px;
+  background: #f8faf9;
+  overflow: hidden;
+}
+
+.featureIndex {
+  font-family: var(--font-display-var);
+  font-weight: 400;
+  font-size: 16px;
+  color: var(--brand-mint-deep);
+  letter-spacing: 0.02em;
+}
+
+.featureTitle {
+  margin: 12px 0 10px;
+  font-family: var(--font-display-var);
+  font-weight: 400;
+  text-transform: uppercase;
+  font-size: clamp(26px, 3vw, 34px);
+  line-height: 0.95;
+  letter-spacing: -0.005em;
+}
+
+.featureBody {
+  margin: 0;
+  max-width: 440px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: hsl(var(--muted-foreground));
+}
+
+@media (max-width: 720px) {
+  .featureGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------------- FAQ ---------------- */
+.faqSection {
+  padding: clamp(56px, 9vw, 96px) 0;
+  background: #f8faf9;
+}
+
+.faqList {
+  margin-top: clamp(28px, 4vw, 44px);
+  border-top: 1px solid hsl(var(--lp-border));
+}
+
+.faqItem {
+  border-bottom: 1px solid hsl(var(--lp-border));
+}
+
+.faqQuestion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 4px;
+  font-family: var(--font-body-var);
+  font-weight: 600;
+  font-size: clamp(17px, 2vw, 21px);
+  letter-spacing: -0.01em;
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  list-style: none;
+}
+
+.faqQuestion::-webkit-details-marker {
+  display: none;
+}
+
+.faqPlus {
+  position: relative;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.faqPlus::before,
+.faqPlus::after {
+  content: '';
+  position: absolute;
+  background: hsl(var(--foreground));
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.faqPlus::before {
+  top: 8px;
+  left: 0;
+  width: 18px;
+  height: 2px;
+}
+
+.faqPlus::after {
+  top: 0;
+  left: 8px;
+  width: 2px;
+  height: 18px;
+}
+
+.faqItem[open] .faqPlus::after {
+  transform: scaleY(0);
+  opacity: 0;
+}
+
+.faqAnswer {
+  margin: 0;
+  padding: 0 4px 24px;
+  max-width: 640px;
+  font-size: 15.5px;
+  line-height: 1.7;
+  color: hsl(var(--muted-foreground));
+}
+
+/* ---------------- Final CTA ---------------- */
+/* Final CTA: full-bleed, tall, with a parallax artwork background, a huge white
+   two-line headline, a light subtitle and the app CTA below (Veeza's Global
+   South treatment). */
+.ctaSection {
+  position: relative;
+  overflow: hidden;
+  min-height: clamp(620px, 88vh, 940px);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: clamp(96px, 14vh, 150px) 24px 0;
+  text-align: center;
+  background: radial-gradient(120% 90% at 50% 8%, #0f5a41 0%, #0a3f30 46%, #072a20 100%);
+}
+
+.ctaBg {
+  position: absolute;
+  inset: -8px 0 0;
+  width: 100%;
+  height: calc(100% + 8px);
+  max-width: none;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Subtle paper grain over the whole panel for tactile depth. */
+.ctaGrain {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image: var(--panel-grain);
+  background-size: 200px 200px;
+  mix-blend-mode: overlay;
+  opacity: 0.4;
+}
+
+/* Cinematic wash: darker at the top (clean headline) and toward the corners. */
+.ctaVignette {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(6, 34, 26, 0.9) 0%, rgba(6, 34, 26, 0) 34%),
+    radial-gradient(130% 120% at 50% 8%, rgba(15, 90, 65, 0.35) 0%, rgba(6, 34, 26, 0) 40%),
+    radial-gradient(150% 90% at 50% 108%, rgba(4, 24, 18, 0) 46%, rgba(4, 24, 18, 0.6) 100%);
+}
+
+.ctaInner {
+  position: relative;
+  z-index: 2;
+  max-width: 960px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 34px;
+}
+
+.ctaTitle {
+  margin: 0;
+  font-family: var(--font-display-var);
+  font-weight: 400;
+  text-transform: uppercase;
+  font-size: clamp(46px, 9.2vw, 116px);
+  line-height: 0.9;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+}
+
+.ctaTitle em {
+  font-family: var(--font-serif-var);
+  font-style: italic;
+  font-weight: 400;
+  text-transform: none;
+  color: #b8f5d8;
+}
+
+/* The clip mask for the wipe needs headroom above and below or the tight
+   line-height crops the cap tops (and the italic ascenders). */
+.ctaTitleLine {
+  display: block;
+  overflow: hidden;
+  padding: 0.2em 0.06em 0.16em;
+  margin: -0.16em -0.06em;
+}
+
+.ctaLead {
+  margin: 0;
+  max-width: 560px;
+  font-size: clamp(17px, 1.8vw, 22px);
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.ctaActions {
+  display: flex;
+  justify-content: center;
+}

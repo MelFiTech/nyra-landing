@@ -66,7 +66,7 @@ const WHAT_WE_DO = [
 
 export default function AboutPage() {
   usePageMeta({
-    title: 'About Nyra — Building the rails for seamless business payments',
+    title: 'About Nyra | Building the rails for seamless business payments',
     description:
       'Nyra makes moving money effortless for businesses, and reimagines how people and teams hold money together.',
     image: 'og-about.jpg',

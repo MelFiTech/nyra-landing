@@ -87,7 +87,7 @@ export default function PricingPage() {
   const navigate = useNavigate()
 
   usePageMeta({
-    title: 'Simple, transparent pricing — Nyra',
+    title: 'Simple, transparent pricing | Nyra',
     description:
       'Pay only for what you use. No monthly fees, no minimums, and no charges on failed transactions.',
     image: 'og-pricing.jpg',

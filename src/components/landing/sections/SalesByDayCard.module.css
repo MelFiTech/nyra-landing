@@ -37,11 +37,6 @@
   background:
     linear-gradient(155deg, rgba(74, 222, 128, 0.28) 0%, transparent 42%),
     linear-gradient(160deg, #21c45d 0%, #11a14a 38%, #0c7a3a 70%, #0a5e2e 100%);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.14) inset,
-    0 1px 1px rgba(255, 255, 255, 0.45) inset,
-    0 28px 60px -18px rgba(8, 70, 36, 0.7),
-    0 0 90px -10px rgba(34, 197, 94, 0.55);
   overflow: hidden;
   animation: cardFloat 6s ease-in-out infinite;
 }

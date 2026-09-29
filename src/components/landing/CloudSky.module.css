@@ -1,0 +1,78 @@
+.sky {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  /* Green-tinted sky: saturated mint up top washing to near-white at the
+     horizon, so dark hero type stays readable. */
+  background:
+    radial-gradient(150% 100% at 50% 120%, #f4fcf7 0%, rgba(244, 252, 247, 0) 52%),
+    linear-gradient(180deg, #7fcaa2 0%, #9ed9b8 30%, #c8ecd6 60%, #eef8f0 100%);
+}
+
+.clouds {
+  position: absolute;
+  inset: -6% 0 0 0;
+  height: 112%;
+  will-change: transform;
+}
+
+/* Real cloud photo (grey on white) blended into the green sky. soft-light lets
+   the sky's colour show through, so the cloud reads as tinted green mist. */
+.cloud {
+  position: absolute;
+  max-width: none;
+  mix-blend-mode: soft-light;
+  /* Push the grey clouds toward a mint-green tint. */
+  filter: sepia(0.55) hue-rotate(58deg) saturate(1.7) brightness(1.04);
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.95;
+}
+
+.cloudLeft {
+  top: 20%;
+  left: -14%;
+  width: 62%;
+  animation: driftA 62s ease-in-out infinite alternate;
+}
+
+.cloudRight {
+  top: 36%;
+  right: -18%;
+  width: 68%;
+  opacity: 0.85;
+  animation: driftB 78s ease-in-out infinite alternate;
+}
+
+.cloudTop {
+  top: 8%;
+  left: 34%;
+  width: 46%;
+  opacity: 0.7;
+  animation: driftA 90s ease-in-out infinite alternate-reverse;
+}
+
+/* Brighter mist at the horizon so the hero blends into the white below. */
+.horizon {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 40%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.8) 76%, #ffffff 100%);
+  pointer-events: none;
+}
+
+@keyframes driftA {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(4%, 1.5%, 0); }
+}
+
+@keyframes driftB {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-5%, -2%, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cloud {
+    animation: none;
+  }
+}
