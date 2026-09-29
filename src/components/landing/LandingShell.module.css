@@ -37,7 +37,7 @@
 }
 
 .heroBlockPersonal .heroCopy {
-  margin-top: clamp(104px, 20vh, 220px);
+  margin-top: calc(clamp(104px, 20vh, 220px) + 56px);
   gap: 26px;
 }
 
@@ -174,7 +174,8 @@
 /* Two hands reaching toward the shared Nyra card, at the base of the hero. */
 .heroHandsWrap {
   width: 100%;
-  /* Pull the hands up so the composition sits higher, closer to the copy. */
+  /* Pull the hands up so the composition sits higher, but keep a fixed gap to
+     the copy above (no extra pull), so the hands never overlap the buttons. */
   margin-top: clamp(-150px, -14vh, -60px);
   display: flex;
   justify-content: center;
@@ -209,10 +210,20 @@
    the composition stays high and in view rather than dropping below the fold. */
 @media (max-height: 900px) {
   .heroBlockPersonal .heroCopy {
-    margin-top: clamp(52px, 8vh, 104px);
+    /* Keep clear of the ~88px fixed nav even on short screens, +56 lower. */
+    margin-top: calc(clamp(104px, 14vh, 150px) + 56px);
   }
   .heroHandsWrap {
     margin-top: clamp(-280px, -26vh, -150px);
+  }
+}
+
+/* Narrow (tablet) widths: the hands are proportionally huge, so ease the
+   upward pull to keep the card clearly below the copy rather than overlapping
+   the buttons. Placed last so it wins when a viewport is both short and narrow. */
+@media (max-width: 980px) {
+  .heroHandsWrap {
+    margin-top: clamp(-40px, -4vh, 0px);
   }
 }
 
