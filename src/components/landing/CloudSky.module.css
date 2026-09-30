@@ -2,11 +2,11 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
-  /* Green-tinted sky: saturated mint up top washing to near-white at the
-     horizon, so dark hero type stays readable. */
+  /* Pale mint sky: a soft green up top washing to near-white at the horizon,
+     so dark hero type stays readable without the whole hero reading green. */
   background:
-    radial-gradient(150% 100% at 50% 120%, #f4fcf7 0%, rgba(244, 252, 247, 0) 52%),
-    linear-gradient(180deg, #7fcaa2 0%, #9ed9b8 30%, #c8ecd6 60%, #eef8f0 100%);
+    radial-gradient(150% 100% at 50% 120%, #f7fcfa 0%, rgba(247, 252, 250, 0) 55%),
+    linear-gradient(180deg, #c2e6d4 0%, #d8efe2 34%, #ebf7f0 64%, #f7fbf9 100%);
 }
 
 .clouds {
@@ -21,12 +21,13 @@
 .cloud {
   position: absolute;
   max-width: none;
-  mix-blend-mode: soft-light;
-  /* Push the grey clouds toward a mint-green tint. */
-  filter: sepia(0.55) hue-rotate(58deg) saturate(1.7) brightness(1.04);
+  /* `screen` only ever lightens, so the clouds read as bright white puffs with
+     a faint mint tint and no dark undersides (no shadow). */
+  mix-blend-mode: screen;
+  filter: sepia(0.18) hue-rotate(62deg) saturate(1.05) brightness(1.12);
   pointer-events: none;
   user-select: none;
-  opacity: 0.95;
+  opacity: 0.92;
 }
 
 .cloudLeft {

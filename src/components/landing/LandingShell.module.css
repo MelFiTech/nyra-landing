@@ -227,30 +227,6 @@
   }
 }
 
-/* Green-tinted clouds hugging the bottom corners of the business dashboard
-   preview so it dissolves softly into the sky. */
-.previewCloudLeft,
-.previewCloudRight {
-  position: absolute;
-  bottom: -40px;
-  width: min(660px, 48vw);
-  height: auto;
-  z-index: 4;
-  pointer-events: none;
-  user-select: none;
-  opacity: 0.92;
-  filter: sepia(0.55) hue-rotate(58deg) saturate(1.7) brightness(1.04);
-}
-
-.previewCloudLeft {
-  left: -90px;
-}
-
-.previewCloudRight {
-  right: -90px;
-  transform: scaleX(-1);
-}
-
 /* Blends the green cloud hero down into the white sections below. */
 .heroFade {
   position: absolute;

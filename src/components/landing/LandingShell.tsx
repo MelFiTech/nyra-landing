@@ -185,20 +185,6 @@ export default function LandingShell({
       </div>
 
       {isPersonal && <div className={styles.heroFade} aria-hidden />}
-
-      {/* Clouds tucked at the bottom corners of the business dashboard preview
-          so its edges fade softly into the sky. */}
-      {!isPersonal && preview && (
-        <>
-          <img className={styles.previewCloudLeft} src="/assets/hero-cloud.png" alt="" aria-hidden />
-          <img
-            className={styles.previewCloudRight}
-            src="/assets/hero-cloud.png"
-            alt=""
-            aria-hidden
-          />
-        </>
-      )}
     </>
   )
 
